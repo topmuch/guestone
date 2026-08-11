@@ -142,6 +142,9 @@ model Agency {
   feedbacks          Feedback[]
   complaints         Complaint[]
   sosAlerts          SosAlert[]
+  menuItems          MenuItem[]
+  orders             Order[]
+  lastDayRequests    LastDayRequest[]
 }
 
 // Baggage model (QRTags "Tag")
@@ -197,6 +200,8 @@ model Baggage {
   personBracelet    PersonBracelet?
   feedbacks         Feedback[]
   sosAlerts         SosAlert[]
+  orders            Order[]
+  lastDayRequests   LastDayRequest[]
 }
 
 // ScanLog model - tracks all scans for audit
@@ -1237,6 +1242,113 @@ model SosAlert {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   @@index([agencyId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ════════════════════════════════════════════════════════════════
+// GUEST ONE — Room Service (PRD §14.4)
+// ════════════════════════════════════════════════════════════════
+// Menu items + commandes avec suivi (en attente → confirmé → préparation → prêt → livré)
+
+model MenuItem {
+  id              String   @id @default(cuid())
+  agencyId        String
+  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  // Identité
+  name            String
+  description     String?
+  // Catégorie: "breakfast" | "mains" | "desserts" | "drinks" | "snacks"
+  category        String   @default("mains")
+  // Médias
+  photoUrl        String?
+  // Prix + dispo
+  price           Int      @default(0) // FCFA
+  isAvailable     Boolean  @default(true)
+  // Horaires (JSON: { days: "mon-sun", open: "07:00", close: "22:00" })
+  schedule        String?
+  // Ordre affichage
+  sortOrder       Int      @default(0)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  orderItems      OrderItem[]
+  @@index([agencyId])
+  @@index([category])
+  @@index([isAvailable])
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  agencyId        String
+  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  baggageId       String?  // bracelet client
+  baggage         Baggage? @relation(fields: [baggageId], references: [id], onDelete: SetNull)
+  // Infos client
+  guestName       String?
+  roomNumber      String?
+  guestPhone      String?
+  // Détails
+  items           OrderItem[]
+  totalAmount     Int      @default(0) // FCFA
+  notes           String?
+  // Statut: "pending" → "confirmed" → "preparing" → "ready" → "delivered" | "cancelled"
+  status          String   @default("pending")
+  handledBy       String?
+  // Paiement: "room" (facture chambre) | "cash" | "card"
+  paymentMethod   String   @default("room")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@index([agencyId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model OrderItem {
+  id              String   @id @default(cuid())
+  orderId         String
+  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItemId      String?
+  menuItem        MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+  // Snapshot au moment de la commande (au cas où le menu change)
+  name            String
+  price           Int
+  quantity        Int      @default(1)
+  @@index([orderId])
+}
+
+// ════════════════════════════════════════════════════════════════
+// GUEST ONE — Mode Dernier Jour (PRD §14.11)
+// ════════════════════════════════════════════════════════════════
+// Après check-out: dépôt bagages, réservation douche, transfert aéroport
+
+model LastDayRequest {
+  id              String   @id @default(cuid())
+  agencyId        String
+  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  baggageId       String?  // bracelet client
+  baggage         Baggage? @relation(fields: [baggageId], references: [id], onDelete: SetNull)
+  // Infos client
+  guestName       String?
+  roomNumber      String?
+  guestPhone      String?
+  // Type de demande: "luggage" (dépôt bagages) | "shower" (douche) | "transfer" (transfert aéroport)
+  type            String
+  // Détails
+  // luggage: { nbBags, dropOffTime, pickUpTime }
+  // shower: { preferredTime, duration }
+  // transfer: { destination, flightTime, passengers, pickupTime }
+  details         String?  // JSON
+  notes           String?
+  // Statut: "pending" → "confirmed" → "completed" | "cancelled"
+  status          String   @default("pending")
+  handledBy       String?
+  // QR code de retrait bagages (généré pour luggage)
+  pickupCode      String?  // code à présenter pour récupérer les bagages
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@index([agencyId])
+  @@index([type])
   @@index([status])
   @@index([createdAt])
 }

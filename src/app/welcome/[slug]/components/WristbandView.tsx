@@ -6,6 +6,8 @@ import NearbyAttractions from './NearbyAttractions';
 import ServiceRequestModal from './ServiceRequestModal';
 import FeedbackModal from './FeedbackModal';
 import SosButton from './SosButton';
+import RoomServiceModal from './RoomServiceModal';
+import LastDayModal from './LastDayModal';
 import { getProfileMeta, type BraceletProfile } from '@/lib/bracelet-profiles';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -120,6 +122,8 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
   const [selectedService, setSelectedService] = useState<HotelServiceItem | null>(null);
   const [isAtHotel, setIsAtHotel] = useState<boolean | null>(null); // null = inconnu
   const [showFeedback, setShowFeedback] = useState(false);
+  const [showRoomService, setShowRoomService] = useState(false);
+  const [showLastDay, setShowLastDay] = useState(false);
 
   // Geofencing GPS — détecte si le client est dans l'hôtel
   useEffect(() => {
@@ -236,6 +240,24 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
     }
     return (
       <div className="space-y-5">
+        {/* Room Service + Mode Dernier Jour — quick access */}
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            onClick={() => setShowRoomService(true)}
+            className="flex flex-col items-center justify-center p-5 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition"
+          >
+            <span className="text-3xl mb-1">🍽️</span>
+            <span className="font-bold text-sm">Room Service</span>
+          </button>
+          <button
+            onClick={() => setShowLastDay(true)}
+            className="flex flex-col items-center justify-center p-5 bg-gradient-to-br from-violet-500 to-purple-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition"
+          >
+            <span className="text-3xl mb-1">🧳</span>
+            <span className="font-bold text-sm">Dernier Jour</span>
+          </button>
+        </div>
+
         {/* Services */}
         {servicesHotel.length > 0 && (
           <div className="space-y-3">
@@ -435,6 +457,28 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
           baggageId={undefined}
           agencyName={agency.name}
           onClose={() => setShowFeedback(false)}
+        />
+      )}
+
+      {/* ─── ROOM SERVICE MODAL ─── */}
+      {showRoomService && (
+        <RoomServiceModal
+          agencyId={agency.id}
+          baggageId={undefined}
+          roomNumber={stay?.roomNumber}
+          guestName={stay?.guestName}
+          onClose={() => setShowRoomService(false)}
+        />
+      )}
+
+      {/* ─── LAST DAY MODAL ─── */}
+      {showLastDay && (
+        <LastDayModal
+          agencyId={agency.id}
+          baggageId={undefined}
+          roomNumber={stay?.roomNumber}
+          guestName={stay?.guestName}
+          onClose={() => setShowLastDay(false)}
         />
       )}
     </div>
