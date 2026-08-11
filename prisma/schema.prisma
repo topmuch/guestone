@@ -145,6 +145,11 @@ model Agency {
   menuItems          MenuItem[]
   orders             Order[]
   lastDayRequests    LastDayRequest[]
+  spaServices        SpaService[]
+  spaAppointments    SpaAppointment[]
+  merchants          Merchant[]
+  products           Product[]
+  marketplaceOrders  MarketplaceOrder[]
 }
 
 // Baggage model (QRTags "Tag")
@@ -202,6 +207,8 @@ model Baggage {
   sosAlerts         SosAlert[]
   orders            Order[]
   lastDayRequests   LastDayRequest[]
+  spaAppointments   SpaAppointment[]
+  marketplaceOrders MarketplaceOrder[]
 }
 
 // ScanLog model - tracks all scans for audit
@@ -1351,4 +1358,176 @@ model LastDayRequest {
   @@index([type])
   @@index([status])
   @@index([createdAt])
+}
+
+// ════════════════════════════════════════════════════════════════
+// GUEST ONE — Spa Booking (PRD §14.5)
+// ════════════════════════════════════════════════════════════════
+// Soins + réservations avec calendrier + créneaux
+
+model SpaService {
+  id              String   @id @default(cuid())
+  agencyId        String
+  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  // Identité
+  name            String
+  description     String?
+  // Catégorie: "massage" | "facial" | "body" | "wellness" | "couple"
+  category        String   @default("massage")
+  // Durée en minutes
+  duration        Int      @default(60)
+  // Prix FCFA
+  price           Int      @default(0)
+  // Médias
+  photoUrl        String?
+  // Praticien assigné (par nom, pas un modèle séparé pour MVP)
+  practitioner    String?
+  // Disponibilité
+  isActive        Boolean  @default(true)
+  // Horaires (JSON: { days: "mon-sun", open: "09:00", close: "19:00" })
+  schedule        String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  appointments    SpaAppointment[]
+  @@index([agencyId])
+  @@index([category])
+  @@index([isActive])
+}
+
+model SpaAppointment {
+  id              String   @id @default(cuid())
+  agencyId        String
+  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  spaServiceId    String
+  spaService      SpaService @relation(fields: [spaServiceId], references: [id], onDelete: Cascade)
+  baggageId       String?
+  baggage         Baggage? @relation(fields: [baggageId], references: [id], onDelete: SetNull)
+  // Infos client
+  guestName       String?
+  roomNumber      String?
+  guestPhone      String?
+  // Créneau
+  date            DateTime // date + heure du rendez-vous
+  duration        Int      // durée en minutes (snapshot)
+  price           Int      // prix snapshot
+  // Statut: "pending" → "confirmed" → "completed" | "cancelled" | "no_show"
+  status          String   @default("pending")
+  notes           String?
+  handledBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@index([agencyId])
+  @@index([spaServiceId])
+  @@index([date])
+  @@index([status])
+}
+
+// ════════════════════════════════════════════════════════════════
+// GUEST ONE — Marketplace Locale (PRD §14.6 + §18)
+// ════════════════════════════════════════════════════════════════
+// Commerçants partenaires + produits + commandes + commissions
+
+model Merchant {
+  id              String   @id @default(cuid())
+  agencyId        String
+  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  // Identité
+  name            String
+  description     String?
+  category        String   @default("other") // "artisanat" | "souvenirs" | "food" | "cosmetics" | "excursions" | "transport" | "other"
+  // Coordonnées
+  address         String?
+  phone           String?
+  email           String?
+  website         String?
+  // Médias
+  logoUrl         String?
+  // Commission (pourcentage prélevé par l'hôtel)
+  commissionRate  Float    @default(10) // 10% par défaut
+  // Accès portail commerçant (login simplifié)
+  accessCode      String?  // code d'accès au portail commerçant
+  // Statut
+  isActive        Boolean  @default(true)
+  isVerified      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  products        Product[]
+  marketplaceOrders MarketplaceOrder[]
+  @@index([agencyId])
+  @@index([category])
+  @@index([isActive])
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  agencyId        String
+  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  merchantId      String
+  merchant        Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  // Identité
+  name            String
+  description     String?
+  category        String   @default("other")
+  // Médias
+  photoUrl        String?
+  // Prix + stock
+  price           Int      @default(0) // FCFA
+  stock           Int      @default(0)
+  isAvailable     Boolean  @default(true)
+  // Livraison: "pickup" | "delivery" | "both"
+  deliveryMode    String   @default("pickup")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  orderItems      MarketplaceOrderItem[]
+  @@index([agencyId])
+  @@index([merchantId])
+  @@index([category])
+  @@index([isAvailable])
+}
+
+model MarketplaceOrder {
+  id              String   @id @default(cuid())
+  agencyId        String
+  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  merchantId      String
+  merchant        Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  baggageId       String?
+  baggage         Baggage? @relation(fields: [baggageId], references: [id], onDelete: SetNull)
+  // Infos client
+  guestName       String?
+  roomNumber      String?
+  guestPhone      String?
+  // Détails
+  items           MarketplaceOrderItem[]
+  totalAmount     Int      @default(0)
+  // Commission
+  commissionRate  Float    @default(0) // snapshot du taux au moment de la commande
+  commissionAmount Int     @default(0) // montant commission hôtel
+  merchantAmount  Int      @default(0) // montant net pour le commerçant
+  // Livraison
+  deliveryMode    String   @default("pickup") // "pickup" | "delivery"
+  deliveryAddress String?
+  notes           String?
+  // Statut: "pending" → "accepted" → "preparing" → "ready" → "delivered" | "refused" | "cancelled"
+  status          String   @default("pending")
+  handledBy       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@index([agencyId])
+  @@index([merchantId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model MarketplaceOrderItem {
+  id              String   @id @default(cuid())
+  orderId         String
+  order           MarketplaceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId       String?
+  product         Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  // Snapshot
+  name            String
+  price           Int
+  quantity        Int      @default(1)
+  @@index([orderId])
 }

@@ -32,6 +32,8 @@ import {
   Star,
   Utensils,
   Luggage,
+  Sparkles,
+  Store,
 } from "lucide-react";
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -128,6 +130,8 @@ function Sidebar({
     { label: "Alertes SOS",   icon: <Siren className="w-5 h-5" />,          href: "/agence/sos" },
     { label: "Avis & Réclamations", icon: <Star className="w-5 h-5" />,     href: "/agence/avis" },
     { label: "Room Service",   icon: <Utensils className="w-5 h-5" />,     href: "/agence/room-service" },
+    { label: "Spa",              icon: <Sparkles className="w-5 h-5" />,      href: "/agence/spa" },
+    { label: "Marketplace",      icon: <Store className="w-5 h-5" />,        href: "/agence/marketplace" },
     { label: "Dernier Jour",    icon: <Luggage className="w-5 h-5" />,      href: "/agence/dernier-jour" },
     { label: "Check-in Bracelet", icon: <Watch className="w-5 h-5" />,          href: "/agence/check-in-bracelet" },
     { label: "Partenaires POI", icon: <MapPin className="w-5 h-5" />,         href: "/agence/partenaires" },

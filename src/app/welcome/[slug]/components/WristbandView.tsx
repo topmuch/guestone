@@ -8,6 +8,8 @@ import FeedbackModal from './FeedbackModal';
 import SosButton from './SosButton';
 import RoomServiceModal from './RoomServiceModal';
 import LastDayModal from './LastDayModal';
+import SpaModal from './SpaModal';
+import MarketplaceModal from './MarketplaceModal';
 import { getProfileMeta, type BraceletProfile } from '@/lib/bracelet-profiles';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -124,6 +126,8 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
   const [showFeedback, setShowFeedback] = useState(false);
   const [showRoomService, setShowRoomService] = useState(false);
   const [showLastDay, setShowLastDay] = useState(false);
+  const [showSpa, setShowSpa] = useState(false);
+  const [showMarketplace, setShowMarketplace] = useState(false);
 
   // Geofencing GPS — détecte si le client est dans l'hôtel
   useEffect(() => {
@@ -240,7 +244,7 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
     }
     return (
       <div className="space-y-5">
-        {/* Room Service + Mode Dernier Jour — quick access */}
+        {/* Room Service + Mode Dernier Jour + Spa + Marketplace — quick access */}
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => setShowRoomService(true)}
@@ -248,6 +252,20 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
           >
             <span className="text-3xl mb-1">🍽️</span>
             <span className="font-bold text-sm">Room Service</span>
+          </button>
+          <button
+            onClick={() => setShowSpa(true)}
+            className="flex flex-col items-center justify-center p-5 bg-gradient-to-br from-purple-500 to-pink-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition"
+          >
+            <span className="text-3xl mb-1">💆</span>
+            <span className="font-bold text-sm">Spa</span>
+          </button>
+          <button
+            onClick={() => setShowMarketplace(true)}
+            className="flex flex-col items-center justify-center p-5 bg-gradient-to-br from-orange-500 to-amber-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition"
+          >
+            <span className="text-3xl mb-1">🛍️</span>
+            <span className="font-bold text-sm">Boutique locale</span>
           </button>
           <button
             onClick={() => setShowLastDay(true)}
@@ -479,6 +497,28 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
           roomNumber={stay?.roomNumber}
           guestName={stay?.guestName}
           onClose={() => setShowLastDay(false)}
+        />
+      )}
+
+      {/* ─── SPA MODAL ─── */}
+      {showSpa && (
+        <SpaModal
+          agencyId={agency.id}
+          baggageId={undefined}
+          roomNumber={stay?.roomNumber}
+          guestName={stay?.guestName}
+          onClose={() => setShowSpa(false)}
+        />
+      )}
+
+      {/* ─── MARKETPLACE MODAL ─── */}
+      {showMarketplace && (
+        <MarketplaceModal
+          agencyId={agency.id}
+          baggageId={undefined}
+          roomNumber={stay?.roomNumber}
+          guestName={stay?.guestName}
+          onClose={() => setShowMarketplace(false)}
         />
       )}
     </div>
