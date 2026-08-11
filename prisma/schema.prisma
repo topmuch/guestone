@@ -150,6 +150,7 @@ model Agency {
   merchants          Merchant[]
   products           Product[]
   marketplaceOrders  MarketplaceOrder[]
+  subscription       Subscription?
 }
 
 // Baggage model (QRTags "Tag")
@@ -1530,4 +1531,59 @@ model MarketplaceOrderItem {
   price           Int
   quantity        Int      @default(1)
   @@index([orderId])
+}
+
+// ════════════════════════════════════════════════════════════════
+// GUEST ONE — Plans & Abonnements (PRD §12.6)
+// ════════════════════════════════════════════════════════════════
+// Plans (Starter, Pro, Premium) avec modules inclus + limites
+// Subscription: lien tenant ↔ plan + statut facturation
+
+model Plan {
+  id              String   @id @default(cuid())
+  name            String   @unique // "Starter" | "Pro" | "Premium"
+  description     String?
+  // Prix mensuel FCFA
+  priceMonthly    Int      @default(0)
+  priceYearly     Int      @default(0)
+  // Limites
+  maxProperties   Int      @default(1) // nb de logements
+  maxQRCodes      Int      @default(50) // nb de QR codes/bracelets
+  maxUsers        Int      @default(3) // nb d'utilisateurs staff
+  // Modules inclus (JSON: ["core_access", "qr_bracelet", "room_service", ...])
+  // Si null → tous les modules MVP inclus
+  includedModules String?
+  // Badge affichage
+  badge           String?  // "🚀" | "⭐" | "💎"
+  isPopular       Boolean  @default(false)
+  isActive        Boolean  @default(true)
+  sortOrder       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  subscriptions   Subscription[]
+  @@index([isActive])
+}
+
+model Subscription {
+  id              String   @id @default(cuid())
+  agencyId        String   @unique // 1 abonnement actif par tenant
+  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  planId          String
+  plan            Plan     @relation(fields: [planId], references: [id], onDelete: Restrict)
+  // Statut: "trial" | "active" | "past_due" | "cancelled" | "expired"
+  status          String   @default("active")
+  // Période
+  startDate       DateTime @default(now())
+  endDate         DateTime? // null = jusqu'à annulation
+  // Facturation
+  billingCycle    String   @default("monthly") // "monthly" | "yearly"
+  autoRenew       Boolean  @default(true)
+  // Montants snapshot
+  amountPaid      Int      @default(0)
+  // Trial
+  trialEndsAt     DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@index([status])
+  @@index([planId])
 }

@@ -34,6 +34,7 @@ import {
   Luggage,
   Sparkles,
   Store,
+  Building2,
 } from "lucide-react";
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -121,6 +122,7 @@ function Sidebar({
 
   const hotelMenuItems: MenuItem[] = [
     { label: "Tableau de bord", icon: <Home className="w-5 h-5" />,          href: "/agence/tableau-de-bord" },
+    { label: "Mes logements",   icon: <Building2 className="w-5 h-5" />,      href: "/agence/proprietes" },
     { label: "Check-in",        icon: <LogIn className="w-5 h-5" />,          href: "/agence/check-in" },
     { label: "QR actifs",       icon: <QrCode className="w-5 h-5" />,         href: "/agence/baggages" },
     { label: "Bracelets",       icon: <Watch className="w-5 h-5" />,          href: "/agence/bracelets" },

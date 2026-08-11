@@ -29,6 +29,8 @@ import {
   Activity,
   Watch,
   Puzzle,
+  CreditCard,
+  Receipt,
 } from "lucide-react";
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -93,6 +95,10 @@ function Sidebar({
 
     // Modules Guest One (activation par tenant)
     { label: "Modules", icon: <Puzzle className="w-5 h-5" />, href: "/admin/modules", roles: ['superadmin', 'admin'] },
+
+    // Plans & Abonnements (superadmin)
+    { label: "Plans & Tarifs", icon: <CreditCard className="w-5 h-5" />, href: "/admin/plans", roles: ['superadmin', 'admin'] },
+    { label: "Abonnements", icon: <Receipt className="w-5 h-5" />, href: "/admin/abonnements", roles: ['superadmin', 'admin'] },
 
     // Travelers Category
     { label: "VOYAGEURS", icon: null, isCategory: true },

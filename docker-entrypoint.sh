@@ -48,6 +48,8 @@ echo "🌱 Seed référentiel modèles appareils..."
 node scripts/seed-modeles-appareils.cjs 2>&1 || true
 echo "🌱 Seed catalogue modules Guest One..."
 node scripts/seed-modules.cjs 2>&1 || true
+echo "🌱 Seed plans Guest One..."
+node scripts/seed-plans.cjs 2>&1 || true
 echo "✅ Seeds terminés"
 
 # 5. Démarrer le serveur
