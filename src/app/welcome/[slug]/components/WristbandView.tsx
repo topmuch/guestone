@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import HostView, { type HouseGuideData } from './HostView';
 import NearbyAttractions from './NearbyAttractions';
 import ServiceRequestModal from './ServiceRequestModal';
+import FeedbackModal from './FeedbackModal';
+import SosButton from './SosButton';
 import { getProfileMeta, type BraceletProfile } from '@/lib/bracelet-profiles';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -117,6 +119,7 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
   const [stay, setStay] = useState<StayData | null>(null);
   const [selectedService, setSelectedService] = useState<HotelServiceItem | null>(null);
   const [isAtHotel, setIsAtHotel] = useState<boolean | null>(null); // null = inconnu
+  const [showFeedback, setShowFeedback] = useState(false);
 
   // Geofencing GPS — détecte si le client est dans l'hôtel
   useEffect(() => {
@@ -299,6 +302,9 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
           {servicesHelp.map((s) => <ServiceCard key={s.id} s={s} />)}
         </div>
       )}
+      {/* SOS Button (maintenir 3s) */}
+      <SosButton agencyId={agency.id} baggageId={undefined} />
+
       <div className="bg-white rounded-2xl p-6 sm:p-5 border" style={{ borderColor: C.border, boxShadow: C.shadow }}>
         <div className="grid grid-cols-2 gap-4 sm:gap-3">
           <a href={`https://www.google.com/maps/dir/?api=1&destination=${agency.latitude || ''},${agency.longitude || ''}`} target="_blank" rel="noopener noreferrer"
@@ -399,14 +405,15 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
 
       {/* ─── FOOTER ─── */}
       <footer className="fixed bottom-0 left-0 w-full backdrop-blur-md border-t p-3 z-50" style={{ backgroundColor: `${C.bg}F0`, borderColor: C.border }}>
-        <a
-          href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(agency.name + ' ' + (agency.address || ''))}`}
-          target="_blank" rel="noopener noreferrer"
-          className="block w-full py-4 sm:py-3 rounded-xl font-bold text-base sm:text-sm text-center transition-all hover:shadow-lg"
-          style={{ backgroundColor: C.gold, color: '#FFFFFF' }}
-        >
-          ⭐ {t.review}
-        </a>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setShowFeedback(true)}
+            className="flex-1 py-4 sm:py-3 rounded-xl font-bold text-base sm:text-sm text-center transition-all hover:shadow-lg"
+            style={{ backgroundColor: C.gold, color: '#FFFFFF' }}
+          >
+            ⭐ {t.review}
+          </button>
+        </div>
       </footer>
 
       {/* ─── MODAL ─── */}
@@ -418,6 +425,16 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
           roomNumber={stay?.roomNumber}
           guestName={stay?.guestName}
           onClose={() => setSelectedService(null)}
+        />
+      )}
+
+      {/* ─── FEEDBACK MODAL (Anti-Bad Review) ─── */}
+      {showFeedback && (
+        <FeedbackModal
+          agencyId={agency.id}
+          baggageId={undefined}
+          agencyName={agency.name}
+          onClose={() => setShowFeedback(false)}
         />
       )}
     </div>

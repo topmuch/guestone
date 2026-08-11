@@ -28,6 +28,8 @@ import {
   Shield,
   Users,
   Navigation,
+  Siren,
+  Star,
 } from "lucide-react";
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -121,6 +123,8 @@ function Sidebar({
     { label: "Services Hôtel", icon: <LayoutGrid className="w-5 h-5" />,      href: "/agence/services" },
     { label: "Équipes & Emails", icon: <Users className="w-5 h-5" />,     href: "/agence/equipes" },
     { label: "Demandes",       icon: <Inbox className="w-5 h-5" />,           href: "/agence/staff" },
+    { label: "Alertes SOS",   icon: <Siren className="w-5 h-5" />,          href: "/agence/sos" },
+    { label: "Avis & Réclamations", icon: <Star className="w-5 h-5" />,     href: "/agence/avis" },
     { label: "Check-in Bracelet", icon: <Watch className="w-5 h-5" />,          href: "/agence/check-in-bracelet" },
     { label: "Partenaires POI", icon: <MapPin className="w-5 h-5" />,         href: "/agence/partenaires" },
     { label: "Localisation",   icon: <Navigation className="w-5 h-5" />,     href: "/agence/localisation" },

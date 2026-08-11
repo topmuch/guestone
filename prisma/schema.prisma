@@ -139,6 +139,9 @@ model Agency {
   lostItems          LostItem[]
   personBracelets    PersonBracelet[]
   tenantModules      TenantModule[]
+  feedbacks          Feedback[]
+  complaints         Complaint[]
+  sosAlerts          SosAlert[]
 }
 
 // Baggage model (QRTags "Tag")
@@ -192,6 +195,8 @@ model Baggage {
   serviceRequests   ServiceRequest[]
   stays             Stay[]
   personBracelet    PersonBracelet?
+  feedbacks         Feedback[]
+  sosAlerts         SosAlert[]
 }
 
 // ScanLog model - tracks all scans for audit
@@ -1136,4 +1141,102 @@ model TenantModule {
   @@unique([agencyId, moduleKey])
   @@index([agencyId])
   @@index([moduleKey])
+}
+
+// ════════════════════════════════════════════════════════════════
+// GUEST ONE — Anti-Bad Review (PRD §14.10)
+// ════════════════════════════════════════════════════════════════
+// Note 4-5 → redirect Google/TripAdvisor/Booking/Airbnb
+// Note 1-3 → formulaire privé → ticket manager
+
+model Feedback {
+  id              String   @id @default(cuid())
+  agencyId        String
+  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  baggageId       String?  // bracelet du client (null si walk-in)
+  baggage         Baggage? @relation(fields: [baggageId], references: [id], onDelete: SetNull)
+  stayId          String?  // séjour lié
+  // Note
+  rating          Int      // 1 à 5
+  comment         String?
+  // Routing
+  // "public_redirect" → redirect vers Google/TripAdvisor (note 4-5)
+  // "private_complaint" → formulaire privé créé (note 1-3)
+  routing         String   @default("pending")
+  publicPlatform  String?  // "google" | "tripadvisor" | "booking" | "airbnb"
+  // Statut
+  status          String   @default("new") // "new" | "resolved" | "archived"
+  handledBy       String?
+  handledAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  // Relation vers complaint (si note basse)
+  complaint       Complaint?
+  @@index([agencyId])
+  @@index([rating])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Complaint {
+  id              String   @id @default(cuid())
+  feedbackId      String   @unique
+  feedback        Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  agencyId        String
+  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  // Détails
+  category        String   // "cleanliness" | "noise" | "service" | "comfort" | "billing" | "other"
+  description     String
+  photoUrl        String?
+  urgency         String   @default("normal") // "low" | "normal" | "high" | "critical"
+  // Résolution
+  status          String   @default("open") // "open" | "in_progress" | "resolved" | "closed"
+  resolution      String?
+  resolvedBy      String?
+  resolvedAt      DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@index([agencyId])
+  @@index([status])
+  @@index([urgency])
+}
+
+// ════════════════════════════════════════════════════════════════
+// GUEST ONE — SOS Alerte avancée (PRD §14.9)
+// ════════════════════════════════════════════════════════════════
+// Maintenir bouton 3s + confirmation + envoi position
+// Dashboard staff: alerte visuelle + carte + boutons d'action
+
+model SosAlert {
+  id              String   @id @default(cuid())
+  agencyId        String
+  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  baggageId       String?  // bracelet du client
+  baggage         Baggage? @relation(fields: [baggageId], references: [id], onDelete: SetNull)
+  // Infos client
+  guestName       String?
+  roomNumber      String?
+  guestPhone      String?
+  // Position
+  latitude        Float?
+  longitude       Float?
+  // Message
+  message         String?
+  // Statut
+  // "active" → "acknowledged" (staff a vu) → "in_progress" (staff agit)
+  // → "resolved" (incident clôturé) | "false_alarm" (fausse alerte)
+  status          String   @default("active")
+  handledBy       String?
+  acknowledgedAt  DateTime?
+  resolvedAt      DateTime?
+  resolutionNote  String?
+  isFalseAlarm    Boolean  @default(false)
+  // Notifications envoyées
+  emailSent       Boolean  @default(false)
+  emailRecipients String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@index([agencyId])
+  @@index([status])
+  @@index([createdAt])
 }
