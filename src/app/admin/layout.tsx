@@ -28,6 +28,7 @@ import {
   Newspaper,
   Activity,
   Watch,
+  Puzzle,
 } from "lucide-react";
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -89,6 +90,9 @@ function Sidebar({
 
     // Bracelets de Séjour Universel (superadmin + admin : gestion production)
     { label: "Bracelets de Séjour", icon: <Watch className="w-5 h-5" />, href: "/admin/bracelets", roles: ['superadmin', 'admin'] },
+
+    // Modules Guest One (activation par tenant)
+    { label: "Modules", icon: <Puzzle className="w-5 h-5" />, href: "/admin/modules", roles: ['superadmin', 'admin'] },
 
     // Travelers Category
     { label: "VOYAGEURS", icon: null, isCategory: true },

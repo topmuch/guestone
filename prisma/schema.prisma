@@ -138,6 +138,7 @@ model Agency {
   stays              Stay[]
   lostItems          LostItem[]
   personBracelets    PersonBracelet[]
+  tenantModules      TenantModule[]
 }
 
 // Baggage model (QRTags "Tag")
@@ -1090,4 +1091,49 @@ model PositionAlert {
   createdAt       DateTime @default(now())
   @@index([personBraceletId])
   @@index([createdAt])
+}
+
+// ════════════════════════════════════════════════════════════════
+// GUEST ONE — Module Activation Engine (PRD §19)
+// ════════════════════════════════════════════════════════════════
+// 5 niveaux d'activation: Global → Plan → Tenant → Propriété → Séjour
+// Si module désactivé: invisible côté client + API refuse l'accès
+
+// Catalogue global des modules disponibles dans la plateforme
+model Module {
+  id              String   @id @default(cuid())
+  key             String   @unique // "core_access", "qr_bracelet", "room_service", "spa", etc.
+  name            String   // "Core Access", "QR / Bracelet"
+  description     String?
+  category        String   @default("core") // "core" | "hotel" | "airbnb" | "business" | "premium"
+  icon            String   @default("📋") // emoji
+  // Dépendances (clés d'autres modules, séparées par virgule)
+  dependencies    String?  // "spa" nécessite "calendar" par exemple
+  // Niveau d'activation par défaut
+  defaultEnabled  Boolean  @default(true)
+  isRequired      Boolean  @default(false) // Core Access, QR — ne peut pas être désactivé
+  priority        Int      @default(0) // pour ordre d'affichage
+  // MVP ou V2
+  phase           String   @default("mvp") // "mvp" | "v2" | "v3"
+  isActive        Boolean  @default(true) // module global disponible dans la plateforme
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@index([category])
+  @@index([isActive])
+}
+
+// Activation d'un module pour un tenant (agence) spécifique
+model TenantModule {
+  id              String   @id @default(cuid())
+  agencyId        String
+  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  moduleKey       String   // clé du module (ex: "room_service")
+  enabled         Boolean  @default(true)
+  // Config spécifique au tenant (JSON: limites, options, etc.)
+  config          String?  // JSON
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  @@unique([agencyId, moduleKey])
+  @@index([agencyId])
+  @@index([moduleKey])
 }

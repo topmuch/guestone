@@ -46,6 +46,8 @@ echo "🌱 Seed catalogue services Airbnb..."
 node scripts/seed-airbnb-services.cjs 2>&1 || true
 echo "🌱 Seed référentiel modèles appareils..."
 node scripts/seed-modeles-appareils.cjs 2>&1 || true
+echo "🌱 Seed catalogue modules Guest One..."
+node scripts/seed-modules.cjs 2>&1 || true
 echo "✅ Seeds terminés"
 
 # 5. Démarrer le serveur
