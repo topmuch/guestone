@@ -25,6 +25,7 @@ model User {
   observations    Observation[]
   dailyReports    DailyReport[]
   blogPosts       BlogPost[]
+  pushSubscriptions PushSubscription[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 }
@@ -1249,9 +1250,48 @@ model SosAlert {
   emailRecipients String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  // V3: GPS tracking temps réel
+  locationPings   SosLocationPing[]
   @@index([agencyId])
   @@index([status])
   @@index([createdAt])
+}
+
+// V3: Position GPS en continu pendant un incident SOS actif
+// Le client envoie sa position toutes les 30s tant que l'alerte est active
+model SosLocationPing {
+  id              String   @id @default(cuid())
+  sosAlertId      String
+  sosAlert        SosAlert @relation(fields: [sosAlertId], references: [id], onDelete: Cascade)
+  latitude        Float
+  longitude       Float
+  accuracy        Float?   // précision en mètres
+  speed           Float?   // vitesse en m/s
+  heading         Float?   // direction en degrés
+  createdAt       DateTime @default(now())
+  @@index([sosAlertId])
+  @@index([createdAt])
+}
+
+// ════════════════════════════════════════════════════════════════
+// GUEST ONE V3 — Push Notifications (Web Push API)
+// ════════════════════════════════════════════════════════════════
+// Abonnements push par utilisateur staff (pour notifications temps réel)
+
+model PushSubscription {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agencyId        String?  // null si superadmin
+  // Web Push endpoint + clés
+  endpoint        String   @unique
+  p256dh          String   // clé publique ECDH
+  auth            String   // clé d'authentification
+  // Métadonnées
+  userAgent       String?
+  createdAt       DateTime @default(now())
+  @@index([userId])
+  @@index([agencyId])
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -1501,10 +1541,14 @@ model MarketplaceOrder {
   // Détails
   items           MarketplaceOrderItem[]
   totalAmount     Int      @default(0)
-  // Commission
-  commissionRate  Float    @default(0) // snapshot du taux au moment de la commande
+  // Commission multi-niveaux V3
+  commissionRate  Float    @default(0) // taux commerçant (pour l'hôtel)
   commissionAmount Int     @default(0) // montant commission hôtel
   merchantAmount  Int      @default(0) // montant net pour le commerçant
+  // V3: Commission plateforme Guest One (sur la commission hôtel)
+  platformRate    Float    @default(5) // 5% par défaut (configurable globalement)
+  platformAmount  Int      @default(0) // montant commission plateforme Guest One
+  agencyNetAmount Int      @default(0) // montant net pour l'hôtel après plateforme
   // Livraison
   deliveryMode    String   @default("pickup") // "pickup" | "delivery"
   deliveryAddress String?

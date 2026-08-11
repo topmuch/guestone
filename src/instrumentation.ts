@@ -17,6 +17,7 @@ export async function register() {
   if (process.env.NODE_ENV === 'production' || process.env.ENABLE_BACKGROUND_JOBS === '1') {
     console.log('[instrumentation] Démarrage tâches de fond...');
     startEscalationJob();
+    startPmsSyncJob();
   }
 }
 
@@ -53,4 +54,45 @@ function startEscalationJob() {
   // Puis toutes les 5 min
   setInterval(runEscalation, POLL_INTERVAL_MS);
   console.log(`[instrumentation] Escalade auto programmée (toutes ${POLL_INTERVAL_MS / 60000} min)`);
+}
+
+// ─── PMS Sync auto ──────────────────────────────────────────────────────
+function startPmsSyncJob() {
+  const SYNC_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const CRON_SECRET = process.env.CRON_SECRET || 'internal-escalation-token';
+
+  const runPmsSync = async () => {
+    try {
+      // Récupère toutes les agences avec PMS configuré
+      const { db } = await import('@/lib/db');
+      const agencies = await db.agency.findMany({
+        where: { pmsProvider: { not: null }, active: true },
+        select: { id: true, name: true, pmsProvider: true },
+      });
+
+      for (const agency of agencies) {
+        try {
+          await fetch(`${APP_URL}/api/pms/sync?agencyId=${agency.id}`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${CRON_SECRET}`,
+              'Content-Type': 'application/json',
+            },
+          });
+          console.log(`[pms-sync] ${agency.name} (${agency.pmsProvider}) synchronisé`);
+        } catch (e) {
+          console.error(`[pms-sync] ${agency.name} échec:`, e instanceof Error ? e.message : e);
+        }
+      }
+    } catch (e) {
+      console.error('[pms-sync] Error:', e instanceof Error ? e.message : e);
+    }
+  };
+
+  // Première exécution après 2 min
+  setTimeout(runPmsSync, 120_000);
+  // Puis toutes les 30 min
+  setInterval(runPmsSync, SYNC_INTERVAL_MS);
+  console.log(`[instrumentation] PMS sync programmé (toutes ${SYNC_INTERVAL_MS / 60000} min)`);
 }

@@ -215,6 +215,9 @@ export default function SosDashboardPage() {
                   <div className="mb-4">
                     <p className="text-xs font-semibold text-slate-600 mb-2 flex items-center gap-1">
                       <MapPin className="w-3.5 h-3.5" /> Position du client
+                      {(selected.status === 'active' || selected.status === 'acknowledged' || selected.status === 'in_progress') && (
+                        <span className="ml-2 text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full font-bold animate-pulse">● LIVE</span>
+                      )}
                     </p>
                     <a
                       href={`https://www.google.com/maps?q=${selected.latitude},${selected.longitude}`}
@@ -231,6 +234,8 @@ export default function SosDashboardPage() {
                         <MapPin className="w-8 h-8 text-red-500" />
                       </div>
                     </a>
+                    {/* V3: Historique des pings GPS */}
+                    <SosTrackingHistory alertId={selected.id} />
                   </div>
                 )}
 
@@ -289,6 +294,60 @@ export default function SosDashboardPage() {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+// V3: Composant affichant l'historique des pings GPS d'une alerte SOS
+function SosTrackingHistory({ alertId }: { alertId: string }) {
+  const [pings, setPings] = useState<{ latitude: number; longitude: number; createdAt: string }[]>([]);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    let interval: ReturnType<typeof setInterval> | null = null;
+    const fetchPings = async () => {
+      try {
+        const res = await fetch(`/api/sos-alert/ping?alertId=${alertId}`);
+        const data = await res.json();
+        if (data.success) setPings(data.pings || []);
+      } catch {}
+    };
+    fetchPings();
+    // Polling 10s pour temps réel
+    interval = setInterval(fetchPings, 10_000);
+    return () => { if (interval) clearInterval(interval); };
+  }, [alertId]);
+
+  if (pings.length === 0) return null;
+
+  return (
+    <div className="mt-2 bg-slate-50 rounded-xl p-3">
+      <button
+        onClick={() => setExpanded(!expanded)}
+        className="w-full flex items-center justify-between text-xs font-semibold text-slate-600"
+      >
+        <span>📍 Historique GPS ({pings.length} pings)</span>
+        <span>{expanded ? '▲' : '▼'}</span>
+      </button>
+      {expanded && (
+        <div className="mt-2 space-y-1 max-h-40 overflow-y-auto">
+          {pings.map((p, i) => (
+            <div key={i} className="text-[10px] text-slate-500 flex justify-between">
+              <span>{new Date(p.createdAt).toLocaleTimeString('fr-FR')}</span>
+              <span className="font-mono">{p.latitude.toFixed(4)}, {p.longitude.toFixed(4)}</span>
+            </div>
+          ))}
+        </div>
+      )}
+      {/* Lien vers Google Maps avec tous les pings (polyline) */}
+      <a
+        href={`https://www.google.com/maps/dir/${pings.slice().reverse().map((p) => `${p.latitude},${p.longitude}`).join('/')}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="block mt-2 text-xs text-blue-600 hover:underline"
+      >
+        Voir le trajet complet →
+      </a>
     </div>
   );
 }

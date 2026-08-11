@@ -1,7 +1,7 @@
 {
-  "name": "QRTagsPro — Gestion d'objets perdus B2B",
-  "short_name": "QRTagsPro",
-  "description": "QRTagsPro — Plateforme SaaS de gestion d'objets perdus pour entreprises. QR codes multi-métiers, check-in, et contact WhatsApp.",
+  "name": "Guest One — Plateforme SaaS Hôtels & Airbnb",
+  "short_name": "Guest One",
+  "description": "Guest One — Plateforme SaaS B2B2C pour hôtels, conciergeries et Airbnb. QR codes, bracelets connectés, services, tourisme géolocalisé.",
   "start_url": "/?from=pwa",
   "display": "standalone",
   "background_color": "#134288",
@@ -9,6 +9,7 @@
   "orientation": "portrait-primary",
   "scope": "/",
   "prefer_related_applications": false,
+  "categories": ["business", "travel", "productivity"],
   "icons": [
     {
       "src": "/icons/icon-72x72.png",
@@ -44,13 +45,7 @@
       "src": "/icons/icon-192x192.png",
       "sizes": "192x192",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/icon-192x192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     },
     {
       "src": "/icons/icon-384x384.png",
@@ -62,34 +57,23 @@
       "src": "/icons/icon-512x512.png",
       "sizes": "512x512",
       "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/icons/maskable-icon-512x512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable"
+      "purpose": "any maskable"
     }
   ],
-  "categories": ["business", "utilities", "productivity"],
-  "lang": "fr",
-  "dir": "auto",
   "shortcuts": [
     {
-      "name": "Connexion agence",
+      "name": "Dashboard Agence",
       "short_name": "Agence",
-      "description": "Espace agence QRTagsPro",
-      "url": "/agence/connexion"
+      "description": "Accéder au dashboard agence",
+      "url": "/agence/tableau-de-bord",
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
     },
     {
-      "name": "Démo interactive",
-      "short_name": "Démo",
-      "description": "Tester QRTagsPro en temps réel",
-      "url": "/demo"
+      "name": "Portail Commerçant",
+      "short_name": "Commerçant",
+      "description": "Accéder au portail commerçant",
+      "url": "/commercant",
+      "icons": [{ "src": "/icons/icon-96x96.png", "sizes": "96x96" }]
     }
-  ],
-  "handle_links": "preferred",
-  "launch_handler": {
-    "client_mode": "navigate-existing"
-  }
+  ]
 }

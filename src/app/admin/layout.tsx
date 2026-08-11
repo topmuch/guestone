@@ -32,6 +32,7 @@ import {
   CreditCard,
   Receipt,
   ScrollText,
+  DollarSign,
 } from "lucide-react";
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -103,6 +104,10 @@ function Sidebar({
 
     // Audit logs (superadmin)
     { label: "Audit Logs", icon: <ScrollText className="w-5 h-5" />, href: "/admin/audit-logs", roles: ['superadmin', 'admin'] },
+
+    // V3 modules
+    { label: "Commissions", icon: <DollarSign className="w-5 h-5" />, href: "/admin/commissions", roles: ['superadmin', 'admin'] },
+    { label: "RGPD", icon: <Shield className="w-5 h-5" />, href: "/admin/rgpd", roles: ['superadmin', 'admin'] },
 
     // Travelers Category
     { label: "VOYAGEURS", icon: null, isCategory: true },

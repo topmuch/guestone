@@ -57,10 +57,15 @@ export async function POST(req: NextRequest) {
       };
     });
 
-    // Calcule commission
+    // Calcule commission multi-niveaux V3
     const commissionRate = merchant.commissionRate;
     const commissionAmount = Math.round(totalAmount * commissionRate / 100);
     const merchantAmount = totalAmount - commissionAmount;
+
+    // V3: Commission plateforme Guest One (prélevée sur la commission hôtel)
+    const platformRate = parseFloat(process.env.PLATFORM_COMMISSION_RATE || '5'); // 5% par défaut
+    const platformAmount = Math.round(commissionAmount * platformRate / 100);
+    const agencyNetAmount = commissionAmount - platformAmount;
 
     const order = await db.marketplaceOrder.create({
       data: {
@@ -72,6 +77,9 @@ export async function POST(req: NextRequest) {
         commissionRate,
         commissionAmount,
         merchantAmount,
+        platformRate,
+        platformAmount,
+        agencyNetAmount,
         deliveryMode: deliveryMode || 'pickup',
         deliveryAddress: deliveryAddress || null,
         notes: notes || null,
