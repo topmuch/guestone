@@ -10,6 +10,7 @@ import RoomServiceModal from './RoomServiceModal';
 import LastDayModal from './LastDayModal';
 import SpaModal from './SpaModal';
 import MarketplaceModal from './MarketplaceModal';
+import ConciergeAlertButton from './ConciergeAlertButton';
 import { getProfileMeta, type BraceletProfile } from '@/lib/bracelet-profiles';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -342,8 +343,11 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
           {servicesHelp.map((s) => <ServiceCard key={s.id} s={s} />)}
         </div>
       )}
-      {/* SOS Button (maintenir 3s) */}
-      <SosButton agencyId={agency.id} baggageId={undefined} />
+      {/* SOS Button (maintenir 3s) — hôtel uniquement */}
+      {!isHost && <SosButton agencyId={agency.id} baggageId={undefined} />}
+
+      {/* Concierge Alert Button — Airbnb/conciergerie uniquement (PRD §15.8) */}
+      {isHost && <ConciergeAlertButton agencyId={agency.id} baggageId={undefined} />}
 
       <div className="bg-white rounded-2xl p-6 sm:p-5 border" style={{ borderColor: C.border, boxShadow: C.shadow }}>
         <div className="grid grid-cols-2 gap-4 sm:gap-3">

@@ -31,6 +31,7 @@ import {
   Puzzle,
   CreditCard,
   Receipt,
+  ScrollText,
 } from "lucide-react";
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -99,6 +100,9 @@ function Sidebar({
     // Plans & Abonnements (superadmin)
     { label: "Plans & Tarifs", icon: <CreditCard className="w-5 h-5" />, href: "/admin/plans", roles: ['superadmin', 'admin'] },
     { label: "Abonnements", icon: <Receipt className="w-5 h-5" />, href: "/admin/abonnements", roles: ['superadmin', 'admin'] },
+
+    // Audit logs (superadmin)
+    { label: "Audit Logs", icon: <ScrollText className="w-5 h-5" />, href: "/admin/audit-logs", roles: ['superadmin', 'admin'] },
 
     // Travelers Category
     { label: "VOYAGEURS", icon: null, isCategory: true },
