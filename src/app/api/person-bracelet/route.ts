@@ -50,9 +50,23 @@ export async function POST(req: NextRequest) {
   if (!agencyId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await req.json();
-  const { baggageId, personName, personType, birthDate, language, description, photoUrl, medicalInfo, allergies, bloodType, emergencyContacts } = body;
+  let { baggageId, personName, personType, birthDate, language, description, photoUrl, medicalInfo, allergies, bloodType, emergencyContacts } = body;
 
   if (!personName) return NextResponse.json({ error: 'Nom requis' }, { status: 400 });
+
+  // Si baggageId ressemble à une référence (pas un cuid), on la convertit en ID
+  if (baggageId && !baggageId.startsWith('cl') && baggageId.length < 30) {
+    const baggage = await db.baggage.findFirst({
+      where: { reference: baggageId, agencyId },
+      select: { id: true },
+    });
+    if (baggage) {
+      baggageId = baggage.id;
+    } else {
+      // Référence non trouvée — on crée quand même la personne sans bracelet lié
+      baggageId = null;
+    }
+  }
 
   // Check if baggage already linked to a person
   if (baggageId) {

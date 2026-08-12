@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { agencyId, name, email, phone, address } = body;
+    const { agencyId, name, email, phone, contactPhone, address, logoUrl, agencyType } = body;
 
     if (!agencyId) {
       return NextResponse.json(
@@ -82,10 +82,13 @@ export async function PUT(request: NextRequest) {
     const agency = await db.agency.update({
       where: { id: agencyId },
       data: {
-        name,
-        email,
-        phone,
-        address,
+        ...(name !== undefined && { name }),
+        ...(email !== undefined && { email }),
+        ...(phone !== undefined && { phone }),
+        ...(contactPhone !== undefined && { contactPhone }),
+        ...(address !== undefined && { address }),
+        ...(logoUrl !== undefined && { logoUrl }),
+        ...(agencyType !== undefined && { agencyType }),
       },
     });
 

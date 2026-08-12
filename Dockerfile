@@ -46,4 +46,5 @@ CMD sh -c "npx prisma db push --skip-generate --accept-data-loss 2>&1; \
   node scripts/seed-modules.cjs 2>&1 || true; \
   node scripts/seed-plans.cjs 2>&1 || true; \
   node scripts/create-admin.cjs 2>&1 || true; \
+  node scripts/seed-demo.cjs 2>&1 || true; \
   node server.js"

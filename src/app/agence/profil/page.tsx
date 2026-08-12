@@ -83,22 +83,30 @@ export default function ProfilPage() {
     e.preventDefault();
     setSaving(true);
     try {
-      // Sauvegarder via l'API admin/agencies PUT
-      const res = await fetch('/api/admin/agencies', {
+      // Sauvegarder via l'API agency/profile (pas admin/agencies qui requiert superadmin)
+      const res = await fetch('/api/agency/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          id: agencyId,
+          agencyId: agencyId,
           name: form.name,
           email: form.email,
           phone: form.phone,
           contactPhone: form.contactPhone,
           address: form.address,
           logoUrl: form.logoUrl,
+          agencyType: form.agencyType,
         }),
       });
+      if (!res.ok) {
+        let errorMsg = 'Erreur sauvegarde';
+        try {
+          const errorData = await res.json();
+          errorMsg = errorData.error || errorMsg;
+        } catch { /* response not JSON */ }
+        throw new Error(errorMsg);
+      }
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Erreur sauvegarde');
       setSuccess(true);
       toast({ title: 'Profil mis à jour ✅' });
       setTimeout(() => setSuccess(false), 3000);
