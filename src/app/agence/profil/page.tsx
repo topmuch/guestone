@@ -124,13 +124,23 @@ export default function ProfilPage() {
   const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    if (file.size > 500000) {
-      toast({ title: 'Logo trop volumineux', description: 'Max 500KB', variant: 'destructive' });
-      return;
-    }
+    // Compression: redimensionne à max 300x300 et convertit en JPEG qualité 0.8
+    const img = new Image();
     const reader = new FileReader();
-    reader.onloadend = () => {
-      setForm({ ...form, logoUrl: reader.result as string });
+    reader.onload = () => { img.src = reader.result as string; };
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const maxSize = 300;
+      let { width, height } = img;
+      if (width > height) { if (width > maxSize) { height = (height * maxSize) / width; width = maxSize; } }
+      else { if (height > maxSize) { width = (width * maxSize) / height; height = maxSize; } }
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressed = canvas.toDataURL('image/jpeg', 0.8);
+        setForm({ ...form, logoUrl: compressed });
+      }
     };
     reader.readAsDataURL(file);
   };

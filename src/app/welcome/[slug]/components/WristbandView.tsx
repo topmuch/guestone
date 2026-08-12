@@ -388,7 +388,7 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
         <div className="pt-12 pb-10 sm:pt-10 sm:pb-8 px-6 text-center relative z-10">
           {agency.logoUrl && (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={agency.logoUrl} alt={agency.name} className="h-28 w-28 sm:h-20 sm:w-20 object-contain mx-auto mb-5 rounded-3xl shadow-lg" style={{ boxShadow: C.shadowHover }} />
+            <img src={agency.logoUrl} alt={agency.name} className="h-56 w-56 sm:h-40 sm:w-40 object-contain mx-auto mb-5 rounded-3xl shadow-lg" style={{ boxShadow: C.shadowHover }} />
           )}
           {/* Badge profil */}
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm sm:text-xs font-semibold mb-5" style={{ backgroundColor: `${C.gold}20`, color: C.goldDark }}>

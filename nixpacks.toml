@@ -1,12 +1,5 @@
 # ════════════════════════════════════════════════════════════════════
 # Guest One — nixpacks.toml pour Coolify
-#
-# ⚠️ Coolify utilise nixpacks (PAS le Dockerfile) pour builder.
-#
-# Setup:
-#   1. npm install (pas bun — problèmes avec lightningcss)
-#   2. npx prisma generate + npm run build
-#   3. Start: prisma db push + ALL seeds + node server.js
 # ════════════════════════════════════════════════════════════════════
 
 [phases.setup]
@@ -21,17 +14,18 @@ cmds = [
 [phases.build]
 cmds = [
   'npx prisma generate',
-  'npm run build'
+  'npm run build',
+  'cp -r .next/static .next/standalone/.next/ || true',
+  'cp -r public .next/standalone/public || true',
+  'cp -r prisma .next/standalone/prisma || true',
+  'cp -r scripts .next/standalone/scripts || true',
+  'cp package.json .next/standalone/package.json || true',
+  'cp start.sh .next/standalone/start.sh || true'
 ]
 dependsOn = ['install']
 
 [start]
-# Étapes (séparées par ; pour continuer même si une échoue):
-# 1. mkdir — crée les répertoires nécessaires
-# 2. npx prisma db push — crée/met à jour le schéma DB
-# 3. Seeds — catalogue services + airbnb + appareils + modules + plans + admin + demo
-# 4. npm start — démarre le serveur Next.js
-cmd = 'mkdir -p /app/data /app/data/backups /app/public/uploads/damage && npx prisma db push --skip-generate --accept-data-loss 2>&1; node scripts/seed-services.cjs 2>&1 || true; node scripts/seed-airbnb-services.cjs 2>&1 || true; node scripts/seed-modeles-appareils.cjs 2>&1 || true; node scripts/seed-modules.cjs 2>&1 || true; node scripts/seed-plans.cjs 2>&1 || true; node scripts/create-admin.cjs 2>&1 || true; node scripts/seed-demo.cjs 2>&1 || true; npm start'
+cmd = 'sh start.sh'
 
 [variables]
 NODE_ENV = 'production'

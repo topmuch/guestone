@@ -1346,7 +1346,10 @@ model MenuItem {
   photoUrl    String?
   // Prix + dispo
   price       Int         @default(0) // FCFA
+  stock       Int         @default(0)
   isAvailable Boolean     @default(true)
+  // Livraison: "pickup" | "delivery" | "both"
+  deliveryMode String     @default("pickup")
   // Horaires (JSON: { days: "mon-sun", open: "07:00", close: "22:00" })
   schedule    String?
   // Ordre affichage
