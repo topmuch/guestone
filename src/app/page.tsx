@@ -24,10 +24,8 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${EMERALD}, ${BLUE})` }}>
-                <span className="text-white font-bold text-sm">G1</span>
-              </div>
-              <span className="font-bold text-lg text-slate-900">Guest One</span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src="/logo-guest-one.png" alt="Guest One" className="h-8 w-auto" />
             </Link>
 
             <div className="hidden md:flex items-center gap-8">
@@ -726,10 +724,8 @@ export default function LandingPage() {
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
             <div>
               <div className="flex items-center gap-2 mb-4">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${EMERALD}, ${BLUE})` }}>
-                  <span className="text-white font-bold text-xs">G1</span>
-                </div>
-                <span className="font-bold text-white">Guest One</span>
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src="/logo-guest-one.png" alt="Guest One" className="h-8 w-auto brightness-0 invert" />
               </div>
               <p className="text-sm">La plateforme SaaS pour hôtels, Airbnb et conciergeries. Un QR code, tout le séjour.</p>
             </div>

@@ -69,7 +69,7 @@ export default function QRTagsLogo({
 
   const img = (
     <img
-      src="/logo-qrtagspro.png"
+      src="/logo-guest-one.png"
       alt={alt}
       className={classes}
       width={275}
