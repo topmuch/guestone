@@ -35,9 +35,12 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 ENV DATABASE_URL=file:/app/data/qrtags.db
 
-WORKDIR /app/.next/standalone
+# IMPORTANT: Workdir stays at /app (not .next/standalone)
+# because seeds need full node_modules with @prisma/client
+# The standalone server.js is launched with full path
+WORKDIR /app
 
-CMD sh -c "npx prisma db push --skip-generate --accept-data-loss 2>&1; \
+CMD sh -c "npx prisma db push --schema=./prisma/schema.prisma --skip-generate --accept-data-loss 2>&1; \
   node scripts/seed-services.cjs 2>&1 || true; \
   node scripts/seed-airbnb-services.cjs 2>&1 || true; \
   node scripts/seed-modeles-appareils.cjs 2>&1 || true; \
@@ -45,4 +48,4 @@ CMD sh -c "npx prisma db push --skip-generate --accept-data-loss 2>&1; \
   node scripts/seed-plans.cjs 2>&1 || true; \
   node scripts/create-admin.cjs 2>&1 || true; \
   node scripts/seed-demo.cjs 2>&1 || true; \
-  node server.js"
+  exec node .next/standalone/server.js"
