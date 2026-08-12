@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Loader2, Plus, Edit, Trash2, X, Save, Sparkles, Clock } from 'lucide-react';
+import { useAgency } from '../layout';
 
 interface SpaService {
   id: string;
@@ -25,6 +26,7 @@ const CATEGORIES = [
 ];
 
 export default function SpaManagePage() {
+  const { agencyId } = useAgency();
   const [services, setServices] = useState<SpaService[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -32,7 +34,9 @@ export default function SpaManagePage() {
   const [tab, setTab] = useState<'services' | 'appointments'>('services');
   const [form, setForm] = useState({ name: '', description: '', category: 'massage', duration: 60, price: 0, photoUrl: '', practitioner: '', isActive: true });
 
-  useEffect(() => { loadServices(); }, []);
+  useEffect(() => {
+    if (agencyId) loadServices();
+  }, [agencyId]);
 
   const loadServices = async () => {
     setLoading(true);
@@ -142,7 +146,7 @@ export default function SpaManagePage() {
           })}
         </div>
       ) : (
-        <AppointmentsList />
+        <AppointmentsList agencyId={agencyId} />
       )}
 
       {showForm && (
@@ -181,17 +185,15 @@ export default function SpaManagePage() {
   );
 }
 
-function AppointmentsList() {
+function AppointmentsList({ agencyId }: { agencyId: string }) {
   const [appts, setAppts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!agencyId) return;
     const load = async () => {
       try {
-        const sessionRes = await fetch('/api/auth/session');
-        const sessionData = await sessionRes.json();
-        if (!sessionData.user?.agencyId) return;
-        const res = await fetch(`/api/spa/appointment?agencyId=${sessionData.user.agencyId}`);
+        const res = await fetch(`/api/spa/appointment?agencyId=${agencyId}`);
         const data = await res.json();
         if (data.success) setAppts(data.appointments);
       } catch (e) { console.error(e); }
@@ -205,9 +207,7 @@ function AppointmentsList() {
 
   const updateStatus = async (id: string, status: string) => {
     await fetch(`/api/spa/appointment?id=${id}&status=${status}&handledBy=Staff`, { method: 'PATCH' });
-    const sessionRes = await fetch('/api/auth/session');
-    const sessionData = await sessionRes.json();
-    const res = await fetch(`/api/spa/appointment?agencyId=${sessionData.user.agencyId}`);
+    const res = await fetch(`/api/spa/appointment?agencyId=${agencyId}`);
     const data = await res.json();
     if (data.success) setAppts(data.appointments);
   };

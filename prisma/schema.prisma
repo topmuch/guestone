@@ -109,6 +109,11 @@ model Agency {
   // QRTagsPro V4 — Logo de l'agence (base64 data URL ou URL externe)
   // Affiché sur la page trouveur /scan/[reference]
   logoUrl            String?
+  // Liens avis publics (configurables par l'hôtel)
+  googleReviewUrl    String?
+  tripadvisorUrl     String?
+  bookingUrl         String?
+  airbnbReviewUrl    String?
   agencyType         String              @default("generic") // "hotel" | "airbnb" | "school" | "luggage_locker" | "car_rental" | "medical" | "custom" | "generic"
   customTypeId       String? // Si agencyType = "custom", référence vers CustomAgencyType
   customType         CustomAgencyType?   @relation(fields: [customTypeId], references: [id], onDelete: SetNull)

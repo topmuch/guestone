@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Loader2, Luggage, ShowerHead, Plane, CheckCircle2, XCircle, QrCode } from 'lucide-react';
+import { useAgency } from '../layout';
 
 interface LastDayRequest {
   id: string;
@@ -22,19 +23,19 @@ const TYPE_META: Record<string, { label: string; icon: typeof Luggage; color: st
 };
 
 export default function LastDayDashboardPage() {
+  const { agencyId } = useAgency();
   const [requests, setRequests] = useState<LastDayRequest[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'active' | 'all'>('active');
 
-  useEffect(() => { loadRequests(); }, []);
+  useEffect(() => {
+    if (agencyId) loadRequests();
+  }, [agencyId]);
 
   const loadRequests = async () => {
     try {
-      const sessionRes = await fetch('/api/auth/session');
-      const sessionData = await sessionRes.json();
-      const user = sessionData.user;
-      if (!user?.agencyId) return;
-      const res = await fetch(`/api/last-day?agencyId=${user.agencyId}`);
+      if (!agencyId) return;
+      const res = await fetch(`/api/last-day?agencyId=${agencyId}`);
       const data = await res.json();
       if (data.success) setRequests(data.requests);
     } catch (e) { console.error(e); }

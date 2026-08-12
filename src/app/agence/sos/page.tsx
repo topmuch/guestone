@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Loader2, AlertTriangle, MapPin, Phone, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { useAgency } from '../layout';
 
 interface SosAlert {
   id: string;
@@ -27,22 +28,21 @@ const STATUS_META: Record<string, { label: string; color: string; icon: string }
 };
 
 export default function SosPage() {
+  const { agencyId } = useAgency();
   const [alerts, setAlerts] = useState<SosAlert[]>([]);
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<SosAlert | null>(null);
 
   useEffect(() => {
+    if (!agencyId) return;
     loadAlerts();
     const interval = setInterval(loadAlerts, 10_000);
     return () => clearInterval(interval);
-  }, []);
+  }, [agencyId]);
 
   const loadAlerts = async () => {
     try {
-      const sessionRes = await fetch('/api/auth/session');
-      const sessionData = await sessionRes.json();
-      if (!sessionData.user?.agencyId) return;
-      const res = await fetch(`/api/sos-alert?agencyId=${sessionData.user.agencyId}`);
+      const res = await fetch(`/api/sos-alert?agencyId=${agencyId}`);
       const data = await res.json();
       if (data.success) {
         setAlerts(data.alerts);

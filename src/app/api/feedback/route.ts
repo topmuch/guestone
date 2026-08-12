@@ -56,15 +56,14 @@ export async function POST(req: NextRequest) {
       });
     }
 
-    // Note haute → retourner les plateformes publiques configurées par l'agence
-    // TODO: configurable par tenant; pour l'instant on retourne Google par défaut
+    // Note haute → retourner les plateformes publiques configurées par l'hôtel
     const agency = await db.agency.findUnique({
       where: { id: agencyId },
-      select: { name: true, address: true },
+      select: { name: true, address: true, googleReviewUrl: true, tripadvisorUrl: true, bookingUrl: true, airbnbReviewUrl: true },
     });
-    const googleSearchUrl = agency?.address
+    const googleSearchUrl = agency?.googleReviewUrl || (agency?.address
       ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(agency.name + ' ' + agency.address)}`
-      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(agency.name || '')}`;
+      : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(agency.name || '')}`);
 
     return NextResponse.json({
       success: true,
@@ -73,9 +72,9 @@ export async function POST(req: NextRequest) {
       redirect: 'public_review',
       platforms: {
         google: googleSearchUrl,
-        tripadvisor: `https://www.tripadvisor.com/Search?q=${encodeURIComponent(agency.name || '')}`,
-        booking: 'https://www.booking.com/',
-        airbnb: 'https://www.airbnb.com/',
+        tripadvisor: agency?.tripadvisorUrl || `https://www.tripadvisor.com/Search?q=${encodeURIComponent(agency.name || '')}`,
+        booking: agency?.bookingUrl || 'https://www.booking.com/',
+        airbnb: agency?.airbnbReviewUrl || 'https://www.airbnb.com/',
       },
     });
   } catch (error) {

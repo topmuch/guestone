@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Loader2, Plus, Edit, Trash2, X, Save, Utensils } from 'lucide-react';
+import { useAgency } from '../layout';
 
 interface MenuItem {
   id: string;
@@ -23,6 +24,7 @@ const CATEGORIES = [
 ];
 
 export default function RoomServiceManagePage() {
+  const { agencyId } = useAgency();
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -31,7 +33,9 @@ export default function RoomServiceManagePage() {
 
   const [form, setForm] = useState({ name: '', description: '', category: 'mains', price: 0, photoUrl: '', stock: 0, isAvailable: true });
 
-  useEffect(() => { loadItems(); }, []);
+  useEffect(() => {
+    if (agencyId) loadItems();
+  }, [agencyId]);
 
   const loadItems = async () => {
     setLoading(true);
@@ -185,7 +189,7 @@ export default function RoomServiceManagePage() {
           })}
         </div>
       ) : (
-        <OrdersList />
+        <OrdersList agencyId={agencyId} />
       )}
 
       {/* Form modal */}
@@ -236,17 +240,15 @@ export default function RoomServiceManagePage() {
   );
 }
 
-function OrdersList() {
+function OrdersList({ agencyId }: { agencyId: string }) {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!agencyId) return;
     const load = async () => {
       try {
-        const sessionRes = await fetch('/api/auth/session');
-        const sessionData = await sessionRes.json();
-        if (!sessionData.user?.agencyId) return;
-        const res = await fetch(`/api/orders?agencyId=${sessionData.user.agencyId}`);
+        const res = await fetch(`/api/orders?agencyId=${agencyId}`);
         const data = await res.json();
         if (data.success) setOrders(data.orders);
       } catch (e) { console.error(e); }
@@ -255,16 +257,14 @@ function OrdersList() {
     load();
     const interval = setInterval(load, 15000);
     return () => clearInterval(interval);
-  }, []);
+  }, [agencyId]);
 
   if (loading) return <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-green-500" /></div>;
   if (orders.length === 0) return <div className="bg-white rounded-2xl border p-12 text-center"><p className="text-slate-500">Aucune commande pour l'instant</p></div>;
 
   const updateStatus = async (id: string, status: string) => {
     await fetch(`/api/orders?id=${id}&status=${status}&handledBy=Staff`, { method: 'PATCH' });
-    const sessionRes = await fetch('/api/auth/session');
-    const sessionData = await sessionRes.json();
-    const res = await fetch(`/api/orders?agencyId=${sessionData.user.agencyId}`);
+    const res = await fetch(`/api/orders?agencyId=${agencyId}`);
     const data = await res.json();
     if (data.success) setOrders(data.orders);
   };

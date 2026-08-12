@@ -15,6 +15,7 @@ import {
   Loader2,
   Copy,
   X,
+  Star,
 } from "lucide-react";
 import { useAgency } from '../layout';
 import { useToast } from '@/hooks/use-toast';
@@ -35,6 +36,10 @@ export default function ProfilPage() {
     address: agencyData?.address || '',
     agencyType: (agencyData as any)?.agencyType || 'generic',
     logoUrl: (agencyData as any)?.logoUrl || '',
+    googleReviewUrl: (agencyData as any)?.googleReviewUrl || '',
+    tripadvisorUrl: (agencyData as any)?.tripadvisorUrl || '',
+    bookingUrl: (agencyData as any)?.bookingUrl || '',
+    airbnbReviewUrl: (agencyData as any)?.airbnbReviewUrl || '',
     currentPassword: '',
     newPassword: '',
     confirmPassword: ''
@@ -96,6 +101,10 @@ export default function ProfilPage() {
           address: form.address,
           logoUrl: form.logoUrl,
           agencyType: form.agencyType,
+          googleReviewUrl: form.googleReviewUrl,
+          tripadvisorUrl: form.tripadvisorUrl,
+          bookingUrl: form.bookingUrl,
+          airbnbReviewUrl: form.airbnbReviewUrl,
         }),
       });
       if (!res.ok) {
@@ -302,6 +311,39 @@ export default function ProfilPage() {
               )}
             </button>
           </form>
+        </div>
+
+        {/* ─── LIENS AVIS PUBLICS ─── */}
+        <div className="bg-white rounded-2xl border border-slate-200 p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center">
+              <Star className="w-5 h-5 text-amber-600" />
+            </div>
+            <div>
+              <h2 className="text-lg font-semibold text-slate-900">Liens avis publics</h2>
+              <p className="text-sm text-slate-500">Configurez vos pages d'avis. Les clients y sont redirigés après une note positive (4-5★).</p>
+            </div>
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-slate-700">🔵 Google Reviews</label>
+            <input type="url" value={form.googleReviewUrl} onChange={(e) => setForm({ ...form, googleReviewUrl: e.target.value })}
+              placeholder="https://www.google.com/maps/place/..." className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-4 text-slate-900 focus:outline-none focus:border-[#32ba5d] text-sm" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-slate-700">🟢 TripAdvisor</label>
+            <input type="url" value={form.tripadvisorUrl} onChange={(e) => setForm({ ...form, tripadvisorUrl: e.target.value })}
+              placeholder="https://www.tripadvisor.com/Hotel_Review-..." className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-4 text-slate-900 focus:outline-none focus:border-[#32ba5d] text-sm" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-slate-700">🏨 Booking.com</label>
+            <input type="url" value={form.bookingUrl} onChange={(e) => setForm({ ...form, bookingUrl: e.target.value })}
+              placeholder="https://www.booking.com/hotel/..." className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-4 text-slate-900 focus:outline-none focus:border-[#32ba5d] text-sm" />
+          </div>
+          <div>
+            <label className="block text-sm font-medium mb-1 text-slate-700">🏠 Airbnb</label>
+            <input type="url" value={form.airbnbReviewUrl} onChange={(e) => setForm({ ...form, airbnbReviewUrl: e.target.value })}
+              placeholder="https://www.airbnb.com/rooms/..." className="w-full bg-slate-50 border-2 border-slate-300 rounded-xl py-2.5 px-4 text-slate-900 focus:outline-none focus:border-[#32ba5d] text-sm" />
+          </div>
         </div>
 
         {/* Password Change */}

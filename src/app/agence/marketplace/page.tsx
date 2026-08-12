@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Loader2, Plus, Edit, Trash2, X, Save, Store, Package, ChevronDown, ChevronRight } from 'lucide-react';
+import { useAgency } from '../layout';
 
 interface Product { id: string; name: string; description: string | null; price: number; photoUrl: string | null; stock: number; isAvailable: boolean; }
 interface Merchant {
@@ -21,6 +22,7 @@ const MERCHANT_CATEGORIES = [
 ];
 
 export default function MarketplaceManagePage() {
+  const { agencyId } = useAgency();
   const [merchants, setMerchants] = useState<Merchant[]>([]);
   const [loading, setLoading] = useState(true);
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -32,7 +34,9 @@ export default function MarketplaceManagePage() {
   const [merchantForm, setMerchantForm] = useState({ name: '', description: '', category: 'other', phone: '', email: '', commissionRate: 10 });
   const [productForm, setProductForm] = useState({ name: '', description: '', price: 0, stock: 0, photoUrl: '' });
 
-  useEffect(() => { loadMerchants(); }, []);
+  useEffect(() => {
+    if (agencyId) loadMerchants();
+  }, [agencyId]);
 
   const loadMerchants = async () => {
     setLoading(true);
@@ -194,7 +198,7 @@ export default function MarketplaceManagePage() {
           })}
         </div>
       ) : (
-        <MarketplaceOrders />
+        <MarketplaceOrders agencyId={agencyId} />
       )}
 
       {/* Merchant form */}
@@ -252,17 +256,15 @@ export default function MarketplaceManagePage() {
   );
 }
 
-function MarketplaceOrders() {
+function MarketplaceOrders({ agencyId }: { agencyId: string }) {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!agencyId) return;
     const load = async () => {
       try {
-        const sessionRes = await fetch('/api/auth/session');
-        const sessionData = await sessionRes.json();
-        if (!sessionData.user?.agencyId) return;
-        const res = await fetch(`/api/marketplace/order?agencyId=${sessionData.user.agencyId}`);
+        const res = await fetch(`/api/marketplace/order?agencyId=${agencyId}`);
         const data = await res.json();
         if (data.success) setOrders(data.orders);
       } catch (e) { console.error(e); }
@@ -279,9 +281,7 @@ function MarketplaceOrders() {
 
   const updateStatus = async (id: string, status: string) => {
     await fetch(`/api/marketplace/order?id=${id}&status=${status}&handledBy=Staff`, { method: 'PATCH' });
-    const sessionRes = await fetch('/api/auth/session');
-    const sessionData = await sessionRes.json();
-    const res = await fetch(`/api/marketplace/order?agencyId=${sessionData.user.agencyId}`);
+    const res = await fetch(`/api/marketplace/order?agencyId=${agencyId}`);
     const data = await res.json();
     if (data.success) setOrders(data.orders);
   };

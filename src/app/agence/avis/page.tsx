@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Star, Loader2, CheckCircle2, AlertTriangle, MessageSquare } from 'lucide-react';
+import { useAgency } from '../layout';
 
 interface Feedback {
   id: string;
@@ -46,16 +47,15 @@ export default function AvisPage() {
   const [resolving, setResolving] = useState<string | null>(null);
   const [resolution, setResolution] = useState('');
 
-  useEffect(() => { loadFeedbacks(); }, []);
+  useEffect(() => {
+    if (agencyId) loadFeedbacks();
+  }, [agencyId]);
 
   const loadFeedbacks = async () => {
     setLoading(true);
     try {
-      const sessionRes = await fetch('/api/auth/session');
-      const sessionData = await sessionRes.json();
-      const user = sessionData.user;
-      if (!user?.agencyId) return;
-      const res = await fetch(`/api/feedback?agencyId=${user.agencyId}`);
+      if (!agencyId) return;
+      const res = await fetch(`/api/feedback?agencyId=${agencyId}`);
       const data = await res.json();
       if (data.success) setFeedbacks(data.feedbacks);
     } catch (e) { console.error(e); }

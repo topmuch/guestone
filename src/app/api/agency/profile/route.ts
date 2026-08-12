@@ -66,7 +66,7 @@ export async function GET(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { agencyId, name, email, phone, contactPhone, address, logoUrl, agencyType } = body;
+    const { agencyId, name, email, phone, contactPhone, address, logoUrl, agencyType, googleReviewUrl, tripadvisorUrl, bookingUrl, airbnbReviewUrl } = body;
 
     if (!agencyId) {
       return NextResponse.json(
@@ -89,6 +89,10 @@ export async function PUT(request: NextRequest) {
         ...(address !== undefined && { address }),
         ...(logoUrl !== undefined && { logoUrl }),
         ...(agencyType !== undefined && { agencyType }),
+        ...(googleReviewUrl !== undefined && { googleReviewUrl }),
+        ...(tripadvisorUrl !== undefined && { tripadvisorUrl }),
+        ...(bookingUrl !== undefined && { bookingUrl }),
+        ...(airbnbReviewUrl !== undefined && { airbnbReviewUrl }),
       },
     });
 
