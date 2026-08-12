@@ -6,6 +6,7 @@ import {
   generateQRCodeImage,
   formatPassengerFolderName,
 } from '@/lib/qr-server';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 /**
  * POST /api/admin/baggages/export-zip
@@ -28,6 +29,8 @@ import {
 const MAX_EXPORT_SIZE = 5000;
 
 export async function POST(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const body = await request.json();
     const { agencyId, type, setId, setIds, status } = body;

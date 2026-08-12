@@ -2,12 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 /**
  * GET /api/admin/custom-types
  * Liste tous les métiers personnalisés (CustomAgencyType)
  */
 export async function GET() {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const types = await db.customAgencyType.findMany({
       orderBy: { createdAt: 'desc' },
@@ -65,6 +68,8 @@ const createSchema = z.object({
  * Crée un nouveau métier personnalisé
  */
 export async function POST(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const body = await request.json();
     const data = createSchema.parse(body);

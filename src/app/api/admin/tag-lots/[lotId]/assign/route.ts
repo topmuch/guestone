@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 /**
  * QRTags — API d'assignation d'un lot à une agence
@@ -16,6 +17,8 @@ import { db } from '@/lib/db';
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ lotId: string }> },
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
 ) {
   try {
     const { lotId } = await params;

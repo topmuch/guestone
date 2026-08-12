@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
 // GET - Get daily report for a specific date
 export async function GET(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(request.url);
     const dateStr = searchParams.get('date');
@@ -55,6 +58,8 @@ export async function GET(request: NextRequest) {
 
 // POST - Create or update daily report
 export async function POST(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const body = await request.json();
     const { userId, content, date } = body;

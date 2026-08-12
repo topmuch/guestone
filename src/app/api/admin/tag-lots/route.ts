@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 /**
  * QRTags — API de liste des lots de QR codes (Superadmin)
@@ -12,6 +13,8 @@ import { db } from '@/lib/db';
  */
 
 export async function GET(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(request.url);
     const agencyId = searchParams.get('agencyId');

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 // Feature definitions inline
 const FEATURE_DEFINITIONS = [
@@ -121,6 +122,8 @@ const FEATURE_DEFINITIONS = [
 
 // GET - Fetch all feature flags
 export async function GET() {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     type FeatureFlagType = {
       id: string;
@@ -216,6 +219,8 @@ export async function GET() {
 
 // PUT - Toggle a feature flag
 export async function PUT(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const body = await request.json();
     const { key, enabled } = body;

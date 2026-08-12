@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 // Default settings
 const defaultSettings = {
@@ -22,6 +23,8 @@ const defaultSettings = {
 
 // GET - Get all settings
 export async function GET() {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const settings = await db.setting.findMany();
     
@@ -47,6 +50,8 @@ export async function GET() {
 
 // PUT - Update settings
 export async function PUT(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const body = await request.json();
     const { settings } = body;

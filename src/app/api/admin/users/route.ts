@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
 import { revalidatePath } from 'next/cache';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 // Validation schema
 const userSchema = z.object({
@@ -20,6 +21,8 @@ async function hashPassword(password: string): Promise<string> {
 
 // GET - List all users
 export async function GET() {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const users = await db.user.findMany({
       include: { agency: true },
@@ -42,6 +45,8 @@ export async function GET() {
 
 // POST - Create new user
 export async function POST(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const body = await request.json();
     const validatedData = userSchema.parse(body);
@@ -114,6 +119,8 @@ export async function POST(request: NextRequest) {
 
 // PUT - Update user
 export async function PUT(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const body = await request.json();
     const { id, password, ...data } = body;
@@ -144,6 +151,8 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Delete user
 export async function DELETE(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

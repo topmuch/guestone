@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { isActive } from '@/lib/status';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 // GET - Fetch dashboard statistics
 export async function GET() {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     // Get all baggages
     const baggages = await db.baggage.findMany({

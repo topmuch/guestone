@@ -1,3 +1,4 @@
+import { requireAgencyAccess } from '@/lib/api-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';

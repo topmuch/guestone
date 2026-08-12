@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { sendEmail, getTestEmailTemplate, updateTestStatus, getEmailSettings } from '@/lib/email';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
 // POST - Send a test email
 export async function POST(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const body = await request.json();
     const { to } = body;

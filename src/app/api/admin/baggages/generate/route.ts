@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { z } from 'zod';
 import { db } from '@/lib/db';
 import { revalidatePath } from 'next/cache';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 /**
  * POST /api/admin/baggages/generate
@@ -52,6 +53,8 @@ async function generateUniqueReference(): Promise<string> {
 }
 
 export async function POST(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const body = await request.json();
     const data = generateSchema.parse(body);
@@ -131,6 +134,8 @@ export async function POST(request: NextRequest) {
  * Liste les QR codes (avec filtres optionnels).
  */
 export async function GET(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(request.url);
     const agencyId = searchParams.get('agencyId');

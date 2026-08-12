@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { db } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 // ─── Extend Validity (SuperAdmin only) ───
 //
@@ -30,6 +31,8 @@ const extendSchema = z.object({
 );
 
 export async function POST(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     // ─── Auth: vérifier superadmin ───
     const session = await getServerSession(authOptions);

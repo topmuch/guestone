@@ -1,3 +1,4 @@
+import { requireAgencyAccess } from '@/lib/api-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { sendEmail, getEmailSettings, getAgencyMessageEmailTemplate } from '@/lib/email';
@@ -18,6 +19,10 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // V3 SECURITY: anti-IDOR — verify user belongs to this agency
+    const auth = await requireAgencyAccess(agencyId);
+    if (!auth.ok) return auth.response;
 
     // If just requesting unread count
     if (searchParams.get('count') === 'true') {

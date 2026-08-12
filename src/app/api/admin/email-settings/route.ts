@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getEmailSettings, saveEmailSettings, type EmailConfig } from '@/lib/email';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 // GET - Retrieve email settings
 export async function GET() {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const settings = await getEmailSettings();
     
@@ -24,6 +27,8 @@ export async function GET() {
 
 // PUT - Update email settings
 export async function PUT(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const body = await request.json();
     

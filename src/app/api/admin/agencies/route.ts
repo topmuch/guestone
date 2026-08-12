@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 /**
  * QRTags — API de gestion des agences
@@ -46,6 +47,8 @@ async function generateUniqueSlug(name: string): Promise<string> {
 
 // GET - List all agencies
 export async function GET() {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const agencies = await db.agency.findMany({
       include: {
@@ -70,6 +73,8 @@ export async function GET() {
 
 // POST - Create new agency
 export async function POST(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const body = await request.json();
     const validatedData = agencySchema.parse(body);
@@ -163,6 +168,8 @@ export async function POST(request: NextRequest) {
 
 // PUT - Update agency
 export async function PUT(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const body = await request.json();
     const { id, active, ...data } = body;
@@ -243,6 +250,8 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Delete agency
 export async function DELETE(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

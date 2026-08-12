@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { sendEmail, getEmailSettings, getNewLeadEmailTemplate } from '@/lib/email';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -20,6 +21,8 @@ const leadSchema = z.object({
 
 // GET - List all leads
 export async function GET() {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const leads = await db.lead.findMany({
       include: {
@@ -46,6 +49,8 @@ export async function GET() {
 
 // POST - Create new lead
 export async function POST(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const body = await request.json();
     console.log('Received lead data:', body);
@@ -128,6 +133,8 @@ export async function POST(request: NextRequest) {
 
 // PUT - Update lead
 export async function PUT(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const body = await request.json();
     const { id, name, email, phone, company, status, source, notes, agencyId, assignedToId } = body;
@@ -169,6 +176,8 @@ export async function PUT(request: NextRequest) {
 
 // DELETE - Delete lead
 export async function DELETE(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

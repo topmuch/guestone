@@ -2,11 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 // ─── Export CSV des bagages (Admin only) ───
 // GET /api/admin/export-baggages?type=voyageur|hajj|all&status=active|lost|all
 
 export async function GET(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user) {

@@ -1,3 +1,4 @@
+import { requireAgencyAccess } from '@/lib/api-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { normalizeStatus, isPending, isActive, statusFilterIn } from '@/lib/status';
@@ -18,6 +19,10 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // V3 SECURITY: anti-IDOR — verify user belongs to this agency
+    const auth = await requireAgencyAccess(agencyId);
+    if (!auth.ok) return auth.response;
 
     // Build where clause — NO status filter by default (show ALL baggages)
     const where: Record<string, unknown> = { agencyId };
@@ -112,6 +117,10 @@ export async function DELETE(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    // V3 SECURITY: anti-IDOR — verify user belongs to this agency
+    const auth = await requireAgencyAccess(agencyId);
+    if (!auth.ok) return auth.response;
 
     let where: Record<string, unknown> = { agencyId };
 

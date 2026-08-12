@@ -1,3 +1,4 @@
+import { requireAgencyAccess } from '@/lib/api-auth';
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
@@ -21,6 +22,10 @@ export async function GET(request: NextRequest) {
     if (!agencyId) {
       return NextResponse.json({ error: 'agencyId requis' }, { status: 400 });
     }
+
+    // V3 SECURITY: anti-IDOR — verify user belongs to this agency
+    const auth = await requireAgencyAccess(agencyId);
+    if (!auth.ok) return auth.response;
 
     const config = await getPMSConfig(agencyId);
 
@@ -78,6 +83,10 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'agencyId requis' }, { status: 400 });
     }
 
+    // V3 SECURITY: anti-IDOR — verify user belongs to this agency
+    const auth = await requireAgencyAccess(agencyId);
+    if (!auth.ok) return auth.response;
+
     await removePMSConfig(agencyId);
 
     return NextResponse.json({ success: true, message: 'Configuration PMS supprimée' });
@@ -100,6 +109,10 @@ export async function POST(request: NextRequest) {
     if (!agencyId) {
       return NextResponse.json({ error: 'agencyId requis' }, { status: 400 });
     }
+
+    // V3 SECURITY: anti-IDOR — verify user belongs to this agency
+    const auth = await requireAgencyAccess(agencyId);
+    if (!auth.ok) return auth.response;
 
     const result = await testPMSConnection(agencyId);
 

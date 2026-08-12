@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { z } from 'zod';
 import { revalidatePath } from 'next/cache';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 const fieldSchema = z.object({
   key: z.string().min(1).max(50).regex(/^[a-zA-Z][a-zA-Z0-9_]*$/),
@@ -31,6 +32,8 @@ const updateSchema = z.object({
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
 ) {
   try {
     const { id } = await params;
@@ -66,6 +69,8 @@ export async function GET(
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
 ) {
   try {
     const { id } = await params;
@@ -151,6 +156,8 @@ export async function PUT(
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
 ) {
   try {
     const { id } = await params;

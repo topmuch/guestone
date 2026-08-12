@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
 
@@ -7,6 +8,8 @@ export const dynamic = 'force-dynamic';
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
 ) {
   try {
     const { id } = await params;
@@ -59,6 +62,8 @@ export async function POST(
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
 ) {
   try {
     const { id } = await params;

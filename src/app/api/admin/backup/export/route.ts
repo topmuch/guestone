@@ -2,9 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import fs from 'fs';
 import path from 'path';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 // GET - Export database as JSON file
 export async function GET(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     // Fetch all data from database
     const [

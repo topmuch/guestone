@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { Prisma } from '@prisma/client';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 // POST - Import database from JSON file
 export async function POST(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;

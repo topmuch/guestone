@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import { requireSuperadmin } from '@/lib/api-auth';
 
 // GET - Fetch Voyageurs (type: voyageur)
 export async function GET() {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     // Get all Voyageur baggages
     const baggages = await db.baggage.findMany({
@@ -108,6 +111,8 @@ export async function GET() {
 
 // DELETE - Delete a traveler and all their baggages
 export async function DELETE(request: NextRequest) {
+  const auth = await requireSuperadmin();
+  if (!auth.ok) return auth.response;
   try {
     const { searchParams } = new URL(request.url);
     const travelerKey = searchParams.get('id');
