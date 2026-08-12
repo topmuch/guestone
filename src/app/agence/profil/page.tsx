@@ -47,6 +47,32 @@ export default function ProfilPage() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
 
+  // Charger les données complètes depuis l'API au montage
+  useEffect(() => {
+    if (!agencyId) return;
+    fetch(`/api/agency/profile?agencyId=${agencyId}`)
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (data?.agency) {
+          setForm((prev) => ({
+            ...prev,
+            name: data.agency.name || prev.name,
+            email: data.agency.email || prev.email,
+            phone: data.agency.phone || prev.phone,
+            contactPhone: data.agency.contactPhone || prev.contactPhone,
+            address: data.agency.address || prev.address,
+            agencyType: data.agency.agencyType || prev.agencyType,
+            logoUrl: data.agency.logoUrl || prev.logoUrl,
+            googleReviewUrl: data.agency.googleReviewUrl || prev.googleReviewUrl,
+            tripadvisorUrl: data.agency.tripadvisorUrl || prev.tripadvisorUrl,
+            bookingUrl: data.agency.bookingUrl || prev.bookingUrl,
+            airbnbReviewUrl: data.agency.airbnbReviewUrl || prev.airbnbReviewUrl,
+          }));
+        }
+      })
+      .catch(() => {});
+  }, [agencyId]);
+
   // ─── Duplication logement ───
   const [showDuplicateForm, setShowDuplicateForm] = useState(false);
   const [duplicating, setDuplicating] = useState(false);

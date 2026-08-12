@@ -451,6 +451,11 @@ export default function AgencyRootLayout({
     contactPhone: user.agency.contactPhone || null,
     customTypeId: user.agency.customTypeId || null,
     customType: user.agency.customType || null,
+    logoUrl: (user.agency as any)?.logoUrl || null,
+    googleReviewUrl: (user.agency as any)?.googleReviewUrl || null,
+    tripadvisorUrl: (user.agency as any)?.tripadvisorUrl || null,
+    bookingUrl: (user.agency as any)?.bookingUrl || null,
+    airbnbReviewUrl: (user.agency as any)?.airbnbReviewUrl || null,
   } : null;
 
   // Don't wrap login page with sidebar

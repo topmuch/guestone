@@ -184,7 +184,7 @@ export default function MarketplaceManagePage() {
                           )}
                           <div className="flex-1">
                             <p className="font-medium text-sm text-slate-900">{p.name}</p>
-                            <p className="text-xs text-slate-500">{p.price.toLocaleString('fr-FR')} FCFA · Stock: {p.stock}</p>
+                            <p className="text-xs text-slate-500">{(p.price || 0).toLocaleString('fr-FR')} FCFA · Stock: {p.stock || 0}</p>
                           </div>
                           <button onClick={() => toggleProduct(p)} className={`px-2 py-1 rounded-lg text-xs font-medium ${p.isAvailable ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>{p.isAvailable ? 'Dispo' : 'Indispo'}</button>
                           <button onClick={() => deleteProduct(p.id)} className="p-1.5 bg-red-100 text-red-600 rounded-lg"><Trash2 className="w-3.5 h-3.5" /></button>
