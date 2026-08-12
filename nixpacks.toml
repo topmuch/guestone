@@ -19,13 +19,13 @@ cmds = [
   'cp -r public .next/standalone/public || true',
   'cp -r prisma .next/standalone/prisma || true',
   'cp -r scripts .next/standalone/scripts || true',
-  'cp package.json .next/standalone/package.json || true',
-  'cp start.sh .next/standalone/start.sh || true'
+  'cp -r node_modules .next/standalone/node_modules || true',
+  'cp package.json .next/standalone/package.json || true'
 ]
 dependsOn = ['install']
 
 [start]
-cmd = 'sh start.sh'
+cmd = 'mkdir -p /app/data && npx prisma db push --skip-generate --accept-data-loss 2>&1; node scripts/seed-services.cjs 2>&1 || true; node scripts/seed-airbnb-services.cjs 2>&1 || true; node scripts/seed-modeles-appareils.cjs 2>&1 || true; node scripts/seed-modules.cjs 2>&1 || true; node scripts/seed-plans.cjs 2>&1 || true; node scripts/create-admin.cjs 2>&1 || true; node scripts/seed-demo.cjs 2>&1 || true; exec node .next/standalone/server.js'
 
 [variables]
 NODE_ENV = 'production'
