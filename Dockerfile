@@ -21,6 +21,7 @@ ENV NODE_OPTIONS="--max-old-space-size=4096"
 ENV NEXT_TYPESCRIPT_CHECK=false
 RUN npm run build
 
+# Copy everything needed into standalone
 RUN cp -r .next/static .next/standalone/.next/ && \
     cp -r public .next/standalone/public && \
     cp -r node_modules .next/standalone/node_modules && \
@@ -35,12 +36,10 @@ ENV PORT=3000
 ENV HOSTNAME="0.0.0.0"
 ENV DATABASE_URL=file:/app/data/qrtags.db
 
-# IMPORTANT: Workdir stays at /app (not .next/standalone)
-# because seeds need full node_modules with @prisma/client
-# The standalone server.js is launched with full path
+# Seeds depuis /app (node_modules complet), puis serveur depuis standalone
 WORKDIR /app
-
-CMD sh -c "npx prisma db push --schema=./prisma/schema.prisma --skip-generate --accept-data-loss 2>&1; \
+CMD sh -c "\
+  npx prisma db push --schema=./prisma/schema.prisma --skip-generate --accept-data-loss 2>&1; \
   node scripts/seed-services.cjs 2>&1 || true; \
   node scripts/seed-airbnb-services.cjs 2>&1 || true; \
   node scripts/seed-modeles-appareils.cjs 2>&1 || true; \
@@ -48,4 +47,4 @@ CMD sh -c "npx prisma db push --schema=./prisma/schema.prisma --skip-generate --
   node scripts/seed-plans.cjs 2>&1 || true; \
   node scripts/create-admin.cjs 2>&1 || true; \
   node scripts/seed-demo.cjs 2>&1 || true; \
-  exec node .next/standalone/server.js"
+  cd /app/.next/standalone && exec node server.js"
