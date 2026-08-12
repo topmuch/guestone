@@ -354,7 +354,6 @@ model EmailSettings {
   lastTestError   String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
-  @@index([agencyId])
 }
 
 // EmailLog model - tracks all sent emails
@@ -383,7 +382,6 @@ model EmailToken {
   used      Boolean  @default(false)
   usedAt    DateTime?
   createdAt DateTime @default(now())
-  @@index([agencyId])
 }
 
 // Invoice model - for agency billing
@@ -447,7 +445,6 @@ model DailyReport {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, date])
-  @@index([agencyId])
 }
 
 // Advertisement model - promotional banners for agencies
@@ -537,7 +534,6 @@ model BlogPost {
   
   // Relations
   blogViews     BlogView[]
-  @@index([agencyId])
 }
 
 // BlogView model - track article views
