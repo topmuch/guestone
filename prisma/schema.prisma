@@ -12,22 +12,23 @@ datasource db {
 
 // User model - supports superadmin, admin, agent, and agency users
 model User {
-  id              String        @id @default(cuid())
-  email           String        @unique
-  name            String?
-  password        String?
-  role            String        @default("agency") // "superadmin" | "admin" | "agent" | "agency"
-  agencyId        String?
-  agency          Agency?       @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  sessions        Session[]
-  loginLogs       LoginLog[]
-  assignedLeads   Lead[]        @relation("AssignedLeads")
-  observations    Observation[]
-  dailyReports    DailyReport[]
-  blogPosts       BlogPost[]
+  id                String             @id @default(cuid())
+  email             String             @unique
+  name              String?
+  password          String?
+  role              String             @default("agency") // "superadmin" | "admin" | "agent" | "agency"
+  agencyId          String?
+  agency            Agency?            @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  sessions          Session[]
+  loginLogs         LoginLog[]
+  assignedLeads     Lead[]             @relation("AssignedLeads")
+  observations      Observation[]
+  dailyReports      DailyReport[]
+  blogPosts         BlogPost[]
   pushSubscriptions PushSubscription[]
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+
   @@index([agencyId])
 }
 
@@ -42,8 +43,8 @@ model Session {
   id           String   @id @default(cuid())
   userId       String
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userAgent    String?  // Browser identification
-  ipAddress    String?  // IP address at login
+  userAgent    String? // Browser identification
+  ipAddress    String? // IP address at login
   lastActivity DateTime @default(now()) // Last activity timestamp
   expiresAt    DateTime
   createdAt    DateTime @default(now())
@@ -51,17 +52,17 @@ model Session {
 
 // LoginLog model - audit trail for all login attempts
 model LoginLog {
-  id           String    @id @default(cuid())
-  userId       String?
-  user         User?     @relation(fields: [userId], references: [id], onDelete: SetNull)
-  email        String    // Email used for login attempt
-  success      Boolean   @default(false) // Whether login succeeded
-  failureReason String?  // Reason for failure if applicable
-  ipAddress    String?   // IP address
-  userAgent    String?   // Browser/client info
-  country      String?   // Country from IP
-  city         String?   // City from IP
-  createdAt    DateTime  @default(now())
+  id            String   @id @default(cuid())
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  email         String // Email used for login attempt
+  success       Boolean  @default(false) // Whether login succeeded
+  failureReason String? // Reason for failure if applicable
+  ipAddress     String? // IP address
+  userAgent     String? // Browser/client info
+  country       String? // Country from IP
+  city          String? // City from IP
+  createdAt     DateTime @default(now())
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -74,9 +75,9 @@ model LoginLog {
 //   - Labels colonnes dashboard
 model CustomAgencyType {
   id                String   @id @default(cuid())
-  key               String   @unique        // ex: "spa", "gym", "entreprise"
-  name              String                   // affichage (ex: "Spa & Thalasso")
-  icon              String   @default("💼")  // emoji
+  key               String   @unique // ex: "spa", "gym", "entreprise"
+  name              String // affichage (ex: "Spa & Thalasso")
+  icon              String   @default("💼") // emoji
   description       String?
   // JSON string: tableau de champs
   // [{ key, label, type, required, placeholder, options?, helper? }]
@@ -88,8 +89,8 @@ model CustomAgencyType {
   // Message WhatsApp personnalisé (optionnel). Variables: {reference}, {agencyName}, {finderName}, {finderPhone}, {location}
   finderMessage     String?
   // Labels personnalisés pour le dashboard (optionnel)
-  colClientLabel    String?  // ex: "Client", "Adhérent", "Participant"
-  colSubLabel       String?  // ex: "Dossier", "Badge", "Casier"
+  colClientLabel    String? // ex: "Client", "Adhérent", "Participant"
+  colSubLabel       String? // ex: "Dossier", "Badge", "Casier"
   agencies          Agency[]
   createdAt         DateTime @default(now())
   updatedAt         DateTime @updatedAt
@@ -97,9 +98,9 @@ model CustomAgencyType {
 
 // Agency model - QRTags multi-business agencies (hotel, school, luggage_locker, car_rental, medical, generic)
 model Agency {
-  id                 String    @id @default(cuid())
+  id                 String              @id @default(cuid())
   name               String
-  slug               String    @unique
+  slug               String              @unique
   email              String?
   phone              String?
   address            String?
@@ -108,22 +109,22 @@ model Agency {
   // QRTagsPro V4 — Logo de l'agence (base64 data URL ou URL externe)
   // Affiché sur la page trouveur /scan/[reference]
   logoUrl            String?
-  agencyType         String    @default("generic") // "hotel" | "airbnb" | "school" | "luggage_locker" | "car_rental" | "medical" | "custom" | "generic"
-  customTypeId       String?   // Si agencyType = "custom", référence vers CustomAgencyType
-  customType         CustomAgencyType? @relation(fields: [customTypeId], references: [id], onDelete: SetNull)
+  agencyType         String              @default("generic") // "hotel" | "airbnb" | "school" | "luggage_locker" | "car_rental" | "medical" | "custom" | "generic"
+  customTypeId       String? // Si agencyType = "custom", référence vers CustomAgencyType
+  customType         CustomAgencyType?   @relation(fields: [customTypeId], references: [id], onDelete: SetNull)
   // Module Bracelets Universel — profil de l'hôtel qui détermine le contenu
   // affiché sur /welcome/[slug]?context=WRISTBAND. Un seul produit, 4 expériences.
   // Valeurs: "BUSINESS" | "TRANSIT" | "RESORT" | "BOUTIQUE" | "HOST" | "STANDARD"
-  braceletProfile    String?   @default("STANDARD")
+  braceletProfile    String?             @default("STANDARD")
   // Volet Touristique Géolocalisé — coordonnées GPS pour le calcul de distance (Haversine)
   latitude           Float?
   longitude          Float?
   // QRTagsPro V4 — PMS Integration (Property Management System)
-  pmsProvider        String?   // "CLOUDBEDS" | "MEWS" | "SIRVOY" | null
-  pmsApiKeys         String?   // JSON string: { apiKey, propertyId, baseUrl }
-  pmsPropertyId      String?   // ID de l'hôtel dans le PMS
-  active             Boolean   @default(true)
-  createdAt          DateTime  @default(now())
+  pmsProvider        String? // "CLOUDBEDS" | "MEWS" | "SIRVOY" | null
+  pmsApiKeys         String? // JSON string: { apiKey, propertyId, baseUrl }
+  pmsPropertyId      String? // ID de l'hôtel dans le PMS
+  active             Boolean             @default(true)
+  createdAt          DateTime            @default(now())
   baggages           Baggage[]
   users              User[]
   invoices           Invoice[]
@@ -181,26 +182,26 @@ model Baggage {
   founderAt         DateTime?
 
   // ─── Suivi partageable (page /track/[token]) ───
-  trackingToken     String?   @unique               // Token unique pour le lien de suivi propriétaire
-  trackingEnabled   Boolean   @default(true)         // Le propriétaire peut désactiver le suivi
-  scanCount         Int       @default(0)            // Nombre total de scans
-  lastScanLocation  String?                          // Ville/pays du dernier scan
-  isLost            Boolean   @default(false)        // Objet signalé perdu par le propriétaire
-  lostReportedAt    DateTime?                        // Date du signalement de perte
-  lostMessage       String?                          // Message personnalisé du propriétaire quand l'objet est perdu
+  trackingToken    String?   @unique // Token unique pour le lien de suivi propriétaire
+  trackingEnabled  Boolean   @default(true) // Le propriétaire peut désactiver le suivi
+  scanCount        Int       @default(0) // Nombre total de scans
+  lastScanLocation String? // Ville/pays du dernier scan
+  isLost           Boolean   @default(false) // Objet signalé perdu par le propriétaire
+  lostReportedAt   DateTime? // Date du signalement de perte
+  lostMessage      String? // Message personnalisé du propriétaire quand l'objet est perdu
 
   // ─── Données personnalisées (JSON) ───
   // Stocke les champs dynamiques du formulaire d'inscription :
   // { category, category_label, object_name, object_description, brand, model, color,
   //   city, country, reward, message_to_finder, email, photo, ... }
-  customData        String?
+  customData String?
 
   // ─── Module Bracelets All-Inclusive ───
-  context              String?  @default("ROOM")
-  braceletPackOrderId  String?
-  braceletPackOrder    BraceletPackOrder? @relation(fields: [braceletPackOrderId], references: [id], onDelete: SetNull)
+  context             String?            @default("ROOM")
+  braceletPackOrderId String?
+  braceletPackOrder   BraceletPackOrder? @relation(fields: [braceletPackOrderId], references: [id], onDelete: SetNull)
 
-  agency            Agency?   @relation(fields: [agencyId], references: [id], onDelete: SetNull)
+  agency            Agency?            @relation(fields: [agencyId], references: [id], onDelete: SetNull)
   scanLogs          ScanLog[]
   damageReports     DamageReport[]
   serviceRequests   ServiceRequest[]
@@ -221,31 +222,31 @@ model Baggage {
 
 // ScanLog model - tracks all scans for audit
 model ScanLog {
-  id          String   @id @default(cuid())
-  baggageId   String
-  ipAddress   String?
-  country     String?
-  city        String?
-  latitude    Float?
-  longitude   Float?
-  location    String?  // Selected location (Jeddah, Médine, etc.)
-  message     String?  // Optional message from finder
-  createdAt   DateTime @default(now())
-  baggage     Baggage  @relation(fields: [baggageId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
+  baggageId String
+  ipAddress String?
+  country   String?
+  city      String?
+  latitude  Float?
+  longitude Float?
+  location  String? // Selected location (Jeddah, Médine, etc.)
+  message   String? // Optional message from finder
+  createdAt DateTime @default(now())
+  baggage   Baggage  @relation(fields: [baggageId], references: [id], onDelete: Cascade)
 
   // ─── Champs IA (Groq) ───
-  whatsappStatus  String?   // "sent" | "delivered" | "failed" | "fallback" | "queued" | "read"
-  aiAnalysis      Json?     // ScanAIAnalysis: { type, color, size, confidence, isDuplicate, description?, analyzedAt }
-  groqUsed        Boolean   @default(false) // true si Groq a été utilisé pour ce scan
-  groqLatencyMs   Int?      // Temps de réponse Groq en ms
-  aiMessageUsed   Boolean   @default(false) // true si le message WhatsApp a été généré par IA
-  groqModelUsed   String?   // Modèle Groq utilisé (ex: "llama-3.3-70b-versatile")
-  wakitMessageId  String?   // ID de retour Wakit pour tracking croisé
+  whatsappStatus String? // "sent" | "delivered" | "failed" | "fallback" | "queued" | "read"
+  aiAnalysis     Json? // ScanAIAnalysis: { type, color, size, confidence, isDuplicate, description?, analyzedAt }
+  groqUsed       Boolean @default(false) // true si Groq a été utilisé pour ce scan
+  groqLatencyMs  Int? // Temps de réponse Groq en ms
+  aiMessageUsed  Boolean @default(false) // true si le message WhatsApp a été généré par IA
+  groqModelUsed  String? // Modèle Groq utilisé (ex: "llama-3.3-70b-versatile")
+  wakitMessageId String? // ID de retour Wakit pour tracking croisé
 
   // ─── Contexte du scan ───
-  context     String?   // "departure_airport_urgent" | "arrival_airport" | "in_transit" | "static_location"
-  finderName  String?   // Nom du trouveur (dupliqué ici pour l'API suivi)
-  finderPhone String?   // Téléphone du trouveur (dupliqué ici pour l'API suivi)
+  context     String? // "departure_airport_urgent" | "arrival_airport" | "in_transit" | "static_location"
+  finderName  String? // Nom du trouveur (dupliqué ici pour l'API suivi)
+  finderPhone String? // Téléphone du trouveur (dupliqué ici pour l'API suivi)
 }
 
 // Settings model - system configuration
@@ -261,7 +262,7 @@ model Page {
   id        String   @id @default(cuid())
   slug      String   @unique
   title     String
-  content   String   // HTML or Markdown content
+  content   String // HTML or Markdown content
   published Boolean  @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -270,7 +271,7 @@ model Page {
 // Banner model - dashboard announcements
 model Banner {
   id        String   @id @default(cuid())
-  type      String   // "header" or "footer"
+  type      String // "header" or "footer"
   content   String
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
@@ -281,11 +282,11 @@ model Banner {
 model FeatureFlag {
   id          String   @id @default(cuid())
   key         String   @unique // ex: "whatsapp_automated"
-  label       String   // "Envoi WhatsApp automatisé"
-  description String   // Clear description for admins
+  label       String // "Envoi WhatsApp automatisé"
+  description String // Clear description for admins
   category    String   @default("general") // "communication", "geolocation", "export", "notifications"
   enabled     Boolean  @default(false)
-  icon        String?  // Icon name for UI
+  icon        String? // Icon name for UI
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 }
@@ -299,18 +300,19 @@ model FeatureFlag {
 // - "reponse_assistance": Replies from superadmin to agencies
 // - "message_superadmin": Messages initiated by superadmin for specific agencies
 model Message {
-  id          String   @id @default(cuid())
-  type        String   // "contact", "partenaire", "commande_agence", "assistance_agence", "reponse_assistance", "message_superadmin"
-  status      String   @default("non_lu") // "non_lu", "lu", "traite"
-  senderName  String?
-  senderEmail String?
-  senderPhone String?
-  agencyId    String?  // lien vers Agence (si commande agence ou assistance)
+  id                String   @id @default(cuid())
+  type              String // "contact", "partenaire", "commande_agence", "assistance_agence", "reponse_assistance", "message_superadmin"
+  status            String   @default("non_lu") // "non_lu", "lu", "traite"
+  senderName        String?
+  senderEmail       String?
+  senderPhone       String?
+  agencyId          String? // lien vers Agence (si commande agence ou assistance)
   recipientAgencyId String? // Pour les messages du superadmin vers une agence spécifique
-  subject     String?  // Subject line for assistance messages
-  content     String   // JSON ou texte brut
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  subject           String? // Subject line for assistance messages
+  content           String // JSON ou texte brut
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
   @@index([agencyId])
 }
 
@@ -321,104 +323,106 @@ model Message {
 // - "new_assistance_message": New assistance message from agency
 // - "urgent_scan": Urgent scan on lost baggage
 model Notification {
-  id          String   @id @default(cuid())
-  type        String   // "baggage_declared_lost", "baggage_found", "new_assistance_message", "urgent_scan"
-  userId      String?  // null = broadcast to all superadmins
-  agencyId    String?  // Reference to agency if applicable
-  baggageId   String?  // Reference to baggage if applicable
-  message     String   // Notification message
-  data        String?  // JSON additional data
-  read        Boolean  @default(false)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id        String   @id @default(cuid())
+  type      String // "baggage_declared_lost", "baggage_found", "new_assistance_message", "urgent_scan"
+  userId    String? // null = broadcast to all superadmins
+  agencyId  String? // Reference to agency if applicable
+  baggageId String? // Reference to baggage if applicable
+  message   String // Notification message
+  data      String? // JSON additional data
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([agencyId])
 }
 
 // EmailSettings model - SMTP configuration
 model EmailSettings {
-  id              String   @id @default(cuid())
-  provider        String   @default("console") // "console" or "smtp"
-  fromEmail       String   @default("noreply@qrbag.com")
-  fromName        String   @default("QRBag")
-  recipientEmail  String?  // Destination for admin notification emails
+  id             String    @id @default(cuid())
+  provider       String    @default("console") // "console" or "smtp"
+  fromEmail      String    @default("noreply@qrbag.com")
+  fromName       String    @default("QRBag")
+  recipientEmail String? // Destination for admin notification emails
   // SMTP settings
-  smtpHost        String?
-  smtpPort        Int?
-  smtpUser        String?
-  smtpPassword    String?
-  smtpEncryption  String   @default("tls") // "tls", "ssl", "none"
+  smtpHost       String?
+  smtpPort       Int?
+  smtpUser       String?
+  smtpPassword   String?
+  smtpEncryption String    @default("tls") // "tls", "ssl", "none"
   // Status
-  isActive        Boolean  @default(true)
-  lastTestAt      DateTime?
-  lastTestStatus  String?  // "success", "failed"
-  lastTestError   String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  isActive       Boolean   @default(true)
+  lastTestAt     DateTime?
+  lastTestStatus String? // "success", "failed"
+  lastTestError  String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
 }
 
 // EmailLog model - tracks all sent emails
 model EmailLog {
-  id          String   @id @default(cuid())
-  to          String
-  subject     String
-  type        String   // "verification", "password_reset", "notification", "invoice", "test", "welcome"
-  status      String   @default("pending") // "pending", "sent", "failed"
-  error       String?
-  userId      String?
-  agencyId    String?
-  data        String?  // JSON for additional data
-  sentAt      DateTime?
-  createdAt   DateTime @default(now())
+  id        String    @id @default(cuid())
+  to        String
+  subject   String
+  type      String // "verification", "password_reset", "notification", "invoice", "test", "welcome"
+  status    String    @default("pending") // "pending", "sent", "failed"
+  error     String?
+  userId    String?
+  agencyId  String?
+  data      String? // JSON for additional data
+  sentAt    DateTime?
+  createdAt DateTime  @default(now())
 }
 
 // EmailToken model - for email verification and password reset
 model EmailToken {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   email     String
-  token     String   @unique
-  type      String   // "email_verification", "password_reset"
-  code      String?  // 6-digit code for verification
+  token     String    @unique
+  type      String // "email_verification", "password_reset"
+  code      String? // 6-digit code for verification
   expiresAt DateTime
-  used      Boolean  @default(false)
+  used      Boolean   @default(false)
   usedAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 }
 
 // Invoice model - for agency billing
 model Invoice {
-  id            String   @id @default(cuid())
-  number        String   @unique
+  id            String    @id @default(cuid())
+  number        String    @unique
   agencyId      String
-  agency        Agency   @relation(fields: [agencyId], references: [id])
+  agency        Agency    @relation(fields: [agencyId], references: [id])
   amount        Float
-  currency      String   @default("EUR")
-  status        String   @default("pending") // "pending", "paid", "cancelled"
+  currency      String    @default("EUR")
+  status        String    @default("pending") // "pending", "paid", "cancelled"
   description   String?
-  items         String   // JSON array of invoice items
+  items         String // JSON array of invoice items
   dueDate       DateTime?
   paidAt        DateTime?
   paymentMethod String?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
   @@index([agencyId])
 }
 
 // Lead model - CRM leads/prospects
 model Lead {
-  id            String        @id @default(cuid())
-  name          String
-  email         String
-  phone         String?
-  company       String?
-  status        String        @default("new") // "new", "contacted", "in_discussion", "qualified", "converted", "lost"
-  source        String?       // "website", "referral", "social", "event", "other"
-  notes         String?
-  agencyId      String?       // Link to agency if converted
-  assignedToId  String?       // Agent assigned to this lead
-  assignedTo    User?         @relation("AssignedLeads", fields: [assignedToId], references: [id], onDelete: SetNull)
-  observations  Observation[]
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
+  id           String        @id @default(cuid())
+  name         String
+  email        String
+  phone        String?
+  company      String?
+  status       String        @default("new") // "new", "contacted", "in_discussion", "qualified", "converted", "lost"
+  source       String? // "website", "referral", "social", "event", "other"
+  notes        String?
+  agencyId     String? // Link to agency if converted
+  assignedToId String? // Agent assigned to this lead
+  assignedTo   User?         @relation("AssignedLeads", fields: [assignedToId], references: [id], onDelete: SetNull)
+  observations Observation[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
 }
 
 // Observation model - tracks interactions with leads
@@ -426,8 +430,8 @@ model Observation {
   id        String   @id @default(cuid())
   leadId    String
   lead      Lead     @relation(fields: [leadId], references: [id], onDelete: Cascade)
-  type      String   // "note", "rdv", "appel", "email", "whatsapp"
-  content   String   // Observation content
+  type      String // "note", "rdv", "appel", "email", "whatsapp"
+  content   String // Observation content
   date      DateTime @default(now())
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -440,7 +444,7 @@ model DailyReport {
   userId    String
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   date      DateTime @default(now())
-  content   String   // Free text report
+  content   String // Free text report
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -449,117 +453,118 @@ model DailyReport {
 
 // Advertisement model - promotional banners for agencies
 model Advertisement {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
   description String?
-  imageUrl    String   // URL to banner image
-  linkUrl     String?  // Click destination URL
-  linkTarget  String   @default("_blank") // "_blank" or "_self"
-  
+  imageUrl    String // URL to banner image
+  linkUrl     String? // Click destination URL
+  linkTarget  String  @default("_blank") // "_blank" or "_self"
+
   // Position - only footer
-  position    String   @default("footer") // "footer", "header", "sidebar"
-  
+  position String @default("footer") // "footer", "header", "sidebar"
+
   // Targeting
-  targetScope String   @default("all") // "all", "agency", "agents"
-  agencyId    String?  // Specific agency if targetScope = "agency"
-  
+  targetScope String  @default("all") // "all", "agency", "agents"
+  agencyId    String? // Specific agency if targetScope = "agency"
+
   // Scheduling
-  startDate   DateTime
-  endDate     DateTime?
-  
+  startDate DateTime
+  endDate   DateTime?
+
   // Status
-  status      String   @default("draft") // "draft", "active", "paused", "expired"
-  priority    Int      @default(0) // Higher = more prominent
-  
+  status   String @default("draft") // "draft", "active", "paused", "expired"
+  priority Int    @default(0) // Higher = more prominent
+
   // Statistics
-  impressions Int      @default(0)
-  clicks      Int      @default(0)
-  
+  impressions Int @default(0)
+  clicks      Int @default(0)
+
   // Metadata
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
   adImpressions AdImpression[]
+
   @@index([agencyId])
 }
 
 // AdImpression model - tracks each impression and click
 model AdImpression {
-  id              String   @id @default(cuid())
+  id              String        @id @default(cuid())
   advertisementId String
   advertisement   Advertisement @relation(fields: [advertisementId], references: [id], onDelete: Cascade)
-  
+
   // Viewer info
-  userId          String?  // Logged-in user who viewed
-  agencyId        String?  // Agency of the viewer
-  userRole        String?  // Role of the viewer
-  
+  userId   String? // Logged-in user who viewed
+  agencyId String? // Agency of the viewer
+  userRole String? // Role of the viewer
+
   // Action
-  action          String   // "impression" or "click"
-  
+  action String // "impression" or "click"
+
   // Context
-  ipAddress       String?
-  userAgent       String?
-  
-  createdAt       DateTime @default(now())
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
 }
 
 // BlogPost model - internal blog for agencies
 model BlogPost {
-  id            String   @id @default(cuid())
-  title         String
-  slug          String   @unique
-  content       String   // HTML content from rich editor
-  excerpt       String?  // Short summary
-  coverImage    String?  // URL to cover image
-  
+  id         String  @id @default(cuid())
+  title      String
+  slug       String  @unique
+  content    String // HTML content from rich editor
+  excerpt    String? // Short summary
+  coverImage String? // URL to cover image
+
   // Categorization
-  category      String   @default("actualites") // "actualites", "conseils", "hajj", "mises_a_jour"
-  
+  category String @default("actualites") // "actualites", "conseils", "hajj", "mises_a_jour"
+
   // Publishing
-  status        String   @default("draft") // "draft", "published"
-  publishedAt   DateTime?
-  
+  status      String    @default("draft") // "draft", "published"
+  publishedAt DateTime?
+
   // Author
-  authorId      String?
-  author        User?    @relation(fields: [authorId], references: [id], onDelete: SetNull)
-  
+  authorId String?
+  author   User?   @relation(fields: [authorId], references: [id], onDelete: SetNull)
+
   // Metrics
-  views         Int      @default(0)
-  
+  views Int @default(0)
+
   // Metadata
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   // Relations
-  blogViews     BlogView[]
+  blogViews BlogView[]
 }
 
 // BlogView model - track article views
 model BlogView {
-  id          String   @id @default(cuid())
-  postId      String
-  post        BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
-  
+  id     String   @id @default(cuid())
+  postId String
+  post   BlogPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+
   // Viewer info
-  userId      String?
-  agencyId    String?
-  
+  userId   String?
+  agencyId String?
+
   // Context
-  ipAddress   String?
-  userAgent   String?
-  
-  createdAt   DateTime @default(now())
+  ipAddress String?
+  userAgent String?
+
+  createdAt DateTime @default(now())
 }
 
 // SystemLog model - centralized system logging for monitoring
 model SystemLog {
   id        String   @id @default(cuid())
-  level     String   // "info" | "warn" | "error" | "fatal"
+  level     String // "info" | "warn" | "error" | "fatal"
   message   String
-  source    String   // ex: "api/activate", "diagnostic", "chatbot"
-  metadata  String?  // JSON string with contextual data (sanitized)
+  source    String // ex: "api/activate", "diagnostic", "chatbot"
+  metadata  String? // JSON string with contextual data (sanitized)
   createdAt DateTime @default(now())
 
   @@index([level])
@@ -571,37 +576,37 @@ model SystemLog {
 // Each checklist is identified by a 6-char public code (URL: /checklist/[code])
 // and protected by an 8-char verification key required to view the PDF content.
 model Checklist {
-  id              String   @id @default(cuid())
+  id                 String    @id @default(cuid())
   // Public 6-char code (base32, no I/O/0/1) — used in URL /checklist/[code]
-  code            String   @unique
+  code               String    @unique
   // 8-char verification key required to view/download the PDF
-  verificationKey String
+  verificationKey    String
   // Passenger info
-  firstName       String
-  lastName        String
-  email           String
-  departureDate   String   // ISO date string (yyyy-mm-dd) — kept as string for simplicity
-  departureCity   String?  // ex: "Paris", "Dakar"
+  firstName          String
+  lastName           String
+  email              String
+  departureDate      String // ISO date string (yyyy-mm-dd) — kept as string for simplicity
+  departureCity      String? // ex: "Paris", "Dakar"
   destinationCountry String
-  airline         String?
-  flightNumber    String?  // ex: "AF123", "AT020"
+  airline            String?
+  flightNumber       String? // ex: "AF123", "AT020"
   // Selected items (JSON array of {category, name, qty, checked})
-  items           String   // JSON string
-  itemsCount      Int      @default(0)
+  items              String // JSON string
+  itemsCount         Int       @default(0)
   // Photo upload
-  photoPath       String?  // Path to uploaded suitcase photo on disk
-  photoSizeBytes  Int?     @default(0)
+  photoPath          String? // Path to uploaded suitcase photo on disk
+  photoSizeBytes     Int?      @default(0)
   // PDF generation metadata
-  pdfPath         String?  // Optional on-disk path; null = generate on-demand
-  pdfSizeBytes    Int?     @default(0)
+  pdfPath            String? // Optional on-disk path; null = generate on-demand
+  pdfSizeBytes       Int?      @default(0)
   // Tracking
-  viewCount       Int      @default(0)
-  lastViewedAt    DateTime?
-  emailSent       Boolean  @default(false)
-  emailSentAt     DateTime?
+  viewCount          Int       @default(0)
+  lastViewedAt       DateTime?
+  emailSent          Boolean   @default(false)
+  emailSentAt        DateTime?
   // Timestamps
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
 
   @@index([code])
   @@index([email])
@@ -611,32 +616,32 @@ model Checklist {
 // QRTagsPro V4 — Demo interactive (bac à sable)
 // Données supprimées automatiquement après 2 heures via cron
 model DemoScan {
-  id            String   @id @default(cuid())
-  reference     String   @default("DEMO-TEST")
-  finderName    String
-  finderPhone   String
-  location      String?
-  mapsLink      String?
-  message       String?
-  createdAt     DateTime @default(now())
-  expiresAt     DateTime
+  id          String   @id @default(cuid())
+  reference   String   @default("DEMO-TEST")
+  finderName  String
+  finderPhone String
+  location    String?
+  mapsLink    String?
+  message     String?
+  createdAt   DateTime @default(now())
+  expiresAt   DateTime
 }
 
 // Review model - user reviews/testimonials for social proof
 model Review {
-  id          String   @id @default(cuid())
-  name        String   // Reviewer name (public)
-  location    String?  // City/country
-  rating      Int      // 1-5 stars
-  title       String?  // Short title
-  content     String   // Review text
-  baggageRef  String?  // Optional reference to the baggage
-  isFeatured  Boolean  @default(false) // Show on landing page
-  isApproved  Boolean  @default(false) // Admin must approve
-  response    String?  // Admin reply
-  language    String   @default("fr") // "fr" | "en" | "ar"
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id         String   @id @default(cuid())
+  name       String // Reviewer name (public)
+  location   String? // City/country
+  rating     Int // 1-5 stars
+  title      String? // Short title
+  content    String // Review text
+  baggageRef String? // Optional reference to the baggage
+  isFeatured Boolean  @default(false) // Show on landing page
+  isApproved Boolean  @default(false) // Admin must approve
+  response   String? // Admin reply
+  language   String   @default("fr") // "fr" | "en" | "ar"
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@index([isApproved])
   @@index([isFeatured])
@@ -645,14 +650,14 @@ model Review {
 
 // LossAlert model - proactive loss detection alerts
 model LossAlert {
-  id          String   @id @default(cuid())
+  id          String    @id @default(cuid())
   baggageId   String
-  reference   String   // Denormalized for quick lookup
-  alertType   String   @default("no_scan_after_arrival") // "no_scan_after_arrival" | "no_scan_duration"
+  reference   String // Denormalized for quick lookup
+  alertType   String    @default("no_scan_after_arrival") // "no_scan_after_arrival" | "no_scan_duration"
   message     String
-  dismissed   Boolean  @default(false)
+  dismissed   Boolean   @default(false)
   dismissedAt DateTime?
-  createdAt   DateTime @default(now())
+  createdAt   DateTime  @default(now())
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -664,12 +669,12 @@ model LossAlert {
 model DamageReport {
   id          String   @id @default(cuid())
   baggageId   String
-  type        String   // "before" (pre-contrôle) | "after" (post-contrôle)
-  photos      String   // JSON array of file paths: '["/uploads/damage/abc.jpg", ...]'
-  description String?  // Description de l'état du bagage
+  type        String // "before" (pre-contrôle) | "after" (post-contrôle)
+  photos      String // JSON array of file paths: '["/uploads/damage/abc.jpg", ...]'
+  description String? // Description de l'état du bagage
   createdAt   DateTime @default(now())
 
-  baggage     Baggage  @relation(fields: [baggageId], references: [id], onDelete: Cascade)
+  baggage Baggage @relation(fields: [baggageId], references: [id], onDelete: Cascade)
 
   @@index([baggageId])
   @@index([type])
@@ -681,39 +686,40 @@ model DamageReport {
 // ════════════════════════════════════════════════════════════════
 
 model BraceletPackOrder {
-  id                String    @id @default(cuid())
-  agencyId          String?
-  agency            Agency?   @relation(fields: [agencyId], references: [id], onDelete: SetNull)
-  quantity          Int
-  isBranded         Boolean   @default(false)
-  unitPrice         Int
-  totalPrice        Int
-  status            String    @default("PENDING")
-  maquetteStatus    String    @default("PENDING")
-  maquetteUrl       String?
+  id                  String    @id @default(cuid())
+  agencyId            String?
+  agency              Agency?   @relation(fields: [agencyId], references: [id], onDelete: SetNull)
+  quantity            Int
+  isBranded           Boolean   @default(false)
+  unitPrice           Int
+  totalPrice          Int
+  status              String    @default("PENDING")
+  maquetteStatus      String    @default("PENDING")
+  maquetteUrl         String?
   maquetteValidatedAt DateTime?
-  logoUrl           String?
-  brandText         String?
-  brandColors       String?
-  customerName      String
-  customerPhone     String
-  customerEmail     String?
-  deliveryCity      String?
-  deliveryQuartier  String?
-  deliveryAddress   String?
-  paymentMethod     String?
-  paymentStatus     String    @default("PENDING")
-  paymentReference  String?
-  trackingNumber    String?
-  shippedAt         DateTime?
-  deliveredAt       DateTime?
-  activatedAt       DateTime?
-  activatedCount    Int       @default(0)
-  notes             String?
-  adminNotes        String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  baggages          Baggage[]
+  logoUrl             String?
+  brandText           String?
+  brandColors         String?
+  customerName        String
+  customerPhone       String
+  customerEmail       String?
+  deliveryCity        String?
+  deliveryQuartier    String?
+  deliveryAddress     String?
+  paymentMethod       String?
+  paymentStatus       String    @default("PENDING")
+  paymentReference    String?
+  trackingNumber      String?
+  shippedAt           DateTime?
+  deliveredAt         DateTime?
+  activatedAt         DateTime?
+  activatedCount      Int       @default(0)
+  notes               String?
+  adminNotes          String?
+  createdAt           DateTime  @default(now())
+  updatedAt           DateTime  @updatedAt
+  baggages            Baggage[]
+
   @@index([agencyId])
   @@index([status])
   @@index([paymentStatus])
@@ -726,36 +732,38 @@ model BraceletPackOrder {
 // ════════════════════════════════════════════════════════════════
 
 model HotelPartner {
-  id          String   @id @default(cuid())
+  id          String         @id @default(cuid())
   agencyId    String
   name        String
   category    String
   description String?
   latitude    Float
   longitude   Float
-  rating      Float    @default(4.5)
+  rating      Float          @default(4.5)
   promoCode   String?
-  commission  Int      @default(0)
-  isVerified  Boolean  @default(true)
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  agency      Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  commission  Int            @default(0)
+  isVerified  Boolean        @default(true)
+  isActive    Boolean        @default(true)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  agency      Agency         @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   clicks      PartnerClick[]
+
   @@index([agencyId])
   @@index([category])
   @@index([isActive])
 }
 
 model PartnerClick {
-  id         String   @id @default(cuid())
+  id         String       @id @default(cuid())
   partnerId  String
   agencyId   String
-  clickedAt  DateTime @default(now())
+  clickedAt  DateTime     @default(now())
   deviceType String?
   source     String?
   partner    HotelPartner @relation(fields: [partnerId], references: [id], onDelete: Cascade)
   agency     Agency       @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+
   @@index([partnerId])
   @@index([agencyId, clickedAt])
 }
@@ -765,41 +773,42 @@ model PartnerClick {
 // ════════════════════════════════════════════════════════════════
 
 model HouseGuide {
-  id              String   @id @default(cuid())
-  agencyId        String   @unique
-  wifiNetwork     String?
-  wifiPassword    String?
+  id                   String   @id @default(cuid())
+  agencyId             String   @unique
+  wifiNetwork          String?
+  wifiPassword         String?
   checkInInstructions  String?
   checkOutInstructions String?
-  checkInTime     String?
-  checkOutTime    String?
-  houseRules      String?
-  homeTutorials  String?
-  hostRecommendations String?
-  hostName        String?
-  hostPhone       String?
-  hostWelcomeMessage String?
-  photos          String?
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  checkInTime          String?
+  checkOutTime         String?
+  houseRules           String?
+  homeTutorials        String?
+  hostRecommendations  String?
+  hostName             String?
+  hostPhone            String?
+  hostWelcomeMessage   String?
+  photos               String?
+  isActive             Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  agency               Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
 }
 
 model HostReservation {
-  id              String   @id @default(cuid())
-  agencyId        String
-  guestName       String
-  guestPhone      String
-  checkInDate     DateTime
-  checkOutDate    DateTime
-  notes           String?
-  reminderSentAt  DateTime?
-  checkoutSentAt  DateTime?
-  status          String   @default("ACTIVE")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  id             String    @id @default(cuid())
+  agencyId       String
+  guestName      String
+  guestPhone     String
+  checkInDate    DateTime
+  checkOutDate   DateTime
+  notes          String?
+  reminderSentAt DateTime?
+  checkoutSentAt DateTime?
+  status         String    @default("ACTIVE")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  agency         Agency    @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+
   @@index([agencyId])
   @@index([status])
   @@index([checkInDate])
@@ -807,9 +816,9 @@ model HostReservation {
 }
 
 model HostKitOrder {
-  id              String   @id @default(cuid())
+  id              String    @id @default(cuid())
   agencyId        String?
-  offer           String   @default("STARTER")
+  offer           String    @default("STARTER")
   totalPrice      Int
   customerName    String
   customerPhone   String
@@ -817,17 +826,18 @@ model HostKitOrder {
   deliveryCity    String?
   deliveryAddress String?
   paymentMethod   String?
-  paymentStatus   String   @default("PENDING")
-  status          String   @default("PENDING")
+  paymentStatus   String    @default("PENDING")
+  status          String    @default("PENDING")
   trackingNumber  String?
   shippedAt       DateTime?
   deliveredAt     DateTime?
   propertyName    String?
   propertyAddress String?
   notes           String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  agency          Agency?  @relation(fields: [agencyId], references: [id], onDelete: SetNull)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  agency          Agency?   @relation(fields: [agencyId], references: [id], onDelete: SetNull)
+
   @@index([agencyId])
   @@index([status])
   @@index([createdAt])
@@ -839,53 +849,53 @@ model HostKitOrder {
 // ════════════════════════════════════════════════════════════════
 
 model HotelService {
-  id              String   @id @default(cuid())
-  agencyId        String
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  id       String @id @default(cuid())
+  agencyId String
+  agency   Agency @relation(fields: [agencyId], references: [id], onDelete: Cascade)
 
   // ─── Identité ───
-  name            String   // ex: "Serviettes supplémentaires"
-  description     String?  // ex: "Demandez des serviettes supplémentaires"
-  icon            String   @default("📋") // emoji
+  name        String // ex: "Serviettes supplémentaires"
+  description String? // ex: "Demandez des serviettes supplémentaires"
+  icon        String  @default("📋") // emoji
 
   // ─── Type & Catégorie ───
   // type: "request" (demande) | "order" (commande) | "booking" (réservation) | "info" (information)
-  type            String   @default("request")
+  type     String @default("request")
   // category: "housekeeping" (ménage) | "maintenance" | "food" (restauration) | "spa" | "reception" | "transport" | "other"
-  category        String   @default("other")
+  category String @default("other")
 
   // ─── Configuration ───
-  isActive        Boolean  @default(true)
-  isFree          Boolean  @default(true)
-  price           Int      @default(0) // FCFA si payant
+  isActive Boolean @default(true)
+  isFree   Boolean @default(true)
+  price    Int     @default(0) // FCFA si payant
   // JSON: horaires d'activité [{ day: "mon", open: "07:00", close: "21:00" }, ...]
   // Si null → 24/7
-  schedule        String?
+  schedule String?
   // JSON: créneaux [{ time: "10:00", capacity: 8 }, ...] (pour réservations)
-  slots           String?
+  slots    String?
   // JSON: menu items [{ name, price, photoUrl, available }, ...] (pour commandes)
-  menu            String?
+  menu     String?
 
   // ─── Routage staff ───
   // Équipe destinataire: "housekeeping" | "maintenance" | "kitchen" | "spa" | "reception"
-  assignedTeam    String   @default("reception")
+  assignedTeam String @default("reception")
 
   // ─── Onglet d'affichage ───
   // "hotel" (Mon Hôtel) | "tourism" (Autour de moi) | "help" (Aide)
-  displayTab      String   @default("hotel")
+  displayTab String @default("hotel")
 
   // ─── Module v2 : Mode d'emploi appareil ───
   // Si type = "info" et category = "guide", peut être lié à un ModèleAppareil
-  modeleId         String?  // référence vers ModeleAppareil (autocomplétion)
-  photoCustom      String?  // photo personnalisée (remplace photo du modèle)
-  videoUrl         String?  // URL vidéo YouTube (surcharge du modèle)
-  etapes           String?  // JSON i18n: étapes d'utilisation (surcharge)
-  depannage        String?  // JSON i18n: dépannage (surcharge)
+  modeleId    String? // référence vers ModeleAppareil (autocomplétion)
+  photoCustom String? // photo personnalisée (remplace photo du modèle)
+  videoUrl    String? // URL vidéo YouTube (surcharge du modèle)
+  etapes      String? // JSON i18n: étapes d'utilisation (surcharge)
+  depannage   String? // JSON i18n: dépannage (surcharge)
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  requests        ServiceRequest[]
+  requests ServiceRequest[]
 
   @@index([agencyId])
   @@index([category])
@@ -895,36 +905,36 @@ model HotelService {
 }
 
 model ServiceRequest {
-  id              String   @id @default(cuid())
-  agencyId        String
-  serviceId       String
-  baggageId       String?  // bracelet du client (null si walk-in)
+  id        String  @id @default(cuid())
+  agencyId  String
+  serviceId String
+  baggageId String? // bracelet du client (null si walk-in)
 
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  service         HotelService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
-  baggage         Baggage? @relation(fields: [baggageId], references: [id], onDelete: SetNull)
+  agency  Agency       @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  service HotelService @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  baggage Baggage?     @relation(fields: [baggageId], references: [id], onDelete: SetNull)
 
   // ─── Infos client ───
-  guestName       String?
-  roomNumber      String?
-  guestPhone      String?
+  guestName  String?
+  roomNumber String?
+  guestPhone String?
 
   // ─── Détails de la demande ───
   // Pour les commandes: JSON [{ itemId, quantity, price }, ...]
-  items           String?
-  notes           String?  // Notes du client
+  items String?
+  notes String? // Notes du client
 
   // ─── Statut ───
   // "new" (nouvelle) → "in_progress" (en cours) → "done" (traitée) → "cancelled"
-  status          String   @default("new")
-  handledBy       String?  // Nom du staff qui a traité
-  handledAt       DateTime?
+  status    String    @default("new")
+  handledBy String? // Nom du staff qui a traité
+  handledAt DateTime?
 
   // ─── Montant (si commande payante) ───
-  totalAmount     Int      @default(0)
+  totalAmount Int @default(0)
 
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([agencyId])
   @@index([serviceId])
@@ -938,14 +948,15 @@ model ServiceRequest {
 
 // Équipes staff (1 par catégorie de service, avec email de notification)
 model Team {
-  id              String   @id @default(cuid())
-  agencyId        String
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  category        String   // "housekeeping" | "maintenance" | "food" | "spa" | "reception" | "bar" | "management"
-  email           String   // email de notification pour cette équipe
-  label           String?  // nom affiché (ex: "Équipe Ménage")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  id        String   @id @default(cuid())
+  agencyId  String
+  agency    Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  category  String // "housekeeping" | "maintenance" | "food" | "spa" | "reception" | "bar" | "management"
+  email     String // email de notification pour cette équipe
+  label     String? // nom affiché (ex: "Équipe Ménage")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@unique([agencyId, category])
   @@index([agencyId])
 }
@@ -953,10 +964,10 @@ model Team {
 // Catalogue global de 30 services pré-remplis (templates)
 model ServiceTemplate {
   id              String   @id @default(cuid())
-  agencyId        String?  // null = template global, sinon = agence qui a personnalisé
+  agencyId        String? // null = template global, sinon = agence qui a personnalisé
   agency          Agency?  @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   // Identité
-  name            String   // ex: "Serviettes supplémentaires"
+  name            String // ex: "Serviettes supplémentaires"
   nameEn          String?
   nameEs          String?
   description     String?
@@ -973,9 +984,10 @@ model ServiceTemplate {
   // Horaires par défaut (JSON simple: {days: "mon-sun", open: "07:00", close: "21:00"} ou "24/7")
   defaultSchedule String?
   // Pack d'appartenance (pour packs 1 clic: "urban", "resort", "bnb")
-  pack            String?  // "urban" | "resort" | "bnb" | null
+  pack            String? // "urban" | "resort" | "bnb" | null
   isActive        Boolean  @default(true)
   createdAt       DateTime @default(now())
+
   @@index([agencyId])
   @@index([category])
   @@index([pack])
@@ -983,23 +995,24 @@ model ServiceTemplate {
 
 // Séjour client (liaison bracelet ↔ chambre ↔ dates)
 model Stay {
-  id              String   @id @default(cuid())
-  agencyId        String
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  baggageId       String?  // bracelet lié
-  baggage         Baggage? @relation(fields: [baggageId], references: [id], onDelete: SetNull)
+  id           String   @id @default(cuid())
+  agencyId     String
+  agency       Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  baggageId    String? // bracelet lié
+  baggage      Baggage? @relation(fields: [baggageId], references: [id], onDelete: SetNull)
   // Infos séjour
-  roomNumber      String?
-  guestName       String?
-  guestEmail      String?  // pour notifications
-  guestPhone      String?
-  language        String   @default("fr") // "fr" | "en" | "es"
-  checkInDate     DateTime
-  checkOutDate    DateTime
-  nbPersons       Int      @default(1)
-  status          String   @default("active") // "active" | "checked_out" | "cancelled"
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  roomNumber   String?
+  guestName    String?
+  guestEmail   String? // pour notifications
+  guestPhone   String?
+  language     String   @default("fr") // "fr" | "en" | "es"
+  checkInDate  DateTime
+  checkOutDate DateTime
+  nbPersons    Int      @default(1)
+  status       String   @default("active") // "active" | "checked_out" | "cancelled"
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
   @@index([agencyId])
   @@index([baggageId])
   @@index([status])
@@ -1007,27 +1020,28 @@ model Stay {
 
 // Objets trouvés (inventaire hôtel)
 model LostItem {
-  id              String   @id @default(cuid())
-  agencyId        String
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  id             String    @id @default(cuid())
+  agencyId       String
+  agency         Agency    @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   // Description
-  name            String   // ex: "iPhone 15 noir"
-  category        String   @default("other") // "electronics" | "clothing" | "documents" | "jewelry" | "other"
-  description     String?
-  photoUrl        String?
+  name           String // ex: "iPhone 15 noir"
+  category       String    @default("other") // "electronics" | "clothing" | "documents" | "jewelry" | "other"
+  description    String?
+  photoUrl       String?
   // Lieu et date
-  foundLocation   String?  // ex: "Chambre 204" | "Lobby" | "Piscine"
-  foundDate       DateTime @default(now())
-  foundBy         String?  // nom du staff
+  foundLocation  String? // ex: "Chambre 204" | "Lobby" | "Piscine"
+  foundDate      DateTime  @default(now())
+  foundBy        String? // nom du staff
   // Restitution
-  status          String   @default("found") // "found" → "claimed" → "returned" → "shipped" → "donated"
-  claimedBy       String?  // nom du réclamant
-  claimedDate     DateTime?
-  returnedDate    DateTime?
-  shippedTo       String?  // adresse d'expédition
-  trackingNumber  String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  status         String    @default("found") // "found" → "claimed" → "returned" → "shipped" → "donated"
+  claimedBy      String? // nom du réclamant
+  claimedDate    DateTime?
+  returnedDate   DateTime?
+  shippedTo      String? // adresse d'expédition
+  trackingNumber String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
   @@index([agencyId])
   @@index([status])
   @@index([category])
@@ -1040,23 +1054,24 @@ model LostItem {
 // utilisés par les services type "mode d'emploi" pour pré-remplir
 // photo + vidéo YouTube + notice étapes + dépannage
 model ModeleAppareil {
-  id              String   @id @default(cuid())
+  id        String   @id @default(cuid())
   // Identité
-  category        String   // "coffee" | "washing" | "tv" | "climate" | "jacuzzi" | "bbq" | "heating"
-  brand           String   // ex: "Nespresso"
-  model           String   // ex: "Essenza Mini"
+  category  String // "coffee" | "washing" | "tv" | "climate" | "jacuzzi" | "bbq" | "heating"
+  brand     String // ex: "Nespresso"
+  model     String // ex: "Essenza Mini"
   // Médias
-  photoUrl        String?  // photo officielle (URL externe)
-  videoUrl        String?  // URL YouTube (mode d'emploi)
+  photoUrl  String? // photo officielle (URL externe)
+  videoUrl  String? // URL YouTube (mode d'emploi)
   // Notices i18n (JSON: { fr: [...], en: [...], es: [...] })
   // etapes: [{ title, description }, ...] — étapes d'utilisation
-  etapes          String?  // JSON i18n
+  etapes    String? // JSON i18n
   // depannage: [{ problem, solution }, ...] — problèmes courants + solutions
-  depannage       String?  // JSON i18n
+  depannage String? // JSON i18n
   // Recherche
-  searchKey       String?  // "nespresso essenza mini" (lowercase, pour autocomplétion)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  searchKey String? // "nespresso essenza mini" (lowercase, pour autocomplétion)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([category])
   @@index([brand])
   @@index([searchKey])
@@ -1068,33 +1083,34 @@ model ModeleAppareil {
 // Bracelet QR porté par une personne (enfant, senior, personne vulnérable)
 // Scan → page "Personne trouvée" → bouton appeler contact + partager position
 model PersonBracelet {
-  id              String   @id @default(cuid())
-  agencyId        String?  // agence propriétaire (null si particulier)
-  agency          Agency?  @relation(fields: [agencyId], references: [id], onDelete: SetNull)
+  id                String          @id @default(cuid())
+  agencyId          String? // agence propriétaire (null si particulier)
+  agency            Agency?         @relation(fields: [agencyId], references: [id], onDelete: SetNull)
   // Liaison au QR baggage
-  baggageId       String?  @unique
-  baggage         Baggage? @relation(fields: [baggageId], references: [id], onDelete: Cascade)
+  baggageId         String?         @unique
+  baggage           Baggage?        @relation(fields: [baggageId], references: [id], onDelete: Cascade)
   // Profil de la personne
-  personName      String   // ex: "Lucas Dupont"
-  personType      String   @default("child") // "child" | "senior" | "medical" | "other"
-  birthDate       DateTime?
-  language        String   @default("fr") // langue préférée de la personne
+  personName        String // ex: "Lucas Dupont"
+  personType        String          @default("child") // "child" | "senior" | "medical" | "other"
+  birthDate         DateTime?
+  language          String          @default("fr") // langue préférée de la personne
   // Description physique (pour identification)
-  description     String?  // ex: "Garçon, 6 ans, cheveux bruns, lunettes"
-  photoUrl        String?  // photo de la personne
+  description       String? // ex: "Garçon, 6 ans, cheveux bruns, lunettes"
+  photoUrl          String? // photo de la personne
   // Infos médicales (optionnel)
-  medicalInfo     String?  // ex: "Asthmatique - ventoline dans sac à dos"
-  allergies       String?  // ex: "Arachide, pénicilline"
-  bloodType       String?  // ex: "A+"
+  medicalInfo       String? // ex: "Asthmatique - ventoline dans sac à dos"
+  allergies         String? // ex: "Arachide, pénicilline"
+  bloodType         String? // ex: "A+"
   // Contacts d'urgence (JSON: [{ name, phone, relation }])
   emergencyContacts String? // JSON
   // Statut
-  status          String   @default("active") // "active" | "lost" | "found" | "returned"
-  lastSeenAt      DateTime? // dernière fois vu
-  lastSeenLocation String? // dernière position connue
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  positionAlerts  PositionAlert[]
+  status            String          @default("active") // "active" | "lost" | "found" | "returned"
+  lastSeenAt        DateTime? // dernière fois vu
+  lastSeenLocation  String? // dernière position connue
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  positionAlerts    PositionAlert[]
+
   @@index([agencyId])
   @@index([status])
   @@index([personType])
@@ -1104,20 +1120,21 @@ model PersonBracelet {
 // MODULE v2 — ALERTES POSITION (partage GPS personne trouvée)
 // ════════════════════════════════════════════════════════════════
 model PositionAlert {
-  id              String   @id @default(cuid())
+  id               String         @id @default(cuid())
   personBraceletId String
-  personBracelet  PersonBracelet @relation(fields: [personBraceletId], references: [id], onDelete: Cascade)
+  personBracelet   PersonBracelet @relation(fields: [personBraceletId], references: [id], onDelete: Cascade)
   // Position partagée
-  latitude        Float
-  longitude       Float
+  latitude         Float
+  longitude        Float
   // Infos du trouveur
-  finderName      String?  // nom optionnel
-  finderPhone     String?  // téléphone optionnel
-  finderMessage   String?  // message optionnel
+  finderName       String? // nom optionnel
+  finderPhone      String? // téléphone optionnel
+  finderMessage    String? // message optionnel
   // Email envoyé aux contacts
-  emailSent       Boolean  @default(false)
-  emailRecipients String?  // liste des emails notifiés
-  createdAt       DateTime @default(now())
+  emailSent        Boolean        @default(false)
+  emailRecipients  String? // liste des emails notifiés
+  createdAt        DateTime       @default(now())
+
   @@index([personBraceletId])
   @@index([createdAt])
 }
@@ -1130,38 +1147,40 @@ model PositionAlert {
 
 // Catalogue global des modules disponibles dans la plateforme
 model Module {
-  id              String   @id @default(cuid())
-  key             String   @unique // "core_access", "qr_bracelet", "room_service", "spa", etc.
-  name            String   // "Core Access", "QR / Bracelet"
-  description     String?
-  category        String   @default("core") // "core" | "hotel" | "airbnb" | "business" | "premium"
-  icon            String   @default("📋") // emoji
+  id             String   @id @default(cuid())
+  key            String   @unique // "core_access", "qr_bracelet", "room_service", "spa", etc.
+  name           String // "Core Access", "QR / Bracelet"
+  description    String?
+  category       String   @default("core") // "core" | "hotel" | "airbnb" | "business" | "premium"
+  icon           String   @default("📋") // emoji
   // Dépendances (clés d'autres modules, séparées par virgule)
-  dependencies    String?  // "spa" nécessite "calendar" par exemple
+  dependencies   String? // "spa" nécessite "calendar" par exemple
   // Niveau d'activation par défaut
-  defaultEnabled  Boolean  @default(true)
-  isRequired      Boolean  @default(false) // Core Access, QR — ne peut pas être désactivé
-  priority        Int      @default(0) // pour ordre d'affichage
+  defaultEnabled Boolean  @default(true)
+  isRequired     Boolean  @default(false) // Core Access, QR — ne peut pas être désactivé
+  priority       Int      @default(0) // pour ordre d'affichage
   // MVP ou V2
-  phase           String   @default("mvp") // "mvp" | "v2" | "v3"
-  isActive        Boolean  @default(true) // module global disponible dans la plateforme
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  phase          String   @default("mvp") // "mvp" | "v2" | "v3"
+  isActive       Boolean  @default(true) // module global disponible dans la plateforme
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
   @@index([category])
   @@index([isActive])
 }
 
 // Activation d'un module pour un tenant (agence) spécifique
 model TenantModule {
-  id              String   @id @default(cuid())
-  agencyId        String
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  moduleKey       String   // clé du module (ex: "room_service")
-  enabled         Boolean  @default(true)
+  id        String   @id @default(cuid())
+  agencyId  String
+  agency    Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  moduleKey String // clé du module (ex: "room_service")
+  enabled   Boolean  @default(true)
   // Config spécifique au tenant (JSON: limites, options, etc.)
-  config          String?  // JSON
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  config    String? // JSON
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@unique([agencyId, moduleKey])
   @@index([agencyId])
   @@index([moduleKey])
@@ -1174,28 +1193,29 @@ model TenantModule {
 // Note 1-3 → formulaire privé → ticket manager
 
 model Feedback {
-  id              String   @id @default(cuid())
-  agencyId        String
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  baggageId       String?  // bracelet du client (null si walk-in)
-  baggage         Baggage? @relation(fields: [baggageId], references: [id], onDelete: SetNull)
-  stayId          String?  // séjour lié
+  id             String     @id @default(cuid())
+  agencyId       String
+  agency         Agency     @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  baggageId      String? // bracelet du client (null si walk-in)
+  baggage        Baggage?   @relation(fields: [baggageId], references: [id], onDelete: SetNull)
+  stayId         String? // séjour lié
   // Note
-  rating          Int      // 1 à 5
-  comment         String?
+  rating         Int // 1 à 5
+  comment        String?
   // Routing
   // "public_redirect" → redirect vers Google/TripAdvisor (note 4-5)
   // "private_complaint" → formulaire privé créé (note 1-3)
-  routing         String   @default("pending")
-  publicPlatform  String?  // "google" | "tripadvisor" | "booking" | "airbnb"
+  routing        String     @default("pending")
+  publicPlatform String? // "google" | "tripadvisor" | "booking" | "airbnb"
   // Statut
-  status          String   @default("new") // "new" | "resolved" | "archived"
-  handledBy       String?
-  handledAt       DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  status         String     @default("new") // "new" | "resolved" | "archived"
+  handledBy      String?
+  handledAt      DateTime?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
   // Relation vers complaint (si note basse)
-  complaint       Complaint?
+  complaint      Complaint?
+
   @@index([agencyId])
   @@index([rating])
   @@index([status])
@@ -1203,23 +1223,24 @@ model Feedback {
 }
 
 model Complaint {
-  id              String   @id @default(cuid())
-  feedbackId      String   @unique
-  feedback        Feedback @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
-  agencyId        String
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  id          String    @id @default(cuid())
+  feedbackId  String    @unique
+  feedback    Feedback  @relation(fields: [feedbackId], references: [id], onDelete: Cascade)
+  agencyId    String
+  agency      Agency    @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   // Détails
-  category        String   // "cleanliness" | "noise" | "service" | "comfort" | "billing" | "other"
-  description     String
-  photoUrl        String?
-  urgency         String   @default("normal") // "low" | "normal" | "high" | "critical"
+  category    String // "cleanliness" | "noise" | "service" | "comfort" | "billing" | "other"
+  description String
+  photoUrl    String?
+  urgency     String    @default("normal") // "low" | "normal" | "high" | "critical"
   // Résolution
-  status          String   @default("open") // "open" | "in_progress" | "resolved" | "closed"
-  resolution      String?
-  resolvedBy      String?
-  resolvedAt      DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  status      String    @default("open") // "open" | "in_progress" | "resolved" | "closed"
+  resolution  String?
+  resolvedBy  String?
+  resolvedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
   @@index([agencyId])
   @@index([status])
   @@index([urgency])
@@ -1232,11 +1253,11 @@ model Complaint {
 // Dashboard staff: alerte visuelle + carte + boutons d'action
 
 model SosAlert {
-  id              String   @id @default(cuid())
+  id              String            @id @default(cuid())
   agencyId        String
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  baggageId       String?  // bracelet du client
-  baggage         Baggage? @relation(fields: [baggageId], references: [id], onDelete: SetNull)
+  agency          Agency            @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  baggageId       String? // bracelet du client
+  baggage         Baggage?          @relation(fields: [baggageId], references: [id], onDelete: SetNull)
   // Infos client
   guestName       String?
   roomNumber      String?
@@ -1249,19 +1270,20 @@ model SosAlert {
   // Statut
   // "active" → "acknowledged" (staff a vu) → "in_progress" (staff agit)
   // → "resolved" (incident clôturé) | "false_alarm" (fausse alerte)
-  status          String   @default("active")
+  status          String            @default("active")
   handledBy       String?
   acknowledgedAt  DateTime?
   resolvedAt      DateTime?
   resolutionNote  String?
-  isFalseAlarm    Boolean  @default(false)
+  isFalseAlarm    Boolean           @default(false)
   // Notifications envoyées
-  emailSent       Boolean  @default(false)
+  emailSent       Boolean           @default(false)
   emailRecipients String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
   // V3: GPS tracking temps réel
   locationPings   SosLocationPing[]
+
   @@index([agencyId])
   @@index([status])
   @@index([createdAt])
@@ -1270,15 +1292,16 @@ model SosAlert {
 // V3: Position GPS en continu pendant un incident SOS actif
 // Le client envoie sa position toutes les 30s tant que l'alerte est active
 model SosLocationPing {
-  id              String   @id @default(cuid())
-  sosAlertId      String
-  sosAlert        SosAlert @relation(fields: [sosAlertId], references: [id], onDelete: Cascade)
-  latitude        Float
-  longitude       Float
-  accuracy        Float?   // précision en mètres
-  speed           Float?   // vitesse en m/s
-  heading         Float?   // direction en degrés
-  createdAt       DateTime @default(now())
+  id         String   @id @default(cuid())
+  sosAlertId String
+  sosAlert   SosAlert @relation(fields: [sosAlertId], references: [id], onDelete: Cascade)
+  latitude   Float
+  longitude  Float
+  accuracy   Float? // précision en mètres
+  speed      Float? // vitesse en m/s
+  heading    Float? // direction en degrés
+  createdAt  DateTime @default(now())
+
   @@index([sosAlertId])
   @@index([createdAt])
 }
@@ -1289,17 +1312,18 @@ model SosLocationPing {
 // Abonnements push par utilisateur staff (pour notifications temps réel)
 
 model PushSubscription {
-  id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  agencyId        String?  // null si superadmin
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  agencyId  String? // null si superadmin
   // Web Push endpoint + clés
-  endpoint        String   @unique
-  p256dh          String   // clé publique ECDH
-  auth            String   // clé d'authentification
+  endpoint  String   @unique
+  p256dh    String // clé publique ECDH
+  auth      String // clé d'authentification
   // Métadonnées
-  userAgent       String?
-  createdAt       DateTime @default(now())
+  userAgent String?
+  createdAt DateTime @default(now())
+
   @@index([userId])
   @@index([agencyId])
 }
@@ -1310,68 +1334,71 @@ model PushSubscription {
 // Menu items + commandes avec suivi (en attente → confirmé → préparation → prêt → livré)
 
 model MenuItem {
-  id              String   @id @default(cuid())
-  agencyId        String
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  id          String      @id @default(cuid())
+  agencyId    String
+  agency      Agency      @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   // Identité
-  name            String
-  description     String?
+  name        String
+  description String?
   // Catégorie: "breakfast" | "mains" | "desserts" | "drinks" | "snacks"
-  category        String   @default("mains")
+  category    String      @default("mains")
   // Médias
-  photoUrl        String?
+  photoUrl    String?
   // Prix + dispo
-  price           Int      @default(0) // FCFA
-  isAvailable     Boolean  @default(true)
+  price       Int         @default(0) // FCFA
+  isAvailable Boolean     @default(true)
   // Horaires (JSON: { days: "mon-sun", open: "07:00", close: "22:00" })
-  schedule        String?
+  schedule    String?
   // Ordre affichage
-  sortOrder       Int      @default(0)
-  isActive        Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  orderItems      OrderItem[]
+  sortOrder   Int         @default(0)
+  isActive    Boolean     @default(true)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  orderItems  OrderItem[]
+
   @@index([agencyId])
   @@index([category])
   @@index([isAvailable])
 }
 
 model Order {
-  id              String   @id @default(cuid())
-  agencyId        String
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  baggageId       String?  // bracelet client
-  baggage         Baggage? @relation(fields: [baggageId], references: [id], onDelete: SetNull)
+  id            String      @id @default(cuid())
+  agencyId      String
+  agency        Agency      @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  baggageId     String? // bracelet client
+  baggage       Baggage?    @relation(fields: [baggageId], references: [id], onDelete: SetNull)
   // Infos client
-  guestName       String?
-  roomNumber      String?
-  guestPhone      String?
+  guestName     String?
+  roomNumber    String?
+  guestPhone    String?
   // Détails
-  items           OrderItem[]
-  totalAmount     Int      @default(0) // FCFA
-  notes           String?
+  items         OrderItem[]
+  totalAmount   Int         @default(0) // FCFA
+  notes         String?
   // Statut: "pending" → "confirmed" → "preparing" → "ready" → "delivered" | "cancelled"
-  status          String   @default("pending")
-  handledBy       String?
+  status        String      @default("pending")
+  handledBy     String?
   // Paiement: "room" (facture chambre) | "cash" | "card"
-  paymentMethod   String   @default("room")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  paymentMethod String      @default("room")
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
   @@index([agencyId])
   @@index([status])
   @@index([createdAt])
 }
 
 model OrderItem {
-  id              String   @id @default(cuid())
-  orderId         String
-  order           Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  menuItemId      String?
-  menuItem        MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
+  id         String    @id @default(cuid())
+  orderId    String
+  order      Order     @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  menuItemId String?
+  menuItem   MenuItem? @relation(fields: [menuItemId], references: [id], onDelete: SetNull)
   // Snapshot au moment de la commande (au cas où le menu change)
-  name            String
-  price           Int
-  quantity        Int      @default(1)
+  name       String
+  price      Int
+  quantity   Int       @default(1)
+
   @@index([orderId])
 }
 
@@ -1381,30 +1408,31 @@ model OrderItem {
 // Après check-out: dépôt bagages, réservation douche, transfert aéroport
 
 model LastDayRequest {
-  id              String   @id @default(cuid())
-  agencyId        String
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  baggageId       String?  // bracelet client
-  baggage         Baggage? @relation(fields: [baggageId], references: [id], onDelete: SetNull)
+  id         String   @id @default(cuid())
+  agencyId   String
+  agency     Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  baggageId  String? // bracelet client
+  baggage    Baggage? @relation(fields: [baggageId], references: [id], onDelete: SetNull)
   // Infos client
-  guestName       String?
-  roomNumber      String?
-  guestPhone      String?
+  guestName  String?
+  roomNumber String?
+  guestPhone String?
   // Type de demande: "luggage" (dépôt bagages) | "shower" (douche) | "transfer" (transfert aéroport)
-  type            String
+  type       String
   // Détails
   // luggage: { nbBags, dropOffTime, pickUpTime }
   // shower: { preferredTime, duration }
   // transfer: { destination, flightTime, passengers, pickupTime }
-  details         String?  // JSON
-  notes           String?
+  details    String? // JSON
+  notes      String?
   // Statut: "pending" → "confirmed" → "completed" | "cancelled"
-  status          String   @default("pending")
-  handledBy       String?
+  status     String   @default("pending")
+  handledBy  String?
   // QR code de retrait bagages (généré pour luggage)
-  pickupCode      String?  // code à présenter pour récupérer les bagages
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  pickupCode String? // code à présenter pour récupérer les bagages
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
   @@index([agencyId])
   @@index([type])
   @@index([status])
@@ -1417,56 +1445,58 @@ model LastDayRequest {
 // Soins + réservations avec calendrier + créneaux
 
 model SpaService {
-  id              String   @id @default(cuid())
-  agencyId        String
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  id           String           @id @default(cuid())
+  agencyId     String
+  agency       Agency           @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   // Identité
-  name            String
-  description     String?
+  name         String
+  description  String?
   // Catégorie: "massage" | "facial" | "body" | "wellness" | "couple"
-  category        String   @default("massage")
+  category     String           @default("massage")
   // Durée en minutes
-  duration        Int      @default(60)
+  duration     Int              @default(60)
   // Prix FCFA
-  price           Int      @default(0)
+  price        Int              @default(0)
   // Médias
-  photoUrl        String?
+  photoUrl     String?
   // Praticien assigné (par nom, pas un modèle séparé pour MVP)
-  practitioner    String?
+  practitioner String?
   // Disponibilité
-  isActive        Boolean  @default(true)
+  isActive     Boolean          @default(true)
   // Horaires (JSON: { days: "mon-sun", open: "09:00", close: "19:00" })
-  schedule        String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  appointments    SpaAppointment[]
+  schedule     String?
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  appointments SpaAppointment[]
+
   @@index([agencyId])
   @@index([category])
   @@index([isActive])
 }
 
 model SpaAppointment {
-  id              String   @id @default(cuid())
-  agencyId        String
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  spaServiceId    String
-  spaService      SpaService @relation(fields: [spaServiceId], references: [id], onDelete: Cascade)
-  baggageId       String?
-  baggage         Baggage? @relation(fields: [baggageId], references: [id], onDelete: SetNull)
+  id           String     @id @default(cuid())
+  agencyId     String
+  agency       Agency     @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  spaServiceId String
+  spaService   SpaService @relation(fields: [spaServiceId], references: [id], onDelete: Cascade)
+  baggageId    String?
+  baggage      Baggage?   @relation(fields: [baggageId], references: [id], onDelete: SetNull)
   // Infos client
-  guestName       String?
-  roomNumber      String?
-  guestPhone      String?
+  guestName    String?
+  roomNumber   String?
+  guestPhone   String?
   // Créneau
-  date            DateTime // date + heure du rendez-vous
-  duration        Int      // durée en minutes (snapshot)
-  price           Int      // prix snapshot
+  date         DateTime // date + heure du rendez-vous
+  duration     Int // durée en minutes (snapshot)
+  price        Int // prix snapshot
   // Statut: "pending" → "confirmed" → "completed" | "cancelled" | "no_show"
-  status          String   @default("pending")
-  notes           String?
-  handledBy       String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  status       String     @default("pending")
+  notes        String?
+  handledBy    String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
   @@index([agencyId])
   @@index([spaServiceId])
   @@index([date])
@@ -1479,60 +1509,62 @@ model SpaAppointment {
 // Commerçants partenaires + produits + commandes + commissions
 
 model Merchant {
-  id              String   @id @default(cuid())
-  agencyId        String
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  id                String             @id @default(cuid())
+  agencyId          String
+  agency            Agency             @relation(fields: [agencyId], references: [id], onDelete: Cascade)
   // Identité
-  name            String
-  description     String?
-  category        String   @default("other") // "artisanat" | "souvenirs" | "food" | "cosmetics" | "excursions" | "transport" | "other"
+  name              String
+  description       String?
+  category          String             @default("other") // "artisanat" | "souvenirs" | "food" | "cosmetics" | "excursions" | "transport" | "other"
   // Coordonnées
-  address         String?
-  phone           String?
-  email           String?
-  website         String?
+  address           String?
+  phone             String?
+  email             String?
+  website           String?
   // Médias
-  logoUrl         String?
+  logoUrl           String?
   // Commission (pourcentage prélevé par l'hôtel)
-  commissionRate  Float    @default(10) // 10% par défaut
+  commissionRate    Float              @default(10) // 10% par défaut
   // Accès portail commerçant (login simplifié)
-  accessCode      String?  // code d'accès au portail commerçant
+  accessCode        String? // code d'accès au portail commerçant
   // V3: Token de session sécurisé (hash du token actif)
-  activeTokenHash String?  // hash SHA-256 du token courant (null si pas de session active)
-  tokenExpiresAt  DateTime? // expiration du token
+  activeTokenHash   String? // hash SHA-256 du token courant (null si pas de session active)
+  tokenExpiresAt    DateTime? // expiration du token
   // Statut
-  isActive        Boolean  @default(true)
-  isVerified      Boolean  @default(false)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  products        Product[]
+  isActive          Boolean            @default(true)
+  isVerified        Boolean            @default(false)
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  products          Product[]
   marketplaceOrders MarketplaceOrder[]
+
   @@index([agencyId])
   @@index([category])
   @@index([isActive])
 }
 
 model Product {
-  id              String   @id @default(cuid())
-  agencyId        String
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  merchantId      String
-  merchant        Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  id           String                 @id @default(cuid())
+  agencyId     String
+  agency       Agency                 @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  merchantId   String
+  merchant     Merchant               @relation(fields: [merchantId], references: [id], onDelete: Cascade)
   // Identité
-  name            String
-  description     String?
-  category        String   @default("other")
+  name         String
+  description  String?
+  category     String                 @default("other")
   // Médias
-  photoUrl        String?
+  photoUrl     String?
   // Prix + stock
-  price           Int      @default(0) // FCFA
-  stock           Int      @default(0)
-  isAvailable     Boolean  @default(true)
+  price        Int                    @default(0) // FCFA
+  stock        Int                    @default(0)
+  isAvailable  Boolean                @default(true)
   // Livraison: "pickup" | "delivery" | "both"
-  deliveryMode    String   @default("pickup")
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  orderItems      MarketplaceOrderItem[]
+  deliveryMode String                 @default("pickup")
+  createdAt    DateTime               @default(now())
+  updatedAt    DateTime               @updatedAt
+  orderItems   MarketplaceOrderItem[]
+
   @@index([agencyId])
   @@index([merchantId])
   @@index([category])
@@ -1540,37 +1572,38 @@ model Product {
 }
 
 model MarketplaceOrder {
-  id              String   @id @default(cuid())
-  agencyId        String
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  merchantId      String
-  merchant        Merchant @relation(fields: [merchantId], references: [id], onDelete: Cascade)
-  baggageId       String?
-  baggage         Baggage? @relation(fields: [baggageId], references: [id], onDelete: SetNull)
+  id               String                 @id @default(cuid())
+  agencyId         String
+  agency           Agency                 @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  merchantId       String
+  merchant         Merchant               @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  baggageId        String?
+  baggage          Baggage?               @relation(fields: [baggageId], references: [id], onDelete: SetNull)
   // Infos client
-  guestName       String?
-  roomNumber      String?
-  guestPhone      String?
+  guestName        String?
+  roomNumber       String?
+  guestPhone       String?
   // Détails
-  items           MarketplaceOrderItem[]
-  totalAmount     Int      @default(0)
+  items            MarketplaceOrderItem[]
+  totalAmount      Int                    @default(0)
   // Commission multi-niveaux V3
-  commissionRate  Float    @default(0) // taux commerçant (pour l'hôtel)
-  commissionAmount Int     @default(0) // montant commission hôtel
-  merchantAmount  Int      @default(0) // montant net pour le commerçant
+  commissionRate   Float                  @default(0) // taux commerçant (pour l'hôtel)
+  commissionAmount Int                    @default(0) // montant commission hôtel
+  merchantAmount   Int                    @default(0) // montant net pour le commerçant
   // V3: Commission plateforme Guest One (sur la commission hôtel)
-  platformRate    Float    @default(5) // 5% par défaut (configurable globalement)
-  platformAmount  Int      @default(0) // montant commission plateforme Guest One
-  agencyNetAmount Int      @default(0) // montant net pour l'hôtel après plateforme
+  platformRate     Float                  @default(5) // 5% par défaut (configurable globalement)
+  platformAmount   Int                    @default(0) // montant commission plateforme Guest One
+  agencyNetAmount  Int                    @default(0) // montant net pour l'hôtel après plateforme
   // Livraison
-  deliveryMode    String   @default("pickup") // "pickup" | "delivery"
-  deliveryAddress String?
-  notes           String?
+  deliveryMode     String                 @default("pickup") // "pickup" | "delivery"
+  deliveryAddress  String?
+  notes            String?
   // Statut: "pending" → "accepted" → "preparing" → "ready" → "delivered" | "refused" | "cancelled"
-  status          String   @default("pending")
-  handledBy       String?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  status           String                 @default("pending")
+  handledBy        String?
+  createdAt        DateTime               @default(now())
+  updatedAt        DateTime               @updatedAt
+
   @@index([agencyId])
   @@index([merchantId])
   @@index([status])
@@ -1578,15 +1611,16 @@ model MarketplaceOrder {
 }
 
 model MarketplaceOrderItem {
-  id              String   @id @default(cuid())
-  orderId         String
-  order           MarketplaceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  productId       String?
-  product         Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  id        String           @id @default(cuid())
+  orderId   String
+  order     MarketplaceOrder @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId String?
+  product   Product?         @relation(fields: [productId], references: [id], onDelete: SetNull)
   // Snapshot
-  name            String
-  price           Int
-  quantity        Int      @default(1)
+  name      String
+  price     Int
+  quantity  Int              @default(1)
+
   @@index([orderId])
 }
 
@@ -1597,50 +1631,52 @@ model MarketplaceOrderItem {
 // Subscription: lien tenant ↔ plan + statut facturation
 
 model Plan {
-  id              String   @id @default(cuid())
-  name            String   @unique // "Starter" | "Pro" | "Premium"
+  id              String         @id @default(cuid())
+  name            String         @unique // "Starter" | "Pro" | "Premium"
   description     String?
   // Prix mensuel FCFA
-  priceMonthly    Int      @default(0)
-  priceYearly     Int      @default(0)
+  priceMonthly    Int            @default(0)
+  priceYearly     Int            @default(0)
   // Limites
-  maxProperties   Int      @default(1) // nb de logements
-  maxQRCodes      Int      @default(50) // nb de QR codes/bracelets
-  maxUsers        Int      @default(3) // nb d'utilisateurs staff
+  maxProperties   Int            @default(1) // nb de logements
+  maxQRCodes      Int            @default(50) // nb de QR codes/bracelets
+  maxUsers        Int            @default(3) // nb d'utilisateurs staff
   // Modules inclus (JSON: ["core_access", "qr_bracelet", "room_service", ...])
   // Si null → tous les modules MVP inclus
   includedModules String?
   // Badge affichage
-  badge           String?  // "🚀" | "⭐" | "💎"
-  isPopular       Boolean  @default(false)
-  isActive        Boolean  @default(true)
-  sortOrder       Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  badge           String? // "🚀" | "⭐" | "💎"
+  isPopular       Boolean        @default(false)
+  isActive        Boolean        @default(true)
+  sortOrder       Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
   subscriptions   Subscription[]
+
   @@index([isActive])
 }
 
 model Subscription {
-  id              String   @id @default(cuid())
-  agencyId        String   @unique // 1 abonnement actif par tenant
-  agency          Agency   @relation(fields: [agencyId], references: [id], onDelete: Cascade)
-  planId          String
-  plan            Plan     @relation(fields: [planId], references: [id], onDelete: Restrict)
+  id           String    @id @default(cuid())
+  agencyId     String    @unique // 1 abonnement actif par tenant
+  agency       Agency    @relation(fields: [agencyId], references: [id], onDelete: Cascade)
+  planId       String
+  plan         Plan      @relation(fields: [planId], references: [id], onDelete: Restrict)
   // Statut: "trial" | "active" | "past_due" | "cancelled" | "expired"
-  status          String   @default("active")
+  status       String    @default("active")
   // Période
-  startDate       DateTime @default(now())
-  endDate         DateTime? // null = jusqu'à annulation
+  startDate    DateTime  @default(now())
+  endDate      DateTime? // null = jusqu'à annulation
   // Facturation
-  billingCycle    String   @default("monthly") // "monthly" | "yearly"
-  autoRenew       Boolean  @default(true)
+  billingCycle String    @default("monthly") // "monthly" | "yearly"
+  autoRenew    Boolean   @default(true)
   // Montants snapshot
-  amountPaid      Int      @default(0)
+  amountPaid   Int       @default(0)
   // Trial
-  trialEndsAt     DateTime?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  trialEndsAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
   @@index([status])
   @@index([planId])
 }
