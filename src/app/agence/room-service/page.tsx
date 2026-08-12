@@ -1,170 +1,263 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Loader2, Utensils, CheckCircle2, Clock, Package, XCircle, Plus, Edit, Trash2 } from 'lucide-react';
+import { Loader2, Plus, Edit, Trash2, X, Save, Utensils } from 'lucide-react';
 
-interface Order {
+interface MenuItem {
   id: string;
-  guestName: string | null;
-  roomNumber: string | null;
-  totalAmount: number;
-  notes: string | null;
-  status: string;
-  paymentMethod: string;
-  createdAt: string;
-  items: { id: string; name: string; price: number; quantity: number }[];
+  name: string;
+  description: string | null;
+  category: string;
+  price: number;
+  photoUrl: string | null;
+  stock: number;
+  isAvailable: boolean;
 }
 
-const STATUS_META: Record<string, { label: string; color: string; icon: typeof Clock }> = {
-  pending: { label: 'En attente', color: 'bg-amber-100 text-amber-700', icon: Clock },
-  confirmed: { label: 'Confirmée', color: 'bg-blue-100 text-blue-700', icon: CheckCircle2 },
-  preparing: { label: 'En préparation', color: 'bg-violet-100 text-violet-700', icon: Package },
-  ready: { label: 'Prête', color: 'bg-teal-100 text-teal-700', icon: CheckCircle2 },
-  delivered: { label: 'Livrée', color: 'bg-green-100 text-green-700', icon: CheckCircle2 },
-  cancelled: { label: 'Annulée', color: 'bg-red-100 text-red-700', icon: XCircle },
-};
+const CATEGORIES = [
+  { value: 'breakfast', label: 'Petit-déjeuner', icon: '🥐' },
+  { value: 'mains', label: 'Plats', icon: '🍽️' },
+  { value: 'desserts', label: 'Desserts', icon: '🍰' },
+  { value: 'drinks', label: 'Boissons', icon: '🥤' },
+  { value: 'snacks', label: 'Snacks', icon: '🥪' },
+];
 
-const NEXT_STATUS: Record<string, string | null> = {
-  pending: 'confirmed',
-  confirmed: 'preparing',
-  preparing: 'ready',
-  ready: 'delivered',
-  delivered: null,
-  cancelled: null,
-};
-
-export default function RoomServiceDashboardPage() {
-  const [orders, setOrders] = useState<Order[]>([]);
+export default function RoomServiceManagePage() {
+  const [items, setItems] = useState<MenuItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<'active' | 'all'>('active');
+  const [showForm, setShowForm] = useState(false);
+  const [editing, setEditing] = useState<MenuItem | null>(null);
+  const [tab, setTab] = useState<'menu' | 'orders'>('menu');
 
-  useEffect(() => {
-    loadOrders();
-    const interval = setInterval(loadOrders, 15_000);
-    return () => clearInterval(interval);
-  }, []);
+  const [form, setForm] = useState({ name: '', description: '', category: 'mains', price: 0, photoUrl: '', stock: 0, isAvailable: true });
 
-  const loadOrders = async () => {
+  useEffect(() => { loadItems(); }, []);
+
+  const loadItems = async () => {
+    setLoading(true);
     try {
-      const sessionRes = await fetch('/api/auth/session');
-      const sessionData = await sessionRes.json();
-      const user = sessionData.user;
-      if (!user?.agencyId) return;
-      const res = await fetch(`/api/orders?agencyId=${user.agencyId}`);
+      const res = await fetch('/api/menu/manage');
       const data = await res.json();
-      if (data.success) setOrders(data.orders);
+      if (data.success) setItems(data.items);
     } catch (e) { console.error(e); }
     finally { setLoading(false); }
   };
 
-  const updateStatus = async (id: string, status: string) => {
-    await fetch(`/api/orders?id=${id}&status=${status}&handledBy=Staff`, { method: 'PATCH' });
-    loadOrders();
+  const resetForm = () => {
+    setForm({ name: '', description: '', category: 'mains', price: 0, photoUrl: '', stock: 0, isAvailable: true });
+    setEditing(null);
   };
 
-  const filteredOrders = filter === 'active'
-    ? orders.filter((o) => o.status !== 'delivered' && o.status !== 'cancelled')
-    : orders;
+  const handleSave = async () => {
+    if (!form.name) return;
+    const method = editing ? 'PATCH' : 'POST';
+    const body = editing ? { id: editing.id, ...form } : form;
+    await fetch('/api/menu/manage', {
+      method, headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    setShowForm(false);
+    resetForm();
+    loadItems();
+  };
+
+  const handleEdit = (item: MenuItem) => {
+    setEditing(item);
+    setForm({ name: item.name, description: item.description || '', category: item.category, price: item.price, photoUrl: item.photoUrl || '', stock: item.stock, isAvailable: item.isAvailable });
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Supprimer cet article ?')) return;
+    await fetch(`/api/menu/manage?id=${id}`, { method: 'DELETE' });
+    loadItems();
+  };
+
+  const toggleAvailable = async (item: MenuItem) => {
+    await fetch('/api/menu/manage', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: item.id, isAvailable: !item.isAvailable }),
+    });
+    loadItems();
+  };
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setForm({ ...form, photoUrl: reader.result as string });
+    reader.readAsDataURL(file);
+  };
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 rounded-xl bg-green-600 flex items-center justify-center">
-          <Utensils className="w-6 h-6 text-white" />
+    <div className="p-6 max-w-4xl mx-auto">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 rounded-xl bg-green-600 flex items-center justify-center">
+            <Utensils className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Room Service</h1>
+            <p className="text-sm text-slate-500">Gérez votre menu et suivez les commandes</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">Room Service</h1>
-          <p className="text-sm text-slate-500">Suivi des commandes en temps réel</p>
-        </div>
+        <button onClick={() => { resetForm(); setShowForm(true); }} className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-xl hover:bg-green-700">
+          <Plus className="w-4 h-4" /> Ajouter un article
+        </button>
       </div>
 
+      {/* Tabs */}
       <div className="flex gap-2 mb-4">
-        {[
-          { value: 'active', label: '🟠 Actives' },
-          { value: 'all', label: '📋 Toutes' },
-        ].map((f) => (
-          <button
-            key={f.value}
-            onClick={() => setFilter(f.value as 'active' | 'all')}
-            className={`px-4 py-2 rounded-lg text-sm font-medium ${filter === f.value ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 border'}`}
-          >
-            {f.label}
-          </button>
-        ))}
+        <button onClick={() => setTab('menu')} className={`px-4 py-2 rounded-lg text-sm font-medium ${tab === 'menu' ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 border'}`}>📋 Menu ({items.length})</button>
+        <button onClick={() => setTab('orders')} className={`px-4 py-2 rounded-lg text-sm font-medium ${tab === 'orders' ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 border'}`}>📦 Commandes</button>
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="w-6 h-6 animate-spin text-green-500" />
-        </div>
-      ) : filteredOrders.length === 0 ? (
-        <div className="bg-white rounded-2xl border p-12 text-center">
-          <Utensils className="w-12 h-12 mx-auto text-slate-300 mb-3" />
-          <p className="text-slate-500">Aucune commande pour l'instant</p>
-        </div>
-      ) : (
+        <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-green-500" /></div>
+      ) : tab === 'menu' ? (
         <div className="space-y-3">
-          {filteredOrders.map((o) => {
-            const meta = STATUS_META[o.status] || STATUS_META.pending;
-            const nextStatus = NEXT_STATUS[o.status];
-            const Icon = meta.icon;
+          {items.length === 0 ? (
+            <div className="bg-white rounded-2xl border p-12 text-center">
+              <Utensils className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+              <p className="text-slate-500">Aucun article dans le menu. Ajoutez votre premier plat !</p>
+            </div>
+          ) : items.map((item) => {
+            const cat = CATEGORIES.find((c) => c.value === item.category) || CATEGORIES[1];
             return (
-              <div key={o.id} className="bg-white rounded-2xl border p-5">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <div className="flex items-center gap-2 mb-1">
-                      <Icon className="w-5 h-5 text-slate-700" />
-                      <h3 className="font-bold text-slate-900">
-                        {o.guestName || 'Client'} {o.roomNumber && `· Ch. ${o.roomNumber}`}
-                      </h3>
-                    </div>
-                    <p className="text-xs text-slate-500">{new Date(o.createdAt).toLocaleString('fr-FR')}</p>
-                  </div>
-                  <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${meta.color}`}>
-                    {meta.label}
-                  </span>
-                </div>
-
-                <div className="bg-slate-50 rounded-xl p-3 mb-3">
-                  {o.items.map((item) => (
-                    <div key={item.id} className="flex justify-between text-sm py-1">
-                      <span>{item.quantity}× {item.name}</span>
-                      <span className="font-medium">{(item.price * item.quantity).toLocaleString('fr-FR')} FCFA</span>
-                    </div>
-                  ))}
-                  <div className="border-t mt-2 pt-2 flex justify-between font-bold">
-                    <span>Total</span>
-                    <span>{o.totalAmount.toLocaleString('fr-FR')} FCFA</span>
-                  </div>
-                </div>
-
-                {o.notes && (
-                  <p className="text-sm text-amber-700 bg-amber-50 p-2 rounded-lg mb-3">📝 {o.notes}</p>
+              <div key={item.id} className={`bg-white rounded-2xl border p-4 flex items-center gap-4 ${!item.isAvailable ? 'opacity-60' : ''}`}>
+                {item.photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={item.photoUrl} alt={item.name} className="w-16 h-16 rounded-xl object-cover" />
+                ) : (
+                  <div className="w-16 h-16 rounded-xl bg-slate-100 flex items-center justify-center text-2xl">{cat.icon}</div>
                 )}
-
-                <div className="flex gap-2">
-                  {nextStatus && (
-                    <button
-                      onClick={() => updateStatus(o.id, nextStatus)}
-                      className="flex-1 py-2 bg-green-600 text-white text-sm font-bold rounded-lg hover:bg-green-700"
-                    >
-                      → {STATUS_META[nextStatus]?.label}
-                    </button>
-                  )}
-                  {o.status !== 'cancelled' && o.status !== 'delivered' && (
-                    <button
-                      onClick={() => updateStatus(o.id, 'cancelled')}
-                      className="px-4 py-2 bg-red-100 text-red-700 text-sm font-medium rounded-lg hover:bg-red-200"
-                    >
-                      Annuler
-                    </button>
-                  )}
+                <div className="flex-1 min-w-0">
+                  <p className="font-semibold text-slate-900">{item.name}</p>
+                  <p className="text-xs text-slate-500">{cat.label} · Stock: {item.stock}</p>
+                  {item.description && <p className="text-xs text-slate-400 truncate">{item.description}</p>}
+                  <p className="text-sm font-bold text-green-700 mt-1">{item.price.toLocaleString('fr-FR')} FCFA</p>
+                </div>
+                <div className="flex gap-1">
+                  <button onClick={() => toggleAvailable(item)} className={`px-2 py-1 rounded-lg text-xs font-medium ${item.isAvailable ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-400'}`}>
+                    {item.isAvailable ? 'Dispo' : 'Indispo'}
+                  </button>
+                  <button onClick={() => handleEdit(item)} className="p-2 bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200"><Edit className="w-4 h-4" /></button>
+                  <button onClick={() => handleDelete(item.id)} className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200"><Trash2 className="w-4 h-4" /></button>
                 </div>
               </div>
             );
           })}
         </div>
+      ) : (
+        <OrdersList />
       )}
+
+      {/* Form modal */}
+      {showForm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold">{editing ? 'Modifier' : 'Nouvel'} article</h2>
+              <button onClick={() => { setShowForm(false); resetForm(); }}><X className="w-5 h-5" /></button>
+            </div>
+            <div className="space-y-3">
+              <input type="text" placeholder="Nom *" value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full p-3 border border-slate-200 rounded-xl text-sm" />
+              <textarea placeholder="Description" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} rows={2} className="w-full p-3 border border-slate-200 rounded-xl text-sm resize-none" />
+              <div className="grid grid-cols-2 gap-3">
+                <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })} className="p-3 border border-slate-200 rounded-xl text-sm">
+                  {CATEGORIES.map((c) => <option key={c.value} value={c.value}>{c.icon} {c.label}</option>)}
+                </select>
+                <input type="number" placeholder="Prix FCFA" value={form.price} onChange={(e) => setForm({ ...form, price: parseInt(e.target.value) || 0 })} className="p-3 border border-slate-200 rounded-xl text-sm" />
+              </div>
+              <input type="number" placeholder="Stock" value={form.stock} onChange={(e) => setForm({ ...form, stock: parseInt(e.target.value) || 0 })} className="w-full p-3 border border-slate-200 rounded-xl text-sm" />
+              <div>
+                <label className="block text-xs font-bold text-slate-600 mb-1">Photo</label>
+                {form.photoUrl ? (
+                  <div className="relative">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={form.photoUrl} alt="" className="w-full h-32 rounded-xl object-cover" />
+                    <button onClick={() => setForm({ ...form, photoUrl: '' })} className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-lg"><X className="w-4 h-4" /></button>
+                  </div>
+                ) : (
+                  <label className="block w-full p-4 border-2 border-dashed border-slate-200 rounded-xl text-center cursor-pointer hover:border-green-400">
+                    <span className="text-sm text-slate-500">📷 Cliquer pour ajouter une photo</span>
+                    <input type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
+                  </label>
+                )}
+              </div>
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={form.isAvailable} onChange={(e) => setForm({ ...form, isAvailable: e.target.checked })} className="w-4 h-4" />
+                <span className="text-sm">Disponible à la commande</span>
+              </label>
+            </div>
+            <button onClick={handleSave} className="w-full mt-4 py-3 bg-green-600 text-white font-bold rounded-xl flex items-center justify-center gap-2 hover:bg-green-700">
+              <Save className="w-4 h-4" /> {editing ? 'Mettre à jour' : 'Créer'}
+            </button>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OrdersList() {
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const load = async () => {
+      try {
+        const sessionRes = await fetch('/api/auth/session');
+        const sessionData = await sessionRes.json();
+        if (!sessionData.user?.agencyId) return;
+        const res = await fetch(`/api/orders?agencyId=${sessionData.user.agencyId}`);
+        const data = await res.json();
+        if (data.success) setOrders(data.orders);
+      } catch (e) { console.error(e); }
+      finally { setLoading(false); }
+    };
+    load();
+    const interval = setInterval(load, 15000);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (loading) return <div className="flex items-center justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-green-500" /></div>;
+  if (orders.length === 0) return <div className="bg-white rounded-2xl border p-12 text-center"><p className="text-slate-500">Aucune commande pour l'instant</p></div>;
+
+  const updateStatus = async (id: string, status: string) => {
+    await fetch(`/api/orders?id=${id}&status=${status}&handledBy=Staff`, { method: 'PATCH' });
+    const sessionRes = await fetch('/api/auth/session');
+    const sessionData = await sessionRes.json();
+    const res = await fetch(`/api/orders?agencyId=${sessionData.user.agencyId}`);
+    const data = await res.json();
+    if (data.success) setOrders(data.orders);
+  };
+
+  const STATUS = ['pending', 'confirmed', 'preparing', 'ready', 'delivered'];
+  const LABELS: Record<string, string> = { pending: 'En attente', confirmed: 'Confirmée', preparing: 'En préparation', ready: 'Prête', delivered: 'Livrée', cancelled: 'Annulée' };
+
+  return (
+    <div className="space-y-3">
+      {orders.map((o) => (
+        <div key={o.id} className="bg-white rounded-2xl border p-4">
+          <div className="flex items-start justify-between mb-2">
+            <div>
+              <p className="font-bold text-slate-900">{o.guestName || 'Client'} {o.roomNumber && `· Ch. ${o.roomNumber}`}</p>
+              <p className="text-xs text-slate-500">{new Date(o.createdAt).toLocaleString('fr-FR')}</p>
+            </div>
+            <span className="text-xs px-2 py-1 rounded-full font-bold bg-amber-100 text-amber-700">{LABELS[o.status] || o.status}</span>
+          </div>
+          <div className="bg-slate-50 rounded-lg p-2 mb-2 text-sm">
+            {o.items?.map((i: any) => <div key={i.id} className="flex justify-between"><span>{i.quantity}× {i.name}</span><span>{(i.price * i.quantity).toLocaleString('fr-FR')}</span></div>)}
+            <div className="border-t mt-1 pt-1 flex justify-between font-bold"><span>Total</span><span>{o.totalAmount?.toLocaleString('fr-FR')} FCFA</span></div>
+          </div>
+          {o.status !== 'delivered' && o.status !== 'cancelled' && (
+            <button onClick={() => updateStatus(o.id, STATUS[STATUS.indexOf(o.status) + 1] || 'delivered')} className="w-full py-2 bg-green-600 text-white text-sm font-bold rounded-lg">
+              → {LABELS[STATUS[STATUS.indexOf(o.status) + 1]] || 'Livrer'}
+            </button>
+          )}
+        </div>
+      ))}
     </div>
   );
 }
