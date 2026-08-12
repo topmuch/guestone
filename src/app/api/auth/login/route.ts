@@ -2,9 +2,20 @@ import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { createSession, logLoginAttempt } from '@/lib/session';
+import { rateLimit } from '@/lib/rate-limit';
 
 export async function POST(request: NextRequest) {
   const { email, password, role } = await request.json();
+
+  // V3 SECURITY: Rate-limit anti brute-force (5 tentatives / 15 min par IP+email)
+  const clientIp = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
+  const rateLimitKey = `login:${clientIp}:${email || 'unknown'}`;
+  if (rateLimit(rateLimitKey, { windowMs: 15 * 60 * 1000, maxRequests: 5 })) {
+    return NextResponse.json(
+      { error: 'Trop de tentatives. Réessayez dans 15 minutes.' },
+      { status: 429 }
+    );
+  }
 
   // QRTags : logs détaillés pour diagnostiquer les échecs de connexion
   console.log('[LOGIN] Tentative:', { email, role, hasPassword: !!password });

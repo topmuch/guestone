@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
 
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json(
         { error: 'Non autorisé' },
         { status: 401 }
@@ -112,7 +112,7 @@ export async function GET(request: NextRequest) {
   const url = new URL(request.url);
   const secret = url.searchParams.get('secret');
 
-  if (cronSecret && secret !== cronSecret) {
+  if (!cronSecret || secret !== cronSecret) {
     return NextResponse.json(
       { error: 'Non autorisé' },
       { status: 401 }

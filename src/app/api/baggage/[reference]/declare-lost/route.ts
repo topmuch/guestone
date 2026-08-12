@@ -60,6 +60,17 @@ export async function PUT(
     try {
       const emailSettings = await getEmailSettings();
       if (emailSettings) {
+        // Parse customData for destination/flightNumber (stored in JSON, not on Baggage directly)
+        let destination: string | undefined;
+        let flightNumber: string | undefined;
+        if (baggage.customData) {
+          try {
+            const custom = JSON.parse(baggage.customData);
+            destination = custom.destination || custom.city || undefined;
+            flightNumber = custom.flightNumber || custom.flight || undefined;
+          } catch { /* ignore JSON parse errors */ }
+        }
+
         const template = getBaggageLostEmailTemplate({
           reference: baggage.reference,
           agencyName: baggage.agency?.name || undefined,
@@ -67,8 +78,8 @@ export async function PUT(
             ? `${baggage.travelerFirstName} ${baggage.travelerLastName}`
             : baggage.travelerFirstName || undefined,
           baggageType: baggage.baggageType,
-          destination: baggage.destination || undefined,
-          flightNumber: baggage.flightNumber || undefined,
+          destination,
+          flightNumber,
         });
 
         // Build recipients list

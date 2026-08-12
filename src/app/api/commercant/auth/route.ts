@@ -6,7 +6,10 @@ import crypto from 'crypto';
  * POST /api/commercant/auth
  * Body: { accessCode }
  * Login simplifié commerçant via accessCode
- * Retourne un token + merchant info
+ * Retourne un token signé + merchant info
+ *
+ * V3 SECURITY FIX: Le token est persisté en DB (hash SHA-256) avec expiration.
+ * Le token ne peut plus être forgé car on vérifie le hash côté serveur.
  */
 export async function POST(req: NextRequest) {
   try {
@@ -22,14 +25,24 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Code invalide ou commerçant désactivé' }, { status: 404 });
     }
 
-    // Génère un token session simple (valide 24h)
+    // Génère un token sécurisé (64 chars hex)
     const token = crypto.randomBytes(32).toString('hex');
-    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24h
+
+    // Persiste le hash du token en DB (pas le token en clair)
+    await db.merchant.update({
+      where: { id: merchant.id },
+      data: {
+        activeTokenHash: tokenHash,
+        tokenExpiresAt: expiresAt,
+      },
+    });
 
     return NextResponse.json({
       success: true,
       token,
-      expiresAt,
+      expiresAt: expiresAt.toISOString(),
       merchant: {
         id: merchant.id,
         name: merchant.name,

@@ -298,11 +298,31 @@ export class CloudbedsProvider implements PMSProvider {
   // ─── Vérification signature webhook ─────────────────────────────
 
   async verifyWebhookSignature(rawBody: string, signature: string): Promise<boolean> {
-    // Cloudbeds utilise HMAC-SHA256 avec un secret partagé
-    // En production, on utiliserait crypto.createHmac('sha256', secret).update(rawBody).digest('hex')
-    // Pour la sandbox, on accepte toutes les signatures (à adapter en prod)
+    // V3 SECURITY FIX: HMAC-SHA256 avec secret partagé configuré via env
+    const webhookSecret = process.env.CLOUDBEDS_WEBHOOK_SECRET;
+    if (!webhookSecret) {
+      console.error('[cloudbeds] CLOUDBEDS_WEBHOOK_SECRET non configuré — webhook rejeté');
+      return false;
+    }
     if (!signature) return false;
-    return true; // TODO: implémenter la vérification HMAC en production
+
+    try {
+      const crypto = await import('crypto');
+      const expectedSignature = crypto
+        .createHmac('sha256', webhookSecret)
+        .update(rawBody)
+        .digest('hex');
+
+      // Constant-time comparison pour éviter timing attacks
+      if (expectedSignature.length !== signature.length) return false;
+      return crypto.timingSafeEqual(
+        Buffer.from(expectedSignature, 'hex'),
+        Buffer.from(signature, 'hex')
+      );
+    } catch (e) {
+      console.error('[cloudbeds] Webhook signature verification error:', e);
+      return false;
+    }
   }
 
   // ─── Test de connexion ──────────────────────────────────────────

@@ -15,9 +15,11 @@ export async function POST(request: NextRequest) {
   try {
     const authHeader = request.headers.get('authorization');
     const cronSecret = process.env.CRON_SECRET;
-    // Accept: CRON_SECRET Bearer token OR internal call (if no secret configured)
-    const isAuthorized = !cronSecret
-      || authHeader === `Bearer ${cronSecret}`
+    // CRON_SECRET must be configured — no fallback
+    if (!cronSecret) {
+      return NextResponse.json({ error: 'CRON_SECRET non configuré' }, { status: 500 });
+    }
+    const isAuthorized = authHeader === `Bearer ${cronSecret}`
       || authHeader === 'Bearer internal-escalation-token';
     if (!isAuthorized) {
       return NextResponse.json({ error: 'Non autorisé' }, { status: 401 });

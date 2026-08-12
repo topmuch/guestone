@@ -28,6 +28,7 @@ model User {
   pushSubscriptions PushSubscription[]
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
+  @@index([agencyId])
 }
 
 // ════════════════════════════════════════════════════════════════
@@ -211,6 +212,11 @@ model Baggage {
   lastDayRequests   LastDayRequest[]
   spaAppointments   SpaAppointment[]
   marketplaceOrders MarketplaceOrder[]
+
+  @@index([agencyId])
+  @@index([reference])
+  @@index([status])
+  @@index([context])
 }
 
 // ScanLog model - tracks all scans for audit
@@ -305,6 +311,7 @@ model Message {
   content     String   // JSON ou texte brut
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  @@index([agencyId])
 }
 
 // Notification model - real-time alerts for SuperAdmin
@@ -324,6 +331,7 @@ model Notification {
   read        Boolean  @default(false)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+  @@index([agencyId])
 }
 
 // EmailSettings model - SMTP configuration
@@ -346,6 +354,7 @@ model EmailSettings {
   lastTestError   String?
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
+  @@index([agencyId])
 }
 
 // EmailLog model - tracks all sent emails
@@ -374,6 +383,7 @@ model EmailToken {
   used      Boolean  @default(false)
   usedAt    DateTime?
   createdAt DateTime @default(now())
+  @@index([agencyId])
 }
 
 // Invoice model - for agency billing
@@ -392,6 +402,7 @@ model Invoice {
   paymentMethod String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  @@index([agencyId])
 }
 
 // Lead model - CRM leads/prospects
@@ -436,6 +447,7 @@ model DailyReport {
   updatedAt DateTime @updatedAt
 
   @@unique([userId, date])
+  @@index([agencyId])
 }
 
 // Advertisement model - promotional banners for agencies
@@ -472,6 +484,7 @@ model Advertisement {
   
   // Relations
   adImpressions AdImpression[]
+  @@index([agencyId])
 }
 
 // AdImpression model - tracks each impression and click
@@ -524,6 +537,7 @@ model BlogPost {
   
   // Relations
   blogViews     BlogView[]
+  @@index([agencyId])
 }
 
 // BlogView model - track article views
@@ -1487,6 +1501,9 @@ model Merchant {
   commissionRate  Float    @default(10) // 10% par défaut
   // Accès portail commerçant (login simplifié)
   accessCode      String?  // code d'accès au portail commerçant
+  // V3: Token de session sécurisé (hash du token actif)
+  activeTokenHash String?  // hash SHA-256 du token courant (null si pas de session active)
+  tokenExpiresAt  DateTime? // expiration du token
   // Statut
   isActive        Boolean  @default(true)
   isVerified      Boolean  @default(false)

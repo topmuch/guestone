@@ -1,27 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import crypto from 'crypto';
 
+/**
+ * V3 SECURITY FIX: Vérifie le token commerçant contre le hash stocké en DB.
+ * Le token envoyé par le client est hashé (SHA-256) et comparé au hash en DB.
+ * Vérifie aussi l'expiration.
+ */
 async function getMerchantFromToken(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
   if (!authHeader?.startsWith('Bearer ')) return null;
   const token = authHeader.substring(7);
-  // Token format: merchantId-randomhex — simplification pour MVP
-  // En production: table MerchantSession avec token valide
-  // Ici on encode l'id dans le token: mid_<merchantId>_<random>
-  if (!token.startsWith('mid_')) return null;
-  const parts = token.split('_');
-  if (parts.length < 3) return null;
-  const merchantId = parts[1];
-  const merchant = await db.merchant.findUnique({
-    where: { id: merchantId },
+  if (!token || token.length < 32) return null;
+
+  // Hash le token reçu pour le comparer au hash stocké
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+  // Cherche le commerçant par hash du token
+  const merchant = await db.merchant.findFirst({
+    where: {
+      activeTokenHash: tokenHash,
+      isActive: true,
+      tokenExpiresAt: { gt: new Date() }, // pas expiré
+    },
     select: { id: true, name: true, agencyId: true, commissionRate: true },
   });
+
   return merchant;
 }
 
 /**
- * GET /api/commercant/products?token=mid_xxx
- * Liste les produits du commerçant
+ * GET /api/commercant/products — liste les produits du commerçant
  */
 export async function GET(req: NextRequest) {
   const merchant = await getMerchantFromToken(req);
@@ -74,7 +83,6 @@ export async function PATCH(req: NextRequest) {
   const { id, ...updates } = body;
   if (!id) return NextResponse.json({ error: 'id requis' }, { status: 400 });
 
-  // Vérifie que le produit appartient au commerçant
   const product = await db.product.findUnique({ where: { id } });
   if (!product || product.merchantId !== merchant.id) {
     return NextResponse.json({ error: 'Produit introuvable' }, { status: 404 });

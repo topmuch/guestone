@@ -88,11 +88,10 @@ export default function CommercantPortalPage() {
       });
       const data = await res.json();
       if (data.success) {
-        // Token format: mid_<merchantId>_<random>
-        const fullToken = `mid_${data.merchant.id}_${data.token}`;
-        setToken(fullToken);
+        // V3: token est un hash sécurisé stocké en DB
+        setToken(data.token);
         setMerchant(data.merchant);
-        sessionStorage.setItem('commercant_token', fullToken);
+        sessionStorage.setItem('commercant_token', data.token);
         sessionStorage.setItem('commercant_merchant', JSON.stringify(data.merchant));
       } else {
         setAuthError(data.error);

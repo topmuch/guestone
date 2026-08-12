@@ -1,18 +1,27 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
+import crypto from 'crypto';
 
+/**
+ * V3 SECURITY FIX: Vérifie le token commerçant contre le hash stocké en DB.
+ */
 async function getMerchantFromToken(req: NextRequest) {
   const authHeader = req.headers.get('authorization');
   if (!authHeader?.startsWith('Bearer ')) return null;
   const token = authHeader.substring(7);
-  if (!token.startsWith('mid_')) return null;
-  const parts = token.split('_');
-  if (parts.length < 3) return null;
-  const merchantId = parts[1];
-  const merchant = await db.merchant.findUnique({
-    where: { id: merchantId },
+  if (!token || token.length < 32) return null;
+
+  const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+  const merchant = await db.merchant.findFirst({
+    where: {
+      activeTokenHash: tokenHash,
+      isActive: true,
+      tokenExpiresAt: { gt: new Date() },
+    },
     select: { id: true, name: true, agencyId: true },
   });
+
   return merchant;
 }
 
@@ -30,7 +39,6 @@ export async function GET(req: NextRequest) {
     take: 50,
   });
 
-  // Stats
   const stats = {
     total: orders.length,
     pending: orders.filter((o) => o.status === 'pending').length,
@@ -42,7 +50,7 @@ export async function GET(req: NextRequest) {
 }
 
 /**
- * PATCH /api/commercant/orders?id=xxx&status=xxx — commerçant met à jour le statut
+ * PATCH /api/commercant/orders?id=xxx&status=xxx
  */
 export async function PATCH(req: NextRequest) {
   const merchant = await getMerchantFromToken(req);
@@ -54,7 +62,6 @@ export async function PATCH(req: NextRequest) {
 
   if (!id || !status) return NextResponse.json({ error: 'id et status requis' }, { status: 400 });
 
-  // Vérifie que la commande appartient au commerçant
   const order = await db.marketplaceOrder.findUnique({ where: { id } });
   if (!order || order.merchantId !== merchant.id) {
     return NextResponse.json({ error: 'Commande introuvable' }, { status: 404 });
