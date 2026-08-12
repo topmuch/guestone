@@ -15,8 +15,8 @@ export async function GET(request: NextRequest) {
   try {
     // Auth simple: vérifier le header CRON_SECRET
     const authHeader = request.headers.get('authorization');
-    const cronSecret = process.env.CRON_SECRET || 'qrlabs-backup-2026';
-    if (authHeader !== `Bearer ${cronSecret}`) {
+    const cronSecret = process.env.CRON_SECRET;
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

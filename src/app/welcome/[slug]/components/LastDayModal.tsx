@@ -38,7 +38,7 @@ const SERVICES = [
   {
     type: 'transfer',
     label: 'Transfert aéroport',
-    description: 'Réservez un transfert vers l'aéroport',
+    description: 'Réservez un transfert vers l\'aéroport',
     icon: Plane,
     color: 'from-violet-500 to-purple-500',
     fields: [

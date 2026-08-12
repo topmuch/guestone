@@ -42,8 +42,9 @@ export default function SosDashboardPage() {
 
   const loadAlerts = async () => {
     try {
-      const { getSession } = await import('@/lib/session');
-      const user = await getSession();
+      const sessionRes = await fetch('/api/auth/session');
+      const sessionData = await sessionRes.json();
+      const user = sessionData.user;
       if (!user?.agencyId) return;
       const res = await fetch(`/api/sos-alert?agencyId=${user.agencyId}`);
       const data = await res.json();

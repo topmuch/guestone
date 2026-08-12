@@ -32,9 +32,9 @@ const updateSchema = z.object({
 export async function GET(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
+) {
   const auth = await requireSuperadmin();
   if (!auth.ok) return auth.response;
-) {
   try {
     const { id } = await params;
     const customType = await db.customAgencyType.findUnique({
@@ -69,9 +69,9 @@ export async function GET(
 export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
+) {
   const auth = await requireSuperadmin();
   if (!auth.ok) return auth.response;
-) {
   try {
     const { id } = await params;
     const body = await request.json();
@@ -156,9 +156,9 @@ export async function PUT(
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
+) {
   const auth = await requireSuperadmin();
   if (!auth.ok) return auth.response;
-) {
   try {
     const { id } = await params;
 

@@ -17,9 +17,9 @@ import { requireSuperadmin } from '@/lib/api-auth';
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ lotId: string }> },
+) {
   const auth = await requireSuperadmin();
   if (!auth.ok) return auth.response;
-) {
   try {
     const { lotId } = await params;
     const body = await request.json();

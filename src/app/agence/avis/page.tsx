@@ -51,8 +51,9 @@ export default function AvisPage() {
   const loadFeedbacks = async () => {
     setLoading(true);
     try {
-      const { getSession } = await import('@/lib/session');
-      const user = await getSession();
+      const sessionRes = await fetch('/api/auth/session');
+      const sessionData = await sessionRes.json();
+      const user = sessionData.user;
       if (!user?.agencyId) return;
       const res = await fetch(`/api/feedback?agencyId=${user.agencyId}`);
       const data = await res.json();

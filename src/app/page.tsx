@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import {
-  Smartphone, QrCode, Bell, ShoppingCart, Sparkles, MapPin, SosButton,
+  Smartphone, QrCode, Bell, ShoppingCart, Sparkles, MapPin, LifeBuoy,
   Star, Luggage, Hotel, Home, Puzzle, TrendingUp, Smile, Shield,
   Check, ArrowRight, Menu, X, Wifi, MessageSquare, ChevronDown,
 } from 'lucide-react';
@@ -278,7 +278,7 @@ export default function LandingPage() {
               { icon: Home, title: 'Guide maison Airbnb', desc: 'Check-in, check-out, Wi-Fi, règles. Tout centralisé dans un livret digital.', color: BLUE },
               { icon: MapPin, title: 'Tourisme local géolocalisé', desc: 'Recommandations à proximité : restaurants, activités, transports. Tri par distance.', color: EMERALD },
               { icon: Hotel, title: 'Retour à l\'hôtel', desc: 'Bouton "Retour" avec itinéraire Google Maps. Plus jamais de client perdu.', color: BLUE },
-              { icon: SosButton, title: 'Assistance / SOS', desc: 'Bouton SOS avec partage GPS. Le staff voit la position en temps réel.', color: EMERALD },
+              { icon: LifeBuoy, title: 'Assistance / SOS', desc: 'Bouton SOS avec partage GPS. Le staff voit la position en temps réel.', color: EMERALD },
               { icon: Star, title: 'Gestion des avis', desc: 'Note avant départ : 4-5★ → Google, 1-3★ → formulaire privé. Protégez votre réputation.', color: BLUE },
               { icon: Luggage, title: 'Consigne & dernier jour', desc: 'Dépôt bagages avec code de retrait, réservation douche, transfert aéroport.', color: EMERALD },
             ].map((f, i) => (

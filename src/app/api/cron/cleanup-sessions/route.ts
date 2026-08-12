@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { cleanupExpiredSessions } from '@/lib/session';
 
 // Cron secret for authorization
-const CRON_SECRET = process.env.CRON_SECRET || 'your-cron-secret-key';
+const CRON_SECRET = process.env.CRON_SECRET;
 
 /**
  * Cron endpoint to cleanup expired sessions

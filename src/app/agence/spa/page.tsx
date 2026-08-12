@@ -32,8 +32,9 @@ export default function SpaDashboardPage() {
 
   const loadAppointments = async () => {
     try {
-      const { getSession } = await import('@/lib/session');
-      const user = await getSession();
+      const sessionRes = await fetch('/api/auth/session');
+      const sessionData = await sessionRes.json();
+      const user = sessionData.user;
       if (!user?.agencyId) return;
       const res = await fetch(`/api/spa/appointment?agencyId=${user.agencyId}`);
       const data = await res.json();
