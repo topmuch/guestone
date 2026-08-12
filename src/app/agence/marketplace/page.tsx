@@ -39,27 +39,54 @@ export default function MarketplaceManagePage() {
     try {
       const res = await fetch('/api/marketplace/manage');
       const data = await res.json();
-      if (data.success) setMerchants(data.merchants);
-    } catch (e) { console.error(e); }
+      if (data.success) {
+        setMerchants(data.merchants || []);
+      } else {
+        console.error('loadMerchants error:', data.error);
+      }
+    } catch (e) { console.error('loadMerchants fetch error:', e); }
     finally { setLoading(false); }
   };
 
   const saveMerchant = async () => {
     if (!merchantForm.name) return;
-    const method = editingMerchant ? 'PATCH' : 'POST';
-    const body = editingMerchant ? { type: 'merchant', id: editingMerchant.id, ...merchantForm } : { type: 'merchant', ...merchantForm };
-    await fetch('/api/marketplace/manage', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    setShowMerchantForm(false); setEditingMerchant(null);
-    setMerchantForm({ name: '', description: '', category: 'other', phone: '', email: '', commissionRate: 10 });
-    loadMerchants();
+    try {
+      const method = editingMerchant ? 'PATCH' : 'POST';
+      const body = editingMerchant ? { type: 'merchant', id: editingMerchant.id, ...merchantForm } : { type: 'merchant', ...merchantForm };
+      const res = await fetch('/api/marketplace/manage', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Erreur' }));
+        alert(err.error || 'Erreur lors de la sauvegarde');
+        return;
+      }
+      setShowMerchantForm(false); setEditingMerchant(null);
+      setMerchantForm({ name: '', description: '', category: 'other', phone: '', email: '', commissionRate: 10 });
+      loadMerchants();
+    } catch (e) {
+      alert('Erreur réseau');
+      console.error(e);
+    }
   };
 
   const saveProduct = async (merchantId: string) => {
     if (!productForm.name) return;
-    await fetch('/api/marketplace/manage', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ type: 'product', merchantId, ...productForm }) });
-    setShowProductForm(null);
-    setProductForm({ name: '', description: '', price: 0, stock: 0, photoUrl: '' });
-    loadMerchants();
+    try {
+      const res = await fetch('/api/marketplace/manage', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'product', merchantId, ...productForm }),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Erreur' }));
+        alert(err.error || 'Erreur lors de la création du produit');
+        return;
+      }
+      setShowProductForm(null);
+      setProductForm({ name: '', description: '', price: 0, stock: 0, photoUrl: '' });
+      loadMerchants();
+    } catch (e) {
+      alert('Erreur réseau');
+      console.error(e);
+    }
   };
 
   const deleteMerchant = async (id: string) => {
@@ -81,8 +108,20 @@ export default function MarketplaceManagePage() {
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]; if (!file) return;
+    // Compression: redimensionne à max 400x400 et convertit en JPEG qualité 0.7
+    const img = new Image();
     const reader = new FileReader();
-    reader.onload = () => setProductForm({ ...productForm, photoUrl: reader.result as string });
+    reader.onload = () => { img.src = reader.result as string; };
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const maxSize = 400;
+      let { width, height } = img;
+      if (width > height) { if (width > maxSize) { height = (height * maxSize) / width; width = maxSize; } }
+      else { if (height > maxSize) { width = (width * maxSize) / height; height = maxSize; } }
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) { ctx.drawImage(img, 0, 0, width, height); setProductForm({ ...productForm, photoUrl: canvas.toDataURL('image/jpeg', 0.7) }); }
+    };
     reader.readAsDataURL(file);
   };
 

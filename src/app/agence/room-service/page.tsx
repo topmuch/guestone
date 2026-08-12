@@ -38,8 +38,12 @@ export default function RoomServiceManagePage() {
     try {
       const res = await fetch('/api/menu/manage');
       const data = await res.json();
-      if (data.success) setItems(data.items);
-    } catch (e) { console.error(e); }
+      if (data.success) {
+        setItems(data.items || []);
+      } else {
+        console.error('loadItems error:', data.error);
+      }
+    } catch (e) { console.error('loadItems fetch error:', e); }
     finally { setLoading(false); }
   };
 
@@ -52,13 +56,23 @@ export default function RoomServiceManagePage() {
     if (!form.name) return;
     const method = editing ? 'PATCH' : 'POST';
     const body = editing ? { id: editing.id, ...form } : form;
-    await fetch('/api/menu/manage', {
-      method, headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    setShowForm(false);
-    resetForm();
-    loadItems();
+    try {
+      const res = await fetch('/api/menu/manage', {
+        method, headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Erreur' }));
+        alert(err.error || 'Erreur lors de la sauvegarde');
+        return;
+      }
+      setShowForm(false);
+      resetForm();
+      loadItems();
+    } catch (e) {
+      alert('Erreur réseau');
+      console.error(e);
+    }
   };
 
   const handleEdit = (item: MenuItem) => {
@@ -84,8 +98,30 @@ export default function RoomServiceManagePage() {
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Compression: redimensionne à max 400x400 et convertit en JPEG qualité 0.7
+    const img = new Image();
     const reader = new FileReader();
-    reader.onload = () => setForm({ ...form, photoUrl: reader.result as string });
+    reader.onload = () => {
+      img.src = reader.result as string;
+    };
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const maxSize = 400;
+      let { width, height } = img;
+      if (width > height) {
+        if (width > maxSize) { height = (height * maxSize) / width; width = maxSize; }
+      } else {
+        if (height > maxSize) { width = (width * maxSize) / height; height = maxSize; }
+      }
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(img, 0, 0, width, height);
+        const compressed = canvas.toDataURL('image/jpeg', 0.7);
+        setForm({ ...form, photoUrl: compressed });
+      }
+    };
     reader.readAsDataURL(file);
   };
 

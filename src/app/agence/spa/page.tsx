@@ -48,10 +48,20 @@ export default function SpaManagePage() {
 
   const handleSave = async () => {
     if (!form.name) return;
-    const method = editing ? 'PATCH' : 'POST';
-    const body = editing ? { id: editing.id, ...form } : form;
-    await fetch('/api/spa/manage', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
-    setShowForm(false); resetForm(); loadServices();
+    try {
+      const method = editing ? 'PATCH' : 'POST';
+      const body = editing ? { id: editing.id, ...form } : form;
+      const res = await fetch('/api/spa/manage', { method, headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Erreur' }));
+        alert(err.error || 'Erreur lors de la sauvegarde');
+        return;
+      }
+      setShowForm(false); resetForm(); loadServices();
+    } catch (e) {
+      alert('Erreur réseau');
+      console.error(e);
+    }
   };
 
   const handleEdit = (s: SpaService) => {
@@ -69,8 +79,20 @@ export default function SpaManagePage() {
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    // Compression: redimensionne à max 400x400 et convertit en JPEG qualité 0.7
+    const img = new Image();
     const reader = new FileReader();
-    reader.onload = () => setForm({ ...form, photoUrl: reader.result as string });
+    reader.onload = () => { img.src = reader.result as string; };
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const maxSize = 400;
+      let { width, height } = img;
+      if (width > height) { if (width > maxSize) { height = (height * maxSize) / width; width = maxSize; } }
+      else { if (height > maxSize) { width = (width * maxSize) / height; height = maxSize; } }
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (ctx) { ctx.drawImage(img, 0, 0, width, height); setForm({ ...form, photoUrl: canvas.toDataURL('image/jpeg', 0.7) }); }
+    };
     reader.readAsDataURL(file);
   };
 
