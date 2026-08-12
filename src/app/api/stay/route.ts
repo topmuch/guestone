@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
         language: language || 'fr',
         checkInDate: new Date(checkInDate || Date.now()),
         checkOutDate: new Date(checkOutDate || (Date.now() + 7 * 24 * 60 * 60 * 1000)),
-        nbPersons: nbPersons || 1,
+        nbPersons: parseInt(String(nbPersons)) || 1,
         status: 'active',
       },
     });

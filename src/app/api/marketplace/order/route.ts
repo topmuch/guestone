@@ -47,13 +47,14 @@ export async function POST(req: NextRequest) {
     const orderItemsData = items.map((i: { productId: string; quantity: number }) => {
       const p = products.find((pr) => pr.id === i.productId);
       if (!p) throw new Error(`Produit ${i.productId} introuvable`);
-      const lineTotal = p.price * (i.quantity || 1);
+      const qty = parseInt(String(i.quantity)) || 1;
+      const lineTotal = p.price * qty;
       totalAmount += lineTotal;
       return {
         productId: p.id,
         name: p.name,
         price: p.price,
-        quantity: i.quantity || 1,
+        quantity: qty,
       };
     });
 

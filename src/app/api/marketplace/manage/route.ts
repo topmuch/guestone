@@ -44,7 +44,7 @@ export async function POST(req: NextRequest) {
         email: data.email || null,
         website: data.website || null,
         logoUrl: data.logoUrl || null,
-        commissionRate: data.commissionRate || 10,
+        commissionRate: parseFloat(String(data.commissionRate)) || 10,
         accessCode: crypto.randomBytes(6).toString('hex').toUpperCase(),
         isActive: true,
       },
@@ -61,9 +61,9 @@ export async function POST(req: NextRequest) {
         name: data.name,
         description: data.description || null,
         category: data.category || 'other',
-        price: data.price || 0,
+        price: parseInt(String(data.price)) || 0,
         photoUrl: data.photoUrl || null,
-        stock: data.stock || 0,
+        stock: parseInt(String(data.stock)) || 0,
         deliveryMode: data.deliveryMode || 'pickup',
         isAvailable: true,
       },
@@ -91,7 +91,7 @@ export async function PATCH(req: NextRequest) {
       ...(updates.category !== undefined && { category: updates.category }),
       ...(updates.phone !== undefined && { phone: updates.phone }),
       ...(updates.email !== undefined && { email: updates.email }),
-      ...(updates.commissionRate !== undefined && { commissionRate: updates.commissionRate }),
+      ...(updates.commissionRate !== undefined && { commissionRate: parseFloat(String(updates.commissionRate)) || 10 }),
       ...(updates.isActive !== undefined && { isActive: updates.isActive }),
     }});
     return NextResponse.json({ success: true, merchant: updated });
@@ -103,8 +103,8 @@ export async function PATCH(req: NextRequest) {
     const updated = await db.product.update({ where: { id }, data: {
       ...(updates.name !== undefined && { name: updates.name }),
       ...(updates.description !== undefined && { description: updates.description }),
-      ...(updates.price !== undefined && { price: updates.price }),
-      ...(updates.stock !== undefined && { stock: updates.stock }),
+      ...(updates.price !== undefined && { price: parseInt(String(updates.price)) || 0 }),
+      ...(updates.stock !== undefined && { stock: parseInt(String(updates.stock)) || 0 }),
       ...(updates.photoUrl !== undefined && { photoUrl: updates.photoUrl }),
       ...(updates.isAvailable !== undefined && { isAvailable: updates.isAvailable }),
     }});
