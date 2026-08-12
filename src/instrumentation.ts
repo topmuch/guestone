@@ -18,6 +18,7 @@ export async function register() {
     console.log('[instrumentation] Démarrage tâches de fond...');
     startEscalationJob();
     startPmsSyncJob();
+    startDemoResetJob();
   }
 }
 
@@ -95,4 +96,32 @@ function startPmsSyncJob() {
   // Puis toutes les 30 min
   setInterval(runPmsSync, SYNC_INTERVAL_MS);
   console.log(`[instrumentation] PMS sync programmé (toutes ${SYNC_INTERVAL_MS / 60000} min)`);
+}
+
+// ─── Demo reset auto ────────────────────────────────────────────────────
+function startDemoResetJob() {
+  const RESET_INTERVAL_MS = 60 * 60 * 1000; // 1 heure
+  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  const CRON_SECRET = process.env.CRON_SECRET || 'internal-escalation-token';
+
+  const runDemoReset = async () => {
+    try {
+      await fetch(`${APP_URL}/api/demo/reset`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${CRON_SECRET}`,
+          'Content-Type': 'application/json',
+        },
+      });
+      console.log('[demo-reset] Données démo réinitialisées');
+    } catch (e) {
+      console.error('[demo-reset] Error:', e instanceof Error ? e.message : e);
+    }
+  };
+
+  // Première exécution après 5 min
+  setTimeout(runDemoReset, 300_000);
+  // Puis toutes les heures
+  setInterval(runDemoReset, RESET_INTERVAL_MS);
+  console.log(`[instrumentation] Demo reset programmé (toutes ${RESET_INTERVAL_MS / 60000} min)`);
 }

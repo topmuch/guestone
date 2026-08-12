@@ -98,8 +98,9 @@ export default function LandingPage() {
                   Demander une démo
                   <ArrowRight className="w-5 h-5" />
                 </a>
-                <a href="#solution" className="px-8 py-4 rounded-2xl bg-white text-slate-900 font-bold border-2 border-slate-200 hover:border-slate-300 transition-all flex items-center justify-center gap-2">
-                  Découvrir la solution
+                <a href="/demo" className="px-8 py-4 rounded-2xl bg-white text-slate-900 font-bold border-2 border-slate-200 hover:border-slate-300 transition-all flex items-center justify-center gap-2">
+                  <Smartphone className="w-5 h-5" style={{ color: EMERALD }} />
+                  Essayer la démo
                 </a>
               </div>
 
@@ -229,32 +230,35 @@ export default function LandingPage() {
             {[
               {
                 num: '1', icon: QrCode, title: 'Le client scanne', desc: 'Un QR code sur le bracelet ou dans la chambre ouvre la WebApp instantanément. Pas de téléchargement, pas d\'inscription.',
-                color: EMERALD,
+                color: EMERALD, href: '/solution/scan',
               },
               {
                 num: '2', icon: Smartphone, title: 'Il accède aux services', desc: 'Room service, spa, ménage, tourisme, assistance. Tout est centralisé dans une interface élégante et multilingue.',
-                color: BLUE,
+                color: BLUE, href: '/solution/accede',
               },
               {
                 num: '3', icon: TrendingUp, title: 'Vous pilotez tout', desc: 'Un dashboard simple pour gérer les demandes, commandes, avis et revenus. Les notifications arrivent en temps réel.',
-                color: EMERALD,
+                color: EMERALD, href: '/solution/pilote',
               },
             ].map((step, i) => (
-              <div key={i} className="relative">
-                <div className="bg-white rounded-3xl p-8 border-2 border-slate-100 hover:shadow-lg transition-all">
+              <a key={i} href={step.href} className="relative group block">
+                <div className="bg-white rounded-3xl p-8 border-2 border-slate-100 hover:shadow-lg transition-all h-full">
                   <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: `${step.color}15` }}>
                     <step.icon className="w-7 h-7" style={{ color: step.color }} />
                   </div>
                   <div className="absolute top-8 right-8 text-6xl font-bold text-slate-100">{step.num}</div>
                   <h3 className="text-xl font-bold text-slate-900 mb-3">{step.title}</h3>
                   <p className="text-slate-600 leading-relaxed">{step.desc}</p>
+                  <span className="inline-flex items-center gap-1 text-sm font-bold mt-4 group-hover:gap-2 transition-all" style={{ color: step.color }}>
+                    En savoir plus <ArrowRight className="w-4 h-4" />
+                  </span>
                 </div>
                 {i < 2 && (
                   <div className="hidden md:block absolute top-1/2 -right-4 z-10">
                     <ArrowRight className="w-6 h-6 text-slate-300" />
                   </div>
                 )}
-              </div>
+              </a>
             ))}
           </div>
         </div>
@@ -274,23 +278,26 @@ export default function LandingPage() {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {[
-              { icon: Bell, title: 'Demandes de services', desc: 'Ménage, serviettes, repassage, assistance technique. Le client demande en 1 tap, le staff est notifié.', color: EMERALD },
-              { icon: ShoppingCart, title: 'Room service & commandes', desc: 'Menu digital, panier, suivi en temps réel. Facturation sur la chambre.', color: BLUE },
-              { icon: Sparkles, title: 'Réservation spa', desc: 'Calendrier interactif, créneaux, tarifs. Confirmation instantanée.', color: EMERALD },
-              { icon: Home, title: 'Guide maison Airbnb', desc: 'Check-in, check-out, Wi-Fi, règles. Tout centralisé dans un livret digital.', color: BLUE },
-              { icon: MapPin, title: 'Tourisme local géolocalisé', desc: 'Recommandations à proximité : restaurants, activités, transports. Tri par distance.', color: EMERALD },
-              { icon: Hotel, title: 'Retour à l\'hôtel', desc: 'Bouton "Retour" avec itinéraire Google Maps. Plus jamais de client perdu.', color: BLUE },
-              { icon: LifeBuoy, title: 'Assistance / SOS', desc: 'Bouton SOS avec partage GPS. Le staff voit la position en temps réel.', color: EMERALD },
-              { icon: Star, title: 'Gestion des avis', desc: 'Note avant départ : 4-5★ → Google, 1-3★ → formulaire privé. Protégez votre réputation.', color: BLUE },
-              { icon: Luggage, title: 'Consigne & dernier jour', desc: 'Dépôt bagages avec code de retrait, réservation douche, transfert aéroport.', color: EMERALD },
+              { slug: 'demandes-services', title: 'Demandes de services', desc: 'Ménage, serviettes, repassage, assistance. Le client demande en 1 tap, le staff est notifié.', image: '/images/features/demandes-services.png' },
+              { slug: 'room-service', title: 'Room service & commandes', desc: 'Menu digital, panier, suivi en temps réel. Facturation sur la chambre.', image: '/images/features/room-service.png' },
+              { slug: 'spa', title: 'Réservation spa', desc: 'Calendrier interactif, créneaux, tarifs. Confirmation instantanée.', image: '/images/features/spa.png' },
+              { slug: 'guide-maison-airbnb', title: 'Guide maison Airbnb', desc: 'Check-in, check-out, Wi-Fi, règles. Tout centralisé dans un livret digital.', image: '/images/features/guide-maison.png' },
+              { slug: 'tourisme', title: 'Tourisme local géolocalisé', desc: 'Recommandations à proximité : restaurants, activités, transports. Tri par distance.', image: '/images/features/tourisme.png' },
+              { slug: 'retour-hotel', title: 'Retour à l\'hôtel', desc: 'Bouton "Retour" avec itinéraire Google Maps. Plus jamais de client perdu.', image: '/images/features/retour-hotel.png' },
+              { slug: 'sos', title: 'Assistance / SOS', desc: 'Bouton SOS avec partage GPS. Le staff voit la position en temps réel.', image: '/images/features/sos.png' },
+              { slug: 'avis', title: 'Gestion des avis', desc: 'Note avant départ : 4-5★ → Google, 1-3★ → formulaire privé. Protégez votre réputation.', image: '/images/features/avis.png' },
+              { slug: 'consigne', title: 'Consigne & dernier jour', desc: 'Dépôt bagages avec code de retrait, réservation douche, transfert aéroport.', image: '/images/features/consigne.png' },
             ].map((f, i) => (
-              <div key={i} className="bg-white rounded-2xl p-6 border border-slate-100 hover:shadow-lg transition-all">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: `${f.color}15` }}>
-                  <f.icon className="w-6 h-6" style={{ color: f.color }} />
+              <a key={i} href={`/fonctionnalites/${f.slug}`} className="group bg-white rounded-2xl overflow-hidden border border-slate-100 hover:shadow-lg transition-all">
+                <div className="aspect-[4/3] overflow-hidden">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={f.image} alt={f.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
                 </div>
-                <h3 className="font-bold text-slate-900 mb-2">{f.title}</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">{f.desc}</p>
-              </div>
+                <div className="p-5">
+                  <h3 className="font-bold text-slate-900 mb-2">{f.title}</h3>
+                  <p className="text-sm text-slate-600 leading-relaxed">{f.desc}</p>
+                </div>
+              </a>
             ))}
           </div>
         </div>

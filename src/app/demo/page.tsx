@@ -1,212 +1,162 @@
 'use client';
 
-/**
- * QRTagsPro V4 — Page Démo interactive (bac à sable)
- *
- * Le client potentiel scanne un vrai QR code, remplit un vrai formulaire,
- * voit sa géolocalisation détectée, et reçoit un vrai message WhatsApp.
- *
- * Les données sont automatiquement supprimées après 2 heures.
- */
-
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import {
-  ArrowRight, ArrowLeft, QrCode, Clock, AlertTriangle,
-  Smartphone, MapPin, MessageCircle, CheckCircle2, RefreshCw,
-} from 'lucide-react';
-import QRTagsLogo from '@/components/qrtags/QRTagsLogo';
+import { QrCode, Smartphone, RefreshCw, ArrowRight, Clock, Check, Hotel, Bell, ShoppingCart, Sparkles } from 'lucide-react';
 
-const DEMO_PHONE = '33600000000'; // Numéro fictif pour la démo
+const EMERALD = '#10B981';
+const BLUE = '#2563EB';
 
 export default function DemoPage() {
-  const [qrDataUrl, setQrDataUrl] = useState<string>('');
-  const [timeUntilReset, setTimeUntilReset] = useState<string>('');
+  const [resetting, setResetting] = useState(false);
+  const [lastReset, setLastReset] = useState<Date | null>(null);
+  const [nextReset, setNextReset] = useState<Date | null>(null);
 
-  // Générer le QR code dynamiquement (côté client pour éviter SSR issues)
   useEffect(() => {
-    (async () => {
-      try {
-        const QRCode = (await import('qrcode')).default;
-        const demoUrl = `${window.location.origin}/demo/finder?t=DEMO-TEST`;
-        const dataUrl = await QRCode.toDataURL(demoUrl, {
-          errorCorrectionLevel: 'H',
-          margin: 2,
-          width: 400,
-          color: {
-            dark: '#134288',
-            light: '#FFFFFF',
-          },
-        });
-        setQrDataUrl(dataUrl);
-      } catch (err) {
-        console.error('QR generation error:', err);
-      }
-    })();
+    // Calcule la prochaine réinitialisation (toutes les heures pile)
+    const now = new Date();
+    const next = new Date(now);
+    next.setMinutes(60 - now.getMinutes(), 0, 0); // prochaine heure pile
+    // Si on est à 0 min, la prochaine est dans 1h
+    if (now.getMinutes() === 0) {
+      next.setHours(now.getHours() + 1);
+    }
+    setNextReset(next);
+    setLastReset(new Date(now.getTime() - now.getMinutes() * 60 * 1000));
   }, []);
 
-  // Compteur visuel avant le prochain reset (toutes les 2 heures)
-  useEffect(() => {
-    const updateCountdown = () => {
-      const now = new Date();
-      const nextReset = new Date(now);
-      // Prochain reset à l'heure paire suivante
-      const hoursToAdd = now.getMinutes() > 0 || now.getSeconds() > 0 ? 1 : 0;
-      nextReset.setHours(now.getHours() + hoursToAdd + (now.getHours() % 2 === 0 ? 0 : 1), 0, 0, 0);
+  const handleReset = async () => {
+    setResetting(true);
+    try {
+      await fetch('/api/demo/reset', { method: 'POST' });
+      setLastReset(new Date());
+      const next = new Date();
+      next.setHours(next.getHours() + 1, 0, 0, 0);
+      setNextReset(next);
+    } catch (e) { console.error(e); }
+    finally { setResetting(false); }
+  };
 
-      const diff = nextReset.getTime() - now.getTime();
-      const h = Math.floor(diff / (1000 * 60 * 60));
-      const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-      const s = Math.floor((diff % (1000 * 60)) / 1000);
-      setTimeUntilReset(`${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`);
-    };
+  // L'URL du QR code — pointe vers la page welcome de l'agence démo
+  const demoUrl = typeof window !== 'undefined' ? `${window.location.origin}/welcome/demo-guest-one?context=WRISTBAND&lang=fr&ref=DEMO-QRCODE` : '';
 
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 1000);
-    return () => clearInterval(interval);
-  }, []);
+  // QR code via API qrcode (service gratuit)
+  const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=400x400&data=${encodeURIComponent(demoUrl)}&bgcolor=ffffff&color=134288&margin=10`;
+
+  const features = [
+    { icon: Bell, label: 'Demandes', color: EMERALD },
+    { icon: ShoppingCart, label: 'Room Service', color: BLUE },
+    { icon: Sparkles, label: 'Spa', color: EMERALD },
+    { icon: Hotel, label: 'Retour hôtel', color: BLUE },
+  ];
 
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
-          <QRTagsLogo size="sm" href="/" withHover />
-          <Link
-            href="/demande-demo"
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold bg-[#32ba5d] text-white rounded-lg hover:bg-[#28a54f] transition"
-          >
-            Demander une démo pro
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-      </header>
-
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-[#134288] to-[#0d3266] text-white py-16">
-        <div className="max-w-4xl mx-auto px-4 md:px-6 text-center">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#32ba5d]/20 border border-[#32ba5d]/40 mb-4">
-            <Smartphone className="w-3.5 h-3.5 text-[#32ba5d]" />
-            <span className="text-xs font-semibold text-[#32ba5d]">Démo interactive — Bac à sable</span>
+    <div className="min-h-screen pt-20" style={{ background: 'linear-gradient(135deg, #ECFDF5 0%, #F8FAFC 50%, #EFF6FF 100%)' }}>
+      <div className="max-w-4xl mx-auto px-4 py-12">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-4" style={{ backgroundColor: `${EMERALD}15` }}>
+            <Clock className="w-4 h-4" style={{ color: EMERALD }} />
+            <span className="text-sm font-semibold" style={{ color: EMERALD }}>Démo interactive · Réinitialisation toutes les heures</span>
           </div>
-          <h1 className="text-4xl md:text-5xl font-black mb-4">
-            🎯 Testez QRTagsPro<br />
-            <span className="text-[#32ba5d]">en temps réel</span>
+          <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">
+            Essayez Guest One maintenant
           </h1>
-          <p className="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto">
-            Scannez ce QR code avec votre téléphone pour vivre l'expérience complète :
-            formulaire, géolocalisation, et message WhatsApp pré-rempli.
+          <p className="text-lg text-slate-600 max-w-2xl mx-auto">
+            Scannez ce QR code avec votre téléphone pour découvrir l'expérience client. Un véritable bracelet connecté, sans installation.
           </p>
         </div>
-      </section>
 
-      {/* QR Code + Instructions */}
-      <section className="py-16">
-        <div className="max-w-4xl mx-auto px-4 md:px-6">
-          <div className="grid md:grid-cols-2 gap-8 items-center">
-            {/* QR Code */}
-            <div className="text-center">
-              <div className="inline-block bg-white p-6 rounded-2xl shadow-xl border-2 border-[#134288]">
-                {qrDataUrl ? (
-                  <img
-                    src={qrDataUrl}
-                    alt="QR code de démo"
-                    className="w-64 h-64 mx-auto"
-                  />
+        <div className="grid md:grid-cols-2 gap-8 items-center">
+          {/* QR Code */}
+          <div className="bg-white rounded-3xl shadow-xl p-8 text-center">
+            <div className="mb-4">
+              <div className="w-64 h-64 mx-auto bg-white rounded-2xl border-4 border-slate-100 flex items-center justify-center">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                {demoUrl ? (
+                  <img src={qrCodeUrl} alt="QR Code démo Guest One" className="w-full h-full rounded-xl" />
                 ) : (
-                  <div className="w-64 h-64 mx-auto bg-slate-100 rounded-lg flex items-center justify-center">
-                    <RefreshCw className="w-12 h-12 text-slate-300 animate-spin" />
-                  </div>
+                  <QrCode className="w-48 h-48 text-slate-300" />
                 )}
               </div>
-              <p className="mt-4 text-sm text-slate-600">
-                📸 Ouvrez l'appareil photo de votre téléphone et scannez ce QR code
+            </div>
+            <p className="text-sm font-bold text-slate-900 mb-1">QR Code de la démo</p>
+            <p className="text-xs text-slate-500 mb-4">Ouvrez l'appareil photo de votre téléphone et scannez ce code</p>
+
+            <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 mb-4">
+              <p className="text-xs text-emerald-700 font-semibold mb-1">📋 Bracelet démo</p>
+              <p className="text-sm text-emerald-900">Référence : <code className="font-mono font-bold">DEMO-QRCODE</code></p>
+              <p className="text-xs text-emerald-700">Chambre 101 · Client Démo</p>
+            </div>
+
+            <a
+              href={demoUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-6 py-3 text-white font-bold rounded-xl w-full justify-center"
+              style={{ background: `linear-gradient(135deg, ${EMERALD}, ${BLUE})` }}
+            >
+              <Smartphone className="w-5 h-5" />
+              Ouvrir la démo sur cet appareil
+            </a>
+          </div>
+
+          {/* Info */}
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900 mb-4">Ce que vous allez découvrir</h2>
+            <div className="space-y-3 mb-6">
+              {features.map((f, i) => (
+                <div key={i} className="flex items-center gap-3 bg-white rounded-2xl p-4 border border-slate-100">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ backgroundColor: `${f.color}15` }}>
+                    <f.icon className="w-5 h-5" style={{ color: f.color }} />
+                  </div>
+                  <span className="font-medium text-slate-900">{f.label}</span>
+                  <Check className="w-4 h-4 ml-auto" style={{ color: EMERALD }} />
+                </div>
+              ))}
+            </div>
+
+            {/* Reset info */}
+            <div className="bg-blue-50 border border-blue-200 rounded-2xl p-5 mb-4">
+              <div className="flex items-center gap-2 mb-2">
+                <RefreshCw className="w-5 h-5" style={{ color: BLUE }} />
+                <h3 className="font-bold text-slate-900">Réinitialisation automatique</h3>
+              </div>
+              <p className="text-sm text-slate-600 mb-3">
+                La démo se réinitialise toutes les heures. Toutes les demandes, commandes et avis sont effacés.
               </p>
+              {nextReset && (
+                <p className="text-xs text-slate-500">
+                  Prochaine réinitialisation : <strong>{nextReset.toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })}</strong>
+                </p>
+              )}
+              <button
+                onClick={handleReset}
+                disabled={resetting}
+                className="mt-3 inline-flex items-center gap-2 px-4 py-2 bg-white border border-blue-200 rounded-lg text-sm font-bold text-blue-700 hover:bg-blue-50 disabled:opacity-50"
+              >
+                <RefreshCw className={`w-4 h-4 ${resetting ? 'animate-spin' : ''}`} />
+                Réinitialiser maintenant
+              </button>
             </div>
 
-            {/* Instructions + Avertissement */}
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-black text-slate-900 mb-3">
-                  Comment ça marche ?
-                </h2>
-                <ol className="space-y-3">
-                  {[
-                    { icon: <QrCode className="w-5 h-5" />, text: 'Scannez le QR code avec votre téléphone' },
-                    { icon: <MapPin className="w-5 h-5" />, text: 'Autorisez la géolocalisation (GPS)' },
-                    { icon: <MessageCircle className="w-5 h-5" />, text: 'Remplissez le formulaire et cliquez sur WhatsApp' },
-                    { icon: <CheckCircle2 className="w-5 h-5" />, text: "WhatsApp s'ouvre avec un message pré-rempli !" },
-                  ].map((step, i) => (
-                    <li key={i} className="flex items-start gap-3">
-                      <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-[#134288] text-white flex items-center justify-center text-xs font-bold">
-                        {i + 1}
-                      </div>
-                      <div className="flex items-center gap-2 text-sm text-slate-700 pt-1">
-                        <span className="text-[#32ba5d]">{step.icon}</span>
-                        <span>{step.text}</span>
-                      </div>
-                    </li>
-                  ))}
-                </ol>
-              </div>
-
-              {/* Avertissement */}
-              <div className="bg-amber-50 border-2 border-amber-300 rounded-xl p-4">
-                <div className="flex items-start gap-2">
-                  <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="text-sm font-bold text-amber-800">⚠️ Ceci est une démo</p>
-                    <p className="text-xs text-amber-700 mt-1">
-                      Les données que vous saisissez sont automatiquement supprimées
-                      après 2 heures pour garantir la confidentialité.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Compteur reset */}
-              <div className="bg-[#134288] rounded-xl p-4 text-white">
-                <div className="flex items-center gap-3">
-                  <Clock className="w-5 h-5 text-[#32ba5d]" />
-                  <div>
-                    <p className="text-xs text-blue-200">🔄 Prochain reset automatique dans :</p>
-                    <p className="text-2xl font-mono font-bold text-[#32ba5d]">
-                      {timeUntilReset || '...'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <Link href="/demande-demo" className="inline-flex items-center gap-2 text-sm font-bold" style={{ color: BLUE }}>
+              Demander une démo personnalisée <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
-      </section>
 
-      {/* Lien direct (fallback si pas de caméra) */}
-      <section className="py-8 bg-slate-50">
-        <div className="max-w-4xl mx-auto px-4 text-center">
-          <p className="text-sm text-slate-600 mb-3">
-            Pas de caméra ? Vous pouvez tester directement sur cet appareil :
-          </p>
-          <Link
-            href="/demo/finder?t=DEMO-TEST"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#32ba5d] text-white font-bold rounded-lg hover:bg-[#28a54f] hover:-translate-y-0.5 transition-all shadow-lg"
-          >
-            Ouvrir le formulaire de démo
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+        {/* Note */}
+        <div className="mt-12 bg-amber-50 border border-amber-200 rounded-2xl p-5 flex items-start gap-3">
+          <Clock className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+          <div>
+            <p className="font-semibold text-amber-900 mb-1">Note importante</p>
+            <p className="text-sm text-amber-800">
+              Cette démo est publique et partagée. Toutes les actions que vous effectuez (demandes, commandes, avis) sont visibles par les autres utilisateurs de la démo et seront effacées à la prochaine réinitialisation. Ne saisissez pas de données personnelles.
+            </p>
+          </div>
         </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-[#0d3266] text-white py-8">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm text-blue-200 hover:text-[#32ba5d]">
-            <ArrowLeft className="w-4 h-4" />
-            Retour à l'accueil
-          </Link>
-          <p className="mt-4 text-xs text-blue-300">© {new Date().getFullYear()} QRTagsPro — Démo interactive</p>
-        </div>
-      </footer>
+      </div>
     </div>
   );
 }
