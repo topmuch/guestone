@@ -1,216 +1,158 @@
 'use client';
 
-/**
- * QRTagsPro — Page "Comment ça marche"
- *
- * Détaille le workflow complet en 4 étapes + FAQ.
- */
-
 import Link from 'next/link';
-import {
-  ArrowRight, ArrowLeft, QrCode, Users, Bell, CheckCircle2,
-  Building2, ScanLine, MessageCircle, Package,
-} from 'lucide-react';
-import QRTagsLogo from '@/components/qrtags/QRTagsLogo';
+import { QrCode, Smartphone, TrendingUp, Check, ArrowRight, Clock, Settings, Bell } from 'lucide-react';
 
-const STEPS = [
-  {
-    num: 1,
-    icon: <QrCode className="w-10 h-10" />,
-    title: 'Génération des QR codes',
-    short: 'Le superadmin crée les lots',
-    description: 'Le superadmin se connecte à son espace et génère un lot de QR codes. Il sélectionne l\'agence destinataire (hôtel, école, clinique, etc.) et la quantité souhaitée (10 à 5000 QR par lot). Les QR sont immédiatement créés en base avec le statut "en stock" et assignés à l\'agence.',
-    details: [
-      'Choix de l\'agence destinataire',
-      'Quantité personnalisable (jusqu\'à 5000)',
-      'Téléchargement immédiat en PNG',
-      'Couleurs QRTagsPro (bleu + vert)',
-    ],
-  },
-  {
-    num: 2,
-    icon: <Users className="w-10 h-10" />,
-    title: 'Check-in du client',
-    short: 'Le staff active le QR',
-    description: 'Au check-in du client (arrivée à l\'hôtel, admission à la clinique, inscription à l\'école...), le staff scanne le QR code physique avec la webcam du PC ou saisit la référence manuellement. Un formulaire adapté au métier s\'affiche : nom du client, n° de chambre, dates, contact d\'urgence, etc.',
-    details: [
-      'Scan webcam via navigateur (html5-qrcode)',
-      'Saisie manuelle de la référence',
-      'Formulaire adapté au métier (hôtel, école, clinique...)',
-      'Départ automatique calculé selon le métier',
-    ],
-  },
-  {
-    num: 3,
-    icon: <Bell className="w-10 h-10" />,
-    title: 'Le trouveur scanne',
-    short: 'Perte → contact WhatsApp',
-    description: 'En cas de perte, la personne qui trouve l\'objet scanne le QR code avec son téléphone. La page trouveur s\'affiche avec le nom de l\'établissement (pas le nom du client — confidentialité totale). Le trouveur saisit son nom, son téléphone et sa position GPS. Un clic ouvre WhatsApp avec un message pré-rempli vers la réception de l\'établissement.',
-    details: [
-      'Page trouveur personnalisée par métier',
-      'Géolocalisation automatique (GPS + Nominatim)',
-      'WhatsApp WAME (click-to-chat, aucune installation)',
-      'Confidentialité : le trouveur ne voit jamais les infos client',
-    ],
-  },
-  {
-    num: 4,
-    icon: <CheckCircle2 className="w-10 h-10" />,
-    title: 'Restitution',
-    short: 'L\'établissement gère',
-    description: 'La réception de l\'établissement reçoit le message WhatsApp avec la position du trouveur. Elle vérifie dans son dashboard que c\'est bien un client actif, contacte le client pour l\'informer, et organise la restitution. Une fois l\'objet rendu, le staff fait le check-out (manuel ou automatique à la date de départ).',
-    details: [
-      'Dashboard temps réel avec liste des QR actifs',
-      'Vérification du client dans le customData',
-      'Check-out manuel (bouton) ou automatique (cron)',
-      'Statistiques : scans, objets perdus, taux de restitution',
-    ],
-  },
-];
+const EMERALD = '#10B981';
+const BLUE = '#2563EB';
 
-const FAQ = [
-  {
-    q: 'Le trouveur a-t-il besoin d\'une application ?',
-    a: 'Non. Le trouveur scanne le QR avec l\'appareil photo de son téléphone. La page s\'ouvre dans le navigateur, et le bouton WhatsApp utilise le click-to-chat (wa.me) — aucune installation requise.',
-  },
-  {
-    q: 'Le trouveur voit-il les informations du client ?',
-    a: 'Non, jamais. Le trouveur ne voit que le nom de l\'établissement et le téléphone de la réception. Les coordonnées du client (nom, chambre, téléphone) restent privées et ne sont accessibles qu\'au staff via le dashboard.',
-  },
-  {
-    q: 'Que se passe-t-il si le client quitte l\'établissement ?',
-    a: 'Le QR est automatiquement expiré (check-out) à la date de départ configurée lors du check-in. Le cron job tourne toutes les heures. Le staff peut aussi faire le check-out manuellement via le bouton dans le dashboard.',
-  },
-  {
-    q: 'Puis-je créer mon propre métier sans coder ?',
-    a: 'Oui ! Le superadmin peut créer un métier personnalisé via /admin/metiers. Il définit les champs du formulaire de check-in (nom, type, obligatoire), le message WhatsApp personnalisé, et les labels du dashboard. Aucune ligne de code.',
-  },
-  {
-    q: 'Combien de QR puis-je générer ?',
-    a: 'Jusqu\'à 5000 QR par lot. Au-delà, générez plusieurs lots. Chaque QR est unique et assigné à une agence spécifique.',
-  },
-];
-
-export default function HowItWorksPage() {
+export default function CommentCaMarchePage() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Header */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
-          <QRTagsLogo size="sm" href="/" withHover />
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-700">
-            <Link href="/comment-ca-marche" className="text-[#134288]">Comment ça marche</Link>
-            <Link href="/metiers" className="hover:text-[#134288] transition">Métiers</Link>
-            <Link href="/tarifs" className="hover:text-[#134288] transition">Tarifs</Link>
-            <Link href="/contact" className="hover:text-[#134288] transition">Contact</Link>
-            <Link href="/demo" className="hover:text-[#134288] transition">Démo</Link>
-          </nav>
-          <Link
-            href="/agence/connexion"
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold bg-[#32ba5d] text-white rounded-lg hover:bg-[#28a54f] transition"
-          >
-            Espace agence
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </div>
-      </header>
-
-      {/* Hero */}
-      <section className="bg-gradient-to-br from-[#134288] to-[#0d3266] text-white py-20">
-        <div className="max-w-4xl mx-auto px-4 md:px-6 text-center">
-          <h1 className="text-4xl md:text-5xl font-black mb-4">
-            Comment ça marche ?
+    <div className="min-h-screen pt-20" style={{ background: 'linear-gradient(135deg, #ECFDF5 0%, #F8FAFC 50%, #EFF6FF 100%)' }}>
+      <div className="max-w-5xl mx-auto px-4 py-12">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <h1 className="text-4xl sm:text-5xl font-bold text-slate-900 mb-4">
+            Comment ça marche
           </h1>
-          <p className="text-lg md:text-xl text-blue-100 max-w-2xl mx-auto">
-            De la génération des QR codes à la restitution de l\'objet,
-            découvrez le workflow complet en 4 étapes simples.
+          <p className="text-lg text-slate-600">
+            De la création à la première utilisation par vos clients — en moins de 24 heures.
           </p>
         </div>
-      </section>
 
-      {/* Steps détaillées */}
-      <section className="py-20">
-        <div className="max-w-5xl mx-auto px-4 md:px-6 space-y-16">
-          {STEPS.map((step, i) => (
-            <div key={i} className="grid md:grid-cols-2 gap-8 items-start">
-              {/* Numéro + icône */}
-              <div className="flex flex-col items-center md:items-start">
-                <div className="flex items-center gap-4 mb-4">
-                  <div className="w-16 h-16 rounded-2xl bg-[#134288] flex items-center justify-center text-white">
-                    {step.icon}
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-[#32ba5d]">ÉTAPE {step.num}</p>
-                    <h2 className="text-xl font-bold text-slate-900">{step.short}</h2>
-                  </div>
-                </div>
+        {/* Steps */}
+        <div className="space-y-12 mb-16">
+          {/* Step 1 */}
+          <div className="flex flex-col md:flex-row gap-8 items-center">
+            <div className="md:w-1/3">
+              <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto" style={{ backgroundColor: `${EMERALD}15` }}>
+                <Settings className="w-10 h-10" style={{ color: EMERALD }} />
               </div>
-
-              {/* Description */}
-              <div>
-                <h3 className="text-2xl font-black text-slate-900 mb-3">{step.title}</h3>
-                <p className="text-slate-600 leading-relaxed mb-4">{step.description}</p>
-                <ul className="space-y-2">
-                  {step.details.map((d, j) => (
-                    <li key={j} className="flex items-start gap-2 text-sm text-slate-700">
-                      <CheckCircle2 className="w-4 h-4 text-[#32ba5d] flex-shrink-0 mt-0.5" />
-                      <span>{d}</span>
-                    </li>
-                  ))}
-                </ul>
+              <div className="text-center mt-3">
+                <span className="text-6xl font-bold text-slate-100">1</span>
               </div>
             </div>
-          ))}
-        </div>
-      </section>
+            <div className="md:w-2/3">
+              <h2 className="text-2xl font-bold text-slate-900 mb-3">Créez votre espace</h2>
+              <p className="text-slate-600 mb-4">
+                Inscrivez-vous en 2 minutes. Configurez votre établissement (hôtel ou Airbnb), personnalisez votre profil, activez les modules dont vous avez besoin.
+              </p>
+              <ul className="space-y-2">
+                {['Choisissez votre type d\'établissement', 'Activez les modules (services, spa, room service…)', 'Configurez vos équipes et notifications'].map((t, i) => (
+                  <li key={i} className="flex items-center gap-2 text-sm text-slate-700">
+                    <Check className="w-4 h-4" style={{ color: EMERALD }} /> {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
 
-      {/* FAQ */}
-      <section className="py-20 bg-slate-50">
-        <div className="max-w-3xl mx-auto px-4 md:px-6">
-          <h2 className="text-3xl font-black text-slate-900 mb-8 text-center">
-            Questions fréquentes
-          </h2>
-          <div className="space-y-4">
-            {FAQ.map((item, i) => (
-              <details key={i} className="bg-white rounded-xl p-5 border-2 border-slate-200 group">
-                <summary className="cursor-pointer font-semibold text-slate-900 flex items-center justify-between">
-                  {item.q}
-                  <ArrowRight className="w-4 h-4 text-slate-400 group-open:rotate-90 transition-transform" />
-                </summary>
-                <p className="mt-3 text-sm text-slate-600 leading-relaxed">{item.a}</p>
-              </details>
+          {/* Step 2 */}
+          <div className="flex flex-col md:flex-row-reverse gap-8 items-center">
+            <div className="md:w-1/3">
+              <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto" style={{ backgroundColor: `${BLUE}15` }}>
+                <QrCode className="w-10 h-10" style={{ color: BLUE }} />
+              </div>
+              <div className="text-center mt-3">
+                <span className="text-6xl font-bold text-slate-100">2</span>
+              </div>
+            </div>
+            <div className="md:w-2/3">
+              <h2 className="text-2xl font-bold text-slate-900 mb-3">Générez vos QR codes</h2>
+              <p className="text-slate-600 mb-4">
+                Créez des QR codes pour vos chambres, bracelets pour vos clients, stickers pour vos logements Airbnb. Chaque QR est unique et sécurisé.
+              </p>
+              <ul className="space-y-2">
+                {['QR codes pour chambres (carte)', 'Bracelets connectés pour clients', 'Stickers pour logements Airbnb', 'Livret digital pour le guide maison'].map((t, i) => (
+                  <li key={i} className="flex items-center gap-2 text-sm text-slate-700">
+                    <Check className="w-4 h-4" style={{ color: BLUE }} /> {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Step 3 */}
+          <div className="flex flex-col md:flex-row gap-8 items-center">
+            <div className="md:w-1/3">
+              <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto" style={{ backgroundColor: `${EMERALD}15` }}>
+                <Smartphone className="w-10 h-10" style={{ color: EMERALD }} />
+              </div>
+              <div className="text-center mt-3">
+                <span className="text-6xl font-bold text-slate-100">3</span>
+              </div>
+            </div>
+            <div className="md:w-2/3">
+              <h2 className="text-2xl font-bold text-slate-900 mb-3">Vos clients scannent</h2>
+              <p className="text-slate-600 mb-4">
+                Le client scanne le QR code avec son téléphone. La WebApp s'ouvre instantanément — sans téléchargement, sans inscription. Tout est prêt.
+              </p>
+              <ul className="space-y-2">
+                {['WebApp mobile-first, sans installation', 'Multilingue (FR, EN, ES)', 'Accès à tous les services activés', 'Interface élégante et intuitive'].map((t, i) => (
+                  <li key={i} className="flex items-center gap-2 text-sm text-slate-700">
+                    <Check className="w-4 h-4" style={{ color: EMERALD }} /> {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+
+          {/* Step 4 */}
+          <div className="flex flex-col md:flex-row-reverse gap-8 items-center">
+            <div className="md:w-1/3">
+              <div className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto" style={{ backgroundColor: `${BLUE}15` }}>
+                <TrendingUp className="w-10 h-10" style={{ color: BLUE }} />
+              </div>
+              <div className="text-center mt-3">
+                <span className="text-6xl font-bold text-slate-100">4</span>
+              </div>
+            </div>
+            <div className="md:w-2/3">
+              <h2 className="text-2xl font-bold text-slate-900 mb-3">Vous pilotez tout</h2>
+              <p className="text-slate-600 mb-4">
+                Depuis votre dashboard, gérez les demandes, commandes, réservations et avis. Les notifications arrivent en temps réel par email et push.
+              </p>
+              <ul className="space-y-2">
+                {['Dashboard temps réel (demandes, commandes, SOS)', 'Notifications email + push', 'Statistiques et analytics', 'Gestion des équipes et du personnel'].map((t, i) => (
+                  <li key={i} className="flex items-center gap-2 text-sm text-slate-700">
+                    <Check className="w-4 h-4" style={{ color: BLUE }} /> {t}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </div>
+
+        {/* Timeline */}
+        <div className="bg-white rounded-3xl shadow-lg p-8 mb-16">
+          <h2 className="text-2xl font-bold text-slate-900 mb-6 text-center">Combien de temps ?</h2>
+          <div className="grid sm:grid-cols-4 gap-4">
+            {[
+              { time: '2 min', label: 'Inscription', icon: Settings },
+              { time: '10 min', label: 'Configuration', icon: Settings },
+              { time: '30 min', label: 'Génération QR', icon: QrCode },
+              { time: '24h', label: 'Premier client', icon: Smartphone },
+            ].map((step, i) => (
+              <div key={i} className="text-center">
+                <div className="w-12 h-12 rounded-2xl flex items-center justify-center mx-auto mb-3" style={{ backgroundColor: `${EMERALD}15` }}>
+                  <step.icon className="w-6 h-6" style={{ color: EMERALD }} />
+                </div>
+                <p className="text-2xl font-bold text-slate-900">{step.time}</p>
+                <p className="text-sm text-slate-500">{step.label}</p>
+              </div>
             ))}
           </div>
         </div>
-      </section>
 
-      {/* CTA */}
-      <section className="py-16 bg-[#134288] text-white text-center">
-        <div className="max-w-3xl mx-auto px-4">
-          <h2 className="text-3xl font-black mb-4">Prêt à essayer ?</h2>
-          <p className="text-blue-100 mb-8">
-            Demandez une démo gratuite et découvrez QRTagsPro adapté à votre métier.
-          </p>
-          <Link
-            href="/demande-demo"
-            className="inline-flex items-center gap-2 px-6 py-3 bg-[#32ba5d] text-white font-bold rounded-lg hover:bg-[#28a54f] hover:-translate-y-0.5 transition-all shadow-lg"
-          >
-            Demander une démo
-            <ArrowRight className="w-4 h-4" />
-          </Link>
+        {/* CTA */}
+        <div className="rounded-3xl p-8 text-center" style={{ background: `linear-gradient(135deg, ${EMERALD}, ${BLUE})` }}>
+          <h2 className="text-2xl font-bold text-white mb-4">Prêt à démarrer ?</h2>
+          <p className="text-blue-50 mb-6">Créez votre espace Guest One aujourd'hui.</p>
+          <a href="/demande-demo" className="inline-flex items-center gap-2 px-8 py-3 bg-white rounded-xl font-bold text-slate-900">
+            Demander une démo <ArrowRight className="w-5 h-5" />
+          </a>
         </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="bg-[#0d3266] text-white py-8">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <Link href="/" className="inline-flex items-center gap-2 text-sm text-blue-200 hover:text-[#32ba5d]">
-            <ArrowLeft className="w-4 h-4" />
-            Retour à l\'accueil
-          </Link>
-          <p className="mt-4 text-xs text-blue-300">© {new Date().getFullYear()} QRTagsPro</p>
-        </div>
-      </footer>
+      </div>
     </div>
   );
 }

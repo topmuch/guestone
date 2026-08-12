@@ -25,15 +25,16 @@ export default function LandingPage() {
           <div className="flex items-center justify-between h-16">
             <Link href="/" className="flex items-center gap-2">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/logo-guest-one.png" alt="Guest One" className="h-8 w-auto" />
+              <img src="/logo-guest-one.png" alt="Guest One" className="h-12 w-auto" />
             </Link>
 
             <div className="hidden md:flex items-center gap-8">
               <a href="#solution" className="text-sm font-medium text-slate-600 hover:text-slate-900">Solution</a>
-              <a href="#fonctionnalites" className="text-sm font-medium text-slate-600 hover:text-slate-900">Fonctionnalités</a>
-              <a href="#hotels" className="text-sm font-medium text-slate-600 hover:text-slate-900">Hôtels</a>
-              <a href="#airbnb" className="text-sm font-medium text-slate-600 hover:text-slate-900">Airbnb</a>
-              <a href="#tarifs" className="text-sm font-medium text-slate-600 hover:text-slate-900">Tarifs</a>
+              <a href="/fonctionnalites" className="text-sm font-medium text-slate-600 hover:text-slate-900">Fonctionnalités</a>
+              <a href="/fonctionnalites/hotel" className="text-sm font-medium text-slate-600 hover:text-slate-900">Hôtels</a>
+              <a href="/fonctionnalites/airbnb" className="text-sm font-medium text-slate-600 hover:text-slate-900">Airbnb</a>
+              <a href="/tarifs" className="text-sm font-medium text-slate-600 hover:text-slate-900">Tarifs</a>
+              <a href="/comment-ca-marche" className="text-sm font-medium text-slate-600 hover:text-slate-900">Comment ça marche</a>
               <a href="#faq" className="text-sm font-medium text-slate-600 hover:text-slate-900">FAQ</a>
             </div>
 
@@ -53,10 +54,11 @@ export default function LandingPage() {
         {mobileMenu && (
           <div className="md:hidden bg-white border-t border-slate-100 px-4 py-4 space-y-3">
             <a href="#solution" onClick={() => setMobileMenu(false)} className="block text-sm font-medium text-slate-600">Solution</a>
-            <a href="#fonctionnalites" onClick={() => setMobileMenu(false)} className="block text-sm font-medium text-slate-600">Fonctionnalités</a>
-            <a href="#hotels" onClick={() => setMobileMenu(false)} className="block text-sm font-medium text-slate-600">Hôtels</a>
-            <a href="#airbnb" onClick={() => setMobileMenu(false)} className="block text-sm font-medium text-slate-600">Airbnb</a>
-            <a href="#tarifs" onClick={() => setMobileMenu(false)} className="block text-sm font-medium text-slate-600">Tarifs</a>
+            <a href="/fonctionnalites" onClick={() => setMobileMenu(false)} className="block text-sm font-medium text-slate-600">Fonctionnalités</a>
+            <a href="/fonctionnalites/hotel" onClick={() => setMobileMenu(false)} className="block text-sm font-medium text-slate-600">Hôtels</a>
+            <a href="/fonctionnalites/airbnb" onClick={() => setMobileMenu(false)} className="block text-sm font-medium text-slate-600">Airbnb</a>
+            <a href="/tarifs" onClick={() => setMobileMenu(false)} className="block text-sm font-medium text-slate-600">Tarifs</a>
+            <a href="/comment-ca-marche" onClick={() => setMobileMenu(false)} className="block text-sm font-medium text-slate-600">Comment ça marche</a>
             <a href="#cta" onClick={() => setMobileMenu(false)} className="block px-4 py-2 rounded-xl text-white text-sm font-bold text-center" style={{ background: `linear-gradient(135deg, ${EMERALD}, ${BLUE})` }}>
               Demander une démo
             </a>
@@ -725,7 +727,7 @@ export default function LandingPage() {
             <div>
               <div className="flex items-center gap-2 mb-4">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/logo-guest-one.png" alt="Guest One" className="h-8 w-auto brightness-0 invert" />
+                <img src="/logo-guest-one.png" alt="Guest One" className="h-12 w-auto brightness-0 invert" />
               </div>
               <p className="text-sm">La plateforme SaaS pour hôtels, Airbnb et conciergeries. Un QR code, tout le séjour.</p>
             </div>
@@ -741,8 +743,8 @@ export default function LandingPage() {
             <div>
               <h4 className="font-semibold text-white mb-3 text-sm">Solutions</h4>
               <ul className="space-y-2 text-sm">
-                <li><a href="#hotels" className="hover:text-white">Pour les hôtels</a></li>
-                <li><a href="#airbnb" className="hover:text-white">Pour les Airbnb</a></li>
+                <li><a href="/fonctionnalites/hotel" className="hover:text-white">Pour les hôtels</a></li>
+                <li><a href="/fonctionnalites/airbnb" className="hover:text-white">Pour les Airbnb</a></li>
                 <li><a href="#cta" className="hover:text-white">Pour les conciergeries</a></li>
               </ul>
             </div>
