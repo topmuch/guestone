@@ -5,6 +5,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
+# Cache buster: force git clone à chaque build
+ARG CACHEBUSTER=1
 RUN git clone https://github.com/topmuch/guestone.git .
 
 RUN rm -rf node_modules package-lock.json
@@ -35,10 +37,6 @@ ENV DATABASE_URL=file:/app/data/qrtags.db
 
 WORKDIR /app/.next/standalone
 
-# 1. prisma db push (crée tables)
-# 2. seeds (catalogue services + modules + plans + appareils)
-# 3. create superadmin (admin@qrtags.com / admin123)
-# 4. start server
 CMD sh -c "npx prisma db push --skip-generate --accept-data-loss 2>&1; \
   node scripts/seed-services.cjs 2>&1 || true; \
   node scripts/seed-airbnb-services.cjs 2>&1 || true; \
