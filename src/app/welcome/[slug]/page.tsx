@@ -72,6 +72,9 @@ export default async function WelcomePage({ params, searchParams }: Props) {
 
   // ─── Contexte WRISTBAND → vue compagnon de séjour (s'adapte au braceletProfile) ───
   if (context === 'WRISTBAND') {
+    // Debug logo
+    console.log('[welcome] logoUrl:', agency.logoUrl ? `${agency.logoUrl.substring(0, 50)}... (${agency.logoUrl.length} chars)` : 'null');
+    
     // Sérialise l'agence en objet plain pour le client component
     const agencyData = {
       id: agency.id,

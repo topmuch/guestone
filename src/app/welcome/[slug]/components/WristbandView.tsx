@@ -218,8 +218,20 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
   const servicesTourism = hotelServices.filter((s) => s.displayTab === 'tourism');
   const servicesHelp = hotelServices.filter((s) => s.displayTab === 'help');
 
+  // ─── Helper: parse schedule JSON ───
+  const parseSchedule = (schedule: string | null): { days: string; open: string; close: string } | null => {
+    if (!schedule) return null;
+    try {
+      const parsed = JSON.parse(schedule);
+      if (parsed.open === '00:00' && parsed.close === '23:59') return { days: parsed.days, open: '', close: '' }; // 24/7
+      return parsed;
+    } catch { return null; }
+  };
+
   // ─── Carte de service (réutilisable) ───
-  const ServiceCard = ({ s }: { s: HotelServiceItem }) => (
+  const ServiceCard = ({ s }: { s: HotelServiceItem }) => {
+    const sched = parseSchedule(s.schedule);
+    return (
     <button
       onClick={() => setSelectedService(s)}
       className="text-left p-5 bg-white rounded-2xl border transition-all hover:shadow-lg w-full"
@@ -232,11 +244,19 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
         <div className="flex-1 min-w-0">
           <h3 className="font-semibold text-base sm:text-sm leading-tight" style={{ color: C.ink }}>{s.name}</h3>
           {s.description && <p className="text-sm sm:text-xs mt-1 line-clamp-2" style={{ color: C.inkLight }}>{s.description}</p>}
-          {!s.isFree && <p className="text-sm font-bold mt-1" style={{ color: C.goldDark }}>{s.price.toLocaleString('fr-FR')} FCFA</p>}
+          <div className="flex items-center gap-2 mt-1">
+            {!s.isFree && <p className="text-sm font-bold" style={{ color: C.goldDark }}>{s.price.toLocaleString('fr-FR')} FCFA</p>}
+            {sched && (
+              <span className="text-xs px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${C.gold}10`, color: C.goldDark }}>
+                {sched.open === '' ? '24/7' : `${sched.open}-${sched.close}`}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </button>
-  );
+    );
+  };
 
   // ─── Onglet MON HÔTEL ───
   const renderHotelTab = () => {
@@ -386,7 +406,7 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
         <div className="h-1" style={{ background: `linear-gradient(90deg, transparent, ${C.gold}, transparent)` }} />
 
         <div className="pt-12 pb-10 sm:pt-10 sm:pb-8 px-6 text-center relative z-10">
-          {agency.logoUrl && (
+          {agency.logoUrl && agency.logoUrl.length > 100 && (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={agency.logoUrl} alt={agency.name} className="h-56 w-56 sm:h-40 sm:w-40 object-contain mx-auto mb-5 rounded-3xl shadow-lg" style={{ boxShadow: C.shadowHover }} />
           )}

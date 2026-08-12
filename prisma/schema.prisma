@@ -1527,6 +1527,7 @@ model Merchant {
   // Coordonnées
   address           String?
   phone             String?
+  whatsapp          String?  // numéro WhatsApp pour commander directement
   email             String?
   website           String?
   // Médias

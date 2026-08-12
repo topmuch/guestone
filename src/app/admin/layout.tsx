@@ -33,6 +33,7 @@ import {
   Receipt,
   ScrollText,
   DollarSign,
+  Store,
 } from "lucide-react";
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAuth } from '@/contexts/AuthContext';
@@ -104,6 +105,7 @@ function Sidebar({
 
     // Audit logs (superadmin)
     { label: "Audit Logs", icon: <ScrollText className="w-5 h-5" />, href: "/admin/audit-logs", roles: ['superadmin', 'admin'] },
+    { label: "Marketplace", icon: <Store className="w-5 h-5" />, href: "/admin/marketplace", roles: ['superadmin', 'admin'] },
 
     // V3 modules
     { label: "Commissions", icon: <DollarSign className="w-5 h-5" />, href: "/admin/commissions", roles: ['superadmin', 'admin'] },

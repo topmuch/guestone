@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url);
   const lat = parseFloat(searchParams.get('lat') || '0');
   const lng = parseFloat(searchParams.get('lng') || '0');
-  const radius = parseFloat(searchParams.get('radius') || '2');
+  const radius = parseFloat(searchParams.get('radius') || '3');
   const category = searchParams.get('category');
   const agencySlug = searchParams.get('slug');
   const agencyIdParam = searchParams.get('agencyId');
@@ -169,7 +169,7 @@ export async function GET(request: NextRequest) {
       success: true,
       agencyName: agency.name,
       count: pois.length,
-      data: pois.slice(0, 10), // Max 10 résultats
+      data: pois.slice(0, 20), // Max 20 résultats
     });
   } catch (error) {
     console.error('[api/pois] Erreur:', error);
@@ -201,19 +201,19 @@ async function fetchFromOverpass(
 
   // Mapping de nos catégories vers les tags OpenStreetMap
   const osmQueries: Record<string, string> = {
-    RESTAURANT: 'node["amenity"="restaurant"]; node["amenity"="cafe"];',
-    ATTRACTION: 'node["tourism"="attraction"]; node["historic"];',
+    RESTAURANT: 'node["amenity"="restaurant"]; node["amenity"="cafe"]; node["amenity"="fast_food"]; node["amenity"="bar"];',
+    ATTRACTION: 'node["tourism"="attraction"]; node["historic"]; node["tourism"="museum"]; node["tourism"="viewpoint"];',
     BEACH: 'node["natural"="beach"];',
-    HEALTH: 'node["amenity"="pharmacy"]; node["amenity"="hospital"]',
-    SHOPPING: 'node["shop"];',
-    TRANSPORT: 'node["amenity"="taxi"]; node["public_transport"]',
-    EXCURSION: 'node["tourism"="attraction"];',
+    HEALTH: 'node["amenity"="pharmacy"]; node["amenity"="hospital"]; node["amenity"="clinic"];',
+    SHOPPING: 'node["shop"]; node["amenity"="marketplace"];',
+    TRANSPORT: 'node["amenity"="taxi"]; node["public_transport"]; node["amenity"="fuel"]; node["highway"="bus_stop"];',
+    EXCURSION: 'node["tourism"="attraction"]; node["tourism"="zoo"]; node["leisure"="park"]; node["leisure"="sports_centre"];',
   };
 
   const queryFilter =
     category && osmQueries[category]
       ? osmQueries[category]
-      : 'node["amenity"="restaurant"]; node["tourism"="attraction"]; node["natural"="beach"]; node["amenity"="pharmacy"];';
+      : 'node["amenity"="restaurant"]; node["amenity"="cafe"]; node["amenity"="fast_food"]; node["amenity"="bar"]; node["tourism"="attraction"]; node["tourism"="museum"]; node["historic"]; node["natural"="beach"]; node["amenity"="pharmacy"]; node["amenity"="hospital"]; node["shop"]; node["amenity"="taxi"]; node["public_transport"]; node["leisure"="park"]; node["tourism"="hotel"];';
 
   const overpassQuery = `
     [out:json][timeout:10];

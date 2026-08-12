@@ -16,6 +16,8 @@ interface POI {
   isVerified: boolean;
   source: 'DB' | 'OSM';
   mapsUrl: string;
+  whatsapp?: string;
+  products?: { name: string; price: number }[];
 }
 
 interface NearbyAttractionsProps {
@@ -67,6 +69,7 @@ export default function NearbyAttractions({ hotelLat, hotelLng, agencySlug, agen
       setLoading(true);
       setError(null);
       try {
+        // Fetch POI (OpenStreetMap) + marketplace merchants in parallel
         const params = new URLSearchParams({
           lat: hotelLat.toString(),
           lng: hotelLng.toString(),
@@ -77,14 +80,40 @@ export default function NearbyAttractions({ hotelLat, hotelLng, agencySlug, agen
           params.set('category', activeCategory);
         }
 
-        const response = await fetch(`/api/pois?${params.toString()}`);
-        if (!response.ok) {
-          throw new Error('HTTP ' + response.status);
-        }
-        const result = await response.json();
+        const [poiRes, merchantRes] = await Promise.all([
+          fetch(`/api/pois?${params.toString()}`),
+          fetch(`/api/marketplace?agencyId=${agencyId}`).catch(() => null),
+        ]);
+
+        const result = await poiRes.json();
+        const merchantData = merchantRes ? await merchantRes.json().catch(() => null) : null;
 
         if (result.success) {
-          setPois(result.data);
+          let allPois = [...result.data];
+
+          // Add marketplace merchants as POIs
+          if (merchantData?.success && merchantData.merchants) {
+            for (const m of merchantData.merchants) {
+              if (m.products && m.products.length > 0) {
+                allPois.push({
+                  id: `merchant-${m.id}`,
+                  name: m.name,
+                  category: 'SHOPPING',
+                  description: m.description || `${m.products.length} produits disponibles`,
+                  distance: '',
+                  distanceKm: 0,
+                  rating: m.isVerified ? 5 : 4,
+                  isVerified: m.isVerified,
+                  source: 'DB',
+                  mapsUrl: m.latitude && m.longitude ? `https://www.google.com/maps?q=${m.latitude},${m.longitude}` : '#',
+                  whatsapp: m.whatsapp || m.phone,
+                  products: m.products.map((p: any) => ({ name: p.name, price: p.price })),
+                });
+              }
+            }
+          }
+
+          setPois(allPois);
         } else {
           setError(result.error || 'Impossible de charger les lieux.');
         }
@@ -182,6 +211,20 @@ export default function NearbyAttractions({ hotelLat, hotelLng, agencySlug, agen
                     <p className="text-xs text-gray-500 mb-0.5 truncate">{place.description}</p>
                   )}
 
+                  {/* Products for marketplace merchants */}
+                  {place.products && place.products.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {place.products.slice(0, 3).map((p, i) => (
+                        <span key={i} className="text-[10px] bg-green-900/30 text-green-400 px-1.5 py-0.5 rounded">
+                          {p.name} · {(p.price || 0).toLocaleString('fr-FR')} F
+                        </span>
+                      ))}
+                      {place.products.length > 3 && (
+                        <span className="text-[10px] text-gray-500">+{place.products.length - 3}</span>
+                      )}
+                    </div>
+                  )}
+
                   <div className="flex items-center gap-2 text-xs text-gray-400 flex-wrap">
                     <span>📍 {place.distance}</span>
                     <span>•</span>
@@ -230,6 +273,17 @@ export default function NearbyAttractions({ hotelLat, hotelLng, agencySlug, agen
                 >
                   Y aller →
                 </a>
+                {/* WhatsApp button for marketplace merchants */}
+                {place.whatsapp && (
+                  <a
+                    href={`https://wa.me/${place.whatsapp.replace(/[\s\-()+]/g, '')}?text=${encodeURIComponent(`Bonjour, je suis intéressé(e) par vos produits: ${place.products?.map((p) => p.name).join(', ') || ''}`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-shrink-0 px-3 py-2 bg-green-600 text-white text-xs font-bold rounded-lg hover:bg-green-700 transition-colors flex items-center gap-1"
+                  >
+                    💬 Commander
+                  </a>
+                )}
               </div>
             ))
           )}
