@@ -1,5 +1,6 @@
 # ════════════════════════════════════════════════════════════════════
 # Guest One — nixpacks.toml pour Coolify
+# Coolify utilise nixpacks par défaut (pas de Dockerfile)
 # ════════════════════════════════════════════════════════════════════
 
 [phases.setup]
@@ -25,7 +26,9 @@ cmds = [
 dependsOn = ['install']
 
 [start]
-cmd = 'mkdir -p /app/data && npx prisma db push --skip-generate --accept-data-loss 2>&1; node scripts/seed-services.cjs 2>&1 || true; node scripts/seed-airbnb-services.cjs 2>&1 || true; node scripts/seed-modeles-appareils.cjs 2>&1 || true; node scripts/seed-modules.cjs 2>&1 || true; node scripts/seed-plans.cjs 2>&1 || true; node scripts/create-admin.cjs 2>&1 || true; node scripts/seed-demo.cjs 2>&1 || true; exec node .next/standalone/server.js'
+# 1. Seeds depuis /app (node_modules complet)
+# 2. cd standalone + start server (trouve public/ et .next/static/)
+cmd = 'mkdir -p /app/data && npx prisma db push --schema=./prisma/schema.prisma --skip-generate --accept-data-loss 2>&1; node scripts/seed-services.cjs 2>&1 || true; node scripts/seed-airbnb-services.cjs 2>&1 || true; node scripts/seed-modeles-appareils.cjs 2>&1 || true; node scripts/seed-modules.cjs 2>&1 || true; node scripts/seed-plans.cjs 2>&1 || true; node scripts/create-admin.cjs 2>&1 || true; node scripts/seed-demo.cjs 2>&1 || true; cd /app/.next/standalone && exec node server.js'
 
 [variables]
 NODE_ENV = 'production'
