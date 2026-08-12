@@ -13,15 +13,15 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "QRTags - Protection intelligente des bagages",
-    template: "%s | QRTags",
+    default: "Guest One — Expérience de séjour connectée pour hôtels et Airbnb",
+    template: "%s | Guest One",
   },
-  description: "Protégez vos bagages avec un autocollant QR intelligent. Sans application, sans batterie, sans GPS. Un seul scan pour la tranquillité d'esprit.",
-  keywords: ["QR", "objet perdu", "entreprise", "hôtel", "école", "consigne", "QRTags", "luggage", "tracker"],
-  authors: [{ name: "QRTags Team" }],
-  creator: "MMASOLUTION",
-  publisher: "QRTags",
-  metadataBase: new URL("https://qrtags.com"),
+  description: "Guest One transforme un simple QR code ou bracelet en assistant de séjour : services, room service, spa, tourisme, assistance et avis clients. Sans application.",
+  keywords: ["Guest One", "QR code", "hôtel", "Airbnb", "conciergerie", "room service", "spa", "tourisme", "SaaS", "hospitality"],
+  authors: [{ name: "Guest One Team" }],
+  creator: "Guest One",
+  publisher: "Guest One",
+  metadataBase: new URL("https://guestone.qrtags.pro"),
 
   // PWA Icons
   icons: {
@@ -41,10 +41,10 @@ export const metadata: Metadata = {
 
   // Open Graph
   openGraph: {
-    title: "QRTags - Protection intelligente des bagages",
-    description: "Un autocollant QR intelligent pour protéger vos effets personnels. Sans application. Sans batterie. Sans GPS.",
-    url: "https://qrtags.com",
-    siteName: "QRTags",
+    title: "Guest One — Expérience de séjour connectée pour hôtels et Airbnb",
+    description: "Un QR code, tout le séjour. Services, room service, spa, tourisme, assistance. Sans application.",
+    url: "https://guestone.qrtags.pro",
+    siteName: "Guest One",
     type: "website",
     locale: "fr_FR",
     images: [
@@ -52,7 +52,7 @@ export const metadata: Metadata = {
         url: "/icons/icon-512x512.png",
         width: 512,
         height: 512,
-        alt: "QRTags Logo",
+        alt: "Guest One Logo",
       },
     ],
   },
@@ -60,8 +60,8 @@ export const metadata: Metadata = {
   // Twitter
   twitter: {
     card: "summary_large_image",
-    title: "QRTags - Protection intelligente des bagages",
-    description: "Un autocollant QR intelligent pour protéger vos effets personnels.",
+    title: "Guest One — Expérience de séjour connectée",
+    description: "Un QR code, tout le séjour. Services, room service, spa, tourisme, assistance.",
     images: ["/icons/icon-512x512.png"],
   },
 

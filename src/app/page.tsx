@@ -1,374 +1,162 @@
 'use client';
 
-/**
- * QRTagsPro V4 — Landing page professionnelle
- *
- * Charte: Bleu corporate #134288 + Vert #32ba5d
- *
- * Sections:
- *   1. Header sticky (logo + nav + CTA)
- *   2. Hero (titre fort + sous-titre + 2 CTA + visuel)
- *   3. Stats clés (3 chiffres)
- *   4. Comment ça marche (4 étapes)
- *   5. Métiers couverts (6 cards)
- *   6. Avantages clés (3 colonnes)
- *   7. Témoignages / social proof
- *   8. CTA final (demande de démo)
- *   9. Footer
- */
-
 import { useState } from 'react';
 import Link from 'next/link';
 import {
-  QrCode, ArrowRight, Building2, Users, Shield, Clock,
-  CheckCircle2, Sparkles, Phone, Mail, MapPin,
-  Hotel, GraduationCap, Stethoscope, Car, Luggage, Briefcase,
-  Zap, BarChart3, Bell, Lock,
+  Smartphone, QrCode, Bell, ShoppingCart, Sparkles, MapPin, SosButton,
+  Star, Luggage, Hotel, Home, Puzzle, TrendingUp, Smile, Shield,
+  Check, ArrowRight, Menu, X, Wifi, MessageSquare, ChevronDown,
 } from 'lucide-react';
-import QRTagsLogo from '@/components/qrtags/QRTagsLogo';
 
-const CTA_DEMO_SUBJECT = 'Demande de démo QRTagsPro';
+const EMERALD = '#10B981';
+const EMERALD_DARK = '#059669';
+const BLUE = '#2563EB';
+const BLUE_DARK = '#1D4ED8';
 
-const METIERS = [
-  {
-    image: 'https://images.unsplash.com/photo-1566073771259-6a8506099945?w=400&h=300&fit=crop',
-    title: 'Hôtels',
-    description: 'Étiquetez les bagages de vos clients dès le check-in. Contact direct avec votre réception en cas de perte.',
-    badge: 'Disponible',
-    color: '#134288',
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1580582932707-520aed937b7b?w=400&h=300&fit=crop',
-    title: 'Écoles',
-    description: 'Identifiez cartables et uniformes des élèves. Contact automatique des parents en cas de perte.',
-    badge: 'Disponible',
-    color: '#32ba5d',
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1538108149393-fbbd81895907?w=400&h=300&fit=crop',
-    title: 'Cliniques',
-    description: 'Étiquetez les effets personnels des patients. Contact d\'urgence prévenu automatiquement.',
-    badge: 'Disponible',
-    color: '#134288',
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?w=400&h=300&fit=crop',
-    title: 'Loueurs auto',
-    description: 'Traçabilité des clés, documents et équipements. Contact direct du locataire.',
-    badge: 'Disponible',
-    color: '#32ba5d',
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1551632436-cbf8dd9ad7f7?w=400&h=300&fit=crop',
-    title: 'Consignes',
-    description: 'Étiquetage des bagages en consigne. Suivi par casier avec retrait programmé.',
-    badge: 'Disponible',
-    color: '#134288',
-  },
-  {
-    image: 'https://images.unsplash.com/photo-1521791136064-7986c2920216?w=400&h=300&fit=crop',
-    title: 'Autres métiers',
-    description: 'Spa, gym, entreprise, événements... Créez votre métier sur-mesure sans coder.',
-    badge: 'Sur devis',
-    color: '#32ba5d',
-  },
-];
-
-const STEPS = [
-  {
-    num: 1,
-    emoji: '🔢',
-    visual: (
-      <div className="relative w-full h-full flex items-center justify-center">
-        <div className="grid grid-cols-3 gap-1">
-          {Array.from({ length: 9 }).map((_, i) => (
-            <div key={i} className="w-6 h-6 bg-[#134288] rounded flex items-center justify-center">
-              <QrCode className="w-4 h-4 text-white" />
-            </div>
-          ))}
-        </div>
-        <div className="absolute -bottom-1 -right-1 bg-[#32ba5d] text-white text-xs font-bold px-2 py-1 rounded-full shadow-lg">
-          ×500
-        </div>
-      </div>
-    ),
-    title: 'Génération des QR',
-    description: 'Le superadmin crée des lots de QR codes assignés à votre entreprise.',
-  },
-  {
-    num: 2,
-    emoji: '📋',
-    visual: (
-      <div className="w-full h-full flex items-center justify-center">
-        <div className="bg-white rounded-lg p-3 shadow-md border border-slate-200 w-32">
-          <div className="flex items-center gap-2 mb-2">
-            <div className="w-8 h-8 rounded bg-[#134288] flex items-center justify-center">
-              <QrCode className="w-4 h-4 text-white" />
-            </div>
-            <div className="flex-1">
-              <div className="h-2 bg-slate-200 rounded w-full mb-1" />
-              <div className="h-2 bg-slate-200 rounded w-2/3" />
-            </div>
-          </div>
-          <div className="space-y-1">
-            <div className="h-2 bg-[#32ba5d]/30 rounded w-full" />
-            <div className="h-2 bg-slate-100 rounded w-3/4" />
-            <div className="h-2 bg-slate-100 rounded w-1/2" />
-          </div>
-        </div>
-      </div>
-    ),
-    title: 'Check-in client',
-    description: 'Votre staff scanne le QR et saisit les infos client (nom, chambre, dates).',
-  },
-  {
-    num: 3,
-    emoji: '📱',
-    visual: (
-      <div className="w-full h-full flex items-center justify-center">
-        <div className="relative">
-          <div className="w-20 h-32 bg-slate-900 rounded-xl p-1.5 shadow-lg">
-            <div className="w-full h-full bg-white rounded-lg flex flex-col items-center justify-center p-2">
-              <QrCode className="w-8 h-8 text-[#134288] mb-1" />
-              <div className="w-full h-1.5 bg-[#32ba5d] rounded mb-1" />
-              <div className="w-2/3 h-1.5 bg-slate-200 rounded" />
-            </div>
-          </div>
-          <div className="absolute -top-2 -right-2 w-8 h-8 bg-[#32ba5d] rounded-full flex items-center justify-center shadow-lg">
-            <Bell className="w-4 h-4 text-white" />
-          </div>
-        </div>
-      </div>
-    ),
-    title: 'Le trouveur scanne',
-    description: 'En cas de perte, le trouveur scanne le QR et contacte votre réception via WhatsApp.',
-  },
-  {
-    num: 4,
-    emoji: '✅',
-    visual: (
-      <div className="w-full h-full flex items-center justify-center">
-        <div className="bg-white rounded-lg p-3 shadow-md border border-slate-200 flex items-center gap-2">
-          <div className="w-10 h-10 rounded-full bg-[#32ba5d] flex items-center justify-center">
-            <CheckCircle2 className="w-6 h-6 text-white" />
-          </div>
-          <div className="flex-1">
-            <div className="h-2 bg-[#32ba5d]/30 rounded w-full mb-1" />
-            <div className="h-2 bg-slate-100 rounded w-2/3" />
-          </div>
-        </div>
-      </div>
-    ),
-    title: 'Restitution',
-    description: 'Votre réception reçoit le message, vérifie le client et organise la restitution.',
-  },
-];
-
-const AVANTAGES = [
-  {
-    icon: <Shield className="w-8 h-8" />,
-    title: 'Contrôle total',
-    description: 'Votre réception garde le contrôle. Le trouveur vous contacte, pas le client directement. Vous vérifiez etrelayez.',
-  },
-  {
-    icon: <BarChart3 className="w-8 h-8" />,
-    title: 'Dashboard temps réel',
-    description: 'Suivez les QR actifs, les check-out à venir, les objets perdus. Statistiques complètes par métier.',
-  },
-  {
-    icon: <Zap className="w-8 h-8" />,
-    title: 'Setup en 5 minutes',
-    description: 'Créez votre agence, générez vos QR, activez vos clients. Aucune installation, accessible partout.',
-  },
-];
-
-const STATS = [
-  { value: '6+', label: 'Métiers supportés' },
-  { value: '< 5min', label: 'Setup complet' },
-  { value: '100%', label: 'Sans installation' },
-];
-
-export default function HomePage() {
-  const [demoForm, setDemoForm] = useState({
-    company: '',
-    metier: 'hotel',
-    email: '',
-    phone: '',
-    message: '',
-  });
-  const [submitted, setSubmitted] = useState(false);
-
-  const handleDemoSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    // V1: simple alert (pas de backend pour le form)
-    const body = `Entreprise: ${demoForm.company}\nMétier: ${demoForm.metier}\nEmail: ${demoForm.email}\nTéléphone: ${demoForm.phone}\nMessage: ${demoForm.message}`;
-    window.location.href = `mailto:contact@qrtagspro.com?subject=${encodeURIComponent(CTA_DEMO_SUBJECT)}&body=${encodeURIComponent(body)}`;
-    setSubmitted(true);
-  };
+export default function LandingPage() {
+  const [mobileMenu, setMobileMenu] = useState(false);
+  const [faqOpen, setFaqOpen] = useState<number | null>(0);
 
   return (
     <div className="min-h-screen bg-white">
-      {/* ═══ HEADER ═══ */}
-      <header className="sticky top-0 z-50 bg-white/95 backdrop-blur border-b border-slate-200">
-        <div className="max-w-[1600px] mx-auto px-4 md:px-6 py-3 flex items-center justify-between">
-          <QRTagsLogo size="sm" href="/" withHover />
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-slate-700">
-            <Link href="/comment-ca-marche" className="hover:text-[#134288] transition">Comment ça marche</Link>
-            <Link href="/metiers" className="hover:text-[#134288] transition">Métiers</Link>
-            <Link href="/tarifs" className="hover:text-[#134288] transition">Tarifs</Link>
-            <Link href="/contact" className="hover:text-[#134288] transition">Contact</Link>
-            <Link href="/demo" className="hover:text-[#134288] transition">Démo</Link>
-          </nav>
-          <div className="flex items-center gap-2">
-            <Link
-              href="/login"
-              className="hidden sm:inline-flex items-center px-4 py-2 text-sm font-semibold text-[#134288] hover:bg-slate-100 rounded-lg transition"
-            >
-              Connexion
+      {/* ─── NAVBAR ─── */}
+      <nav className="fixed top-0 left-0 right-0 z-50 bg-white/90 backdrop-blur-md border-b border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            <Link href="/" className="flex items-center gap-2">
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${EMERALD}, ${BLUE})` }}>
+                <span className="text-white font-bold text-sm">G1</span>
+              </div>
+              <span className="font-bold text-lg text-slate-900">Guest One</span>
             </Link>
-            <Link
-              href="/onboarding"
-              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-bold bg-[#32ba5d] text-white rounded-lg hover:bg-[#28a54f] transition"
-            >
-              S'inscrire
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+
+            <div className="hidden md:flex items-center gap-8">
+              <a href="#solution" className="text-sm font-medium text-slate-600 hover:text-slate-900">Solution</a>
+              <a href="#fonctionnalites" className="text-sm font-medium text-slate-600 hover:text-slate-900">Fonctionnalités</a>
+              <a href="#hotels" className="text-sm font-medium text-slate-600 hover:text-slate-900">Hôtels</a>
+              <a href="#airbnb" className="text-sm font-medium text-slate-600 hover:text-slate-900">Airbnb</a>
+              <a href="#tarifs" className="text-sm font-medium text-slate-600 hover:text-slate-900">Tarifs</a>
+              <a href="#faq" className="text-sm font-medium text-slate-600 hover:text-slate-900">FAQ</a>
+            </div>
+
+            <div className="hidden md:flex items-center gap-3">
+              <Link href="/agence/connexion" className="text-sm font-medium text-slate-600 hover:text-slate-900">Connexion</Link>
+              <a href="#cta" className="px-4 py-2 rounded-xl text-white text-sm font-bold shadow-sm hover:shadow-md transition-all" style={{ background: `linear-gradient(135deg, ${EMERALD}, ${BLUE})` }}>
+                Demander une démo
+              </a>
+            </div>
+
+            <button onClick={() => setMobileMenu(!mobileMenu)} className="md:hidden p-2">
+              {mobileMenu ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            </button>
           </div>
         </div>
-      </header>
 
-      {/* ═══ HERO ═══ */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-[#134288] to-[#0d3266] text-white">
-        {/* Pattern décoratif */}
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: 'radial-gradient(circle at 20% 30%, #32ba5d 0%, transparent 50%), radial-gradient(circle at 80% 70%, #32ba5d 0%, transparent 50%)',
-          }}
-        />
-
-        <div className="relative max-w-[1600px] mx-auto px-4 md:px-6 py-16 md:py-24 grid md:grid-cols-2 gap-12 items-center">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#32ba5d]/20 border border-[#32ba5d]/40 mb-6">
-              <Sparkles className="w-3.5 h-3.5 text-[#32ba5d]" />
-              <span className="text-xs font-semibold text-[#32ba5d]">Nouvelle version V3 — Métiers personnalisables</span>
-            </div>
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black leading-tight mb-6">
-              La gestion d&apos;objets perdus,<br />
-              <span className="text-[#32ba5d]">simple et professionnelle</span>
-            </h1>
-            <p className="text-lg md:text-xl text-blue-100 mb-8 leading-relaxed">
-              Hôtels, écoles, cliniques, loueurs auto... Protégez les effets de vos clients
-              avec des QR codes traçables. Le trouveur vous contacte directement via WhatsApp.
-            </p>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                href="/demande-demo"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-[#32ba5d] text-white font-bold rounded-lg hover:bg-[#28a54f] hover:-translate-y-0.5 transition-all shadow-lg"
-              >
-                Demander une démo
-                <ArrowRight className="w-4 h-4" />
-              </Link>
-              <Link
-                href="/comment-ca-marche"
-                className="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white font-bold rounded-lg border border-white/30 hover:bg-white/20 transition-all"
-              >
-                Voir comment ça marche
-              </Link>
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 mt-12 pt-8 border-t border-white/20">
-              {STATS.map((s, i) => (
-                <div key={i}>
-                  <p className="text-3xl font-black text-[#32ba5d]">{s.value}</p>
-                  <p className="text-xs text-blue-200 mt-1">{s.label}</p>
-                </div>
-              ))}
-            </div>
+        {mobileMenu && (
+          <div className="md:hidden bg-white border-t border-slate-100 px-4 py-4 space-y-3">
+            <a href="#solution" onClick={() => setMobileMenu(false)} className="block text-sm font-medium text-slate-600">Solution</a>
+            <a href="#fonctionnalites" onClick={() => setMobileMenu(false)} className="block text-sm font-medium text-slate-600">Fonctionnalités</a>
+            <a href="#hotels" onClick={() => setMobileMenu(false)} className="block text-sm font-medium text-slate-600">Hôtels</a>
+            <a href="#airbnb" onClick={() => setMobileMenu(false)} className="block text-sm font-medium text-slate-600">Airbnb</a>
+            <a href="#tarifs" onClick={() => setMobileMenu(false)} className="block text-sm font-medium text-slate-600">Tarifs</a>
+            <a href="#cta" onClick={() => setMobileMenu(false)} className="block px-4 py-2 rounded-xl text-white text-sm font-bold text-center" style={{ background: `linear-gradient(135deg, ${EMERALD}, ${BLUE})` }}>
+              Demander une démo
+            </a>
           </div>
+        )}
+      </nav>
 
-          {/* Visuel: Objets avec QR codes */}
-          <div className="relative hidden md:block">
-            {/* Conteneur principal */}
-            <div className="relative">
-              {/* Valise avec QR */}
-              <div className="bg-white rounded-2xl p-6 shadow-2xl rotate-[-3deg] hover:rotate-0 transition-transform duration-500 mb-4">
-                <div className="flex items-center gap-4">
-                  {/* QR code visuel */}
-                  <div className="flex-shrink-0 w-24 h-24 rounded-xl bg-[#134288] p-2">
-                    <div className="w-full h-full bg-white rounded-lg flex items-center justify-center">
-                      <QrCode className="w-12 h-12 text-[#134288]" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-[#32ba5d] uppercase tracking-wide">Valise</p>
-                    <p className="text-lg font-bold text-slate-900">Marie Dupont</p>
-                    <p className="text-sm text-slate-500">Chambre 204 — Hôtel Radisson</p>
-                  </div>
-                  <span className="ml-auto text-xs px-3 py-1 rounded-full font-semibold bg-[#32ba5d]/15 text-[#28a54f]">
-                    ✅ Actif
-                  </span>
-                </div>
+      {/* ─── 1. HERO ─── */}
+      <section className="relative pt-32 pb-20 overflow-hidden" style={{ background: 'linear-gradient(135deg, #ECFDF5 0%, #F8FAFC 50%, #EFF6FF 100%)' }}>
+        <div className="absolute top-0 right-0 w-1/2 h-full opacity-30">
+          <div className="absolute top-20 right-20 w-72 h-72 rounded-full blur-3xl" style={{ background: EMERALD }} />
+          <div className="absolute bottom-20 right-40 w-96 h-96 rounded-full blur-3xl" style={{ background: BLUE }} />
+        </div>
+
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full mb-6" style={{ backgroundColor: `${EMERALD}15` }}>
+                <span className="w-2 h-2 rounded-full animate-pulse" style={{ backgroundColor: EMERALD }} />
+                <span className="text-sm font-semibold" style={{ color: EMERALD_DARK }}>Sans application · Activation en 24h</span>
               </div>
 
-              {/* Cartable avec QR */}
-              <div className="bg-white rounded-2xl p-6 shadow-2xl rotate-[2deg] hover:rotate-0 transition-transform duration-500 mb-4 ml-12">
-                <div className="flex items-center gap-4">
-                  <div className="flex-shrink-0 w-24 h-24 rounded-xl bg-[#32ba5d] p-2">
-                    <div className="w-full h-full bg-white rounded-lg flex items-center justify-center">
-                      <QrCode className="w-12 h-12 text-[#32ba5d]" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-[#134288] uppercase tracking-wide">Cartable</p>
-                    <p className="text-lg font-bold text-slate-900">Luc Martin</p>
-                    <p className="text-sm text-slate-500">6ème B — École Jules Ferry</p>
-                  </div>
-                  <span className="ml-auto text-xs px-3 py-1 rounded-full font-semibold bg-[#32ba5d]/15 text-[#28a54f]">
-                    ✅ Actif
-                  </span>
-                </div>
+              <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-slate-900 leading-tight mb-6">
+                Offrez à vos clients une{' '}
+                <span className="bg-clip-text text-transparent" style={{ backgroundImage: `linear-gradient(135deg, ${EMERALD}, ${BLUE})` }}>
+                  expérience de séjour connectée
+                </span>
+                , sans application.
+              </h1>
+
+              <p className="text-lg text-slate-600 mb-8 leading-relaxed">
+                Guest One transforme un simple QR code ou bracelet en assistant de séjour : services, room service, spa, tourisme, assistance et avis clients.
+              </p>
+
+              <div className="flex flex-col sm:flex-row gap-4">
+                <a href="#cta" className="px-8 py-4 rounded-2xl text-white font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2" style={{ background: `linear-gradient(135deg, ${EMERALD}, ${BLUE})` }}>
+                  Demander une démo
+                  <ArrowRight className="w-5 h-5" />
+                </a>
+                <a href="#solution" className="px-8 py-4 rounded-2xl bg-white text-slate-900 font-bold border-2 border-slate-200 hover:border-slate-300 transition-all flex items-center justify-center gap-2">
+                  Découvrir la solution
+                </a>
               </div>
 
-              {/* Clés avec QR */}
-              <div className="bg-white rounded-2xl p-6 shadow-2xl rotate-[-1deg] hover:rotate-0 transition-transform duration-500 ml-6">
-                <div className="flex items-center gap-4">
-                  <div className="flex-shrink-0 w-24 h-24 rounded-xl bg-slate-800 p-2">
-                    <div className="w-full h-full bg-white rounded-lg flex items-center justify-center">
-                      <QrCode className="w-12 h-12 text-slate-800" />
-                    </div>
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-slate-600 uppercase tracking-wide">Clés voiture</p>
-                    <p className="text-lg font-bold text-slate-900">Karim Benali</p>
-                    <p className="text-sm text-slate-500">Clio 5 — AB-123-CD</p>
-                  </div>
-                  <span className="ml-auto text-xs px-3 py-1 rounded-full font-semibold bg-[#32ba5d]/15 text-[#28a54f]">
-                    ✅ Actif
-                  </span>
-                </div>
+              <div className="flex flex-wrap items-center gap-6 mt-8 text-sm text-slate-500">
+                <span className="flex items-center gap-1.5"><Check className="w-4 h-4" style={{ color: EMERALD }} /> Sans installation</span>
+                <span className="flex items-center gap-1.5"><Check className="w-4 h-4" style={{ color: EMERALD }} /> Multilingue FR/EN/ES</span>
+                <span className="flex items-center gap-1.5"><Check className="w-4 h-4" style={{ color: EMERALD }} /> Activation rapide</span>
               </div>
             </div>
 
-            {/* Badge flottant: notification WhatsApp */}
-            <div className="absolute -bottom-4 -left-4 bg-[#32ba5d] text-white p-4 rounded-xl shadow-xl -rotate-3 z-10">
-              <div className="flex items-center gap-2">
-                <Bell className="w-5 h-5" />
-                <div>
-                  <p className="text-xs font-bold">Objet trouvé !</p>
-                  <p className="text-xs opacity-90">WhatsApp envoyé ✅</p>
+            {/* Visuel smartphone + QR */}
+            <div className="relative flex justify-center">
+              <div className="relative">
+                {/* Phone mockup */}
+                <div className="w-64 h-[500px] rounded-[3rem] border-8 border-slate-900 bg-white shadow-2xl overflow-hidden relative">
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-slate-900 rounded-b-2xl z-10" />
+                  <div className="h-full flex flex-col">
+                    {/* Header */}
+                    <div className="pt-10 pb-6 px-4 text-center" style={{ background: `linear-gradient(135deg, ${EMERALD}15, ${BLUE}15)` }}>
+                      <div className="w-16 h-16 rounded-2xl mx-auto mb-2 flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${EMERALD}, ${BLUE})` }}>
+                        <Hotel className="w-8 h-8 text-white" />
+                      </div>
+                      <p className="text-xs text-slate-500">Bonjour</p>
+                      <h3 className="font-bold text-slate-900 text-sm">Hôtel Baobab</h3>
+                      <p className="text-xs text-slate-400">Chambre 204</p>
+                    </div>
+                    {/* Services grid */}
+                    <div className="flex-1 p-3 grid grid-cols-2 gap-2">
+                      {[
+                        { icon: '🍽️', label: 'Room Service', color: EMERALD },
+                        { icon: '💆', label: 'Spa', color: BLUE },
+                        { icon: '🧹', label: 'Ménage', color: EMERALD },
+                        { icon: '🛍️', label: 'Boutique', color: BLUE },
+                        { icon: '🗺️', label: 'Tourisme', color: EMERALD },
+                        { icon: '🆘', label: 'SOS', color: BLUE },
+                      ].map((s, i) => (
+                        <div key={i} className="bg-slate-50 rounded-2xl p-3 flex flex-col items-center justify-center">
+                          <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl mb-1" style={{ backgroundColor: `${s.color}15` }}>
+                            {s.icon}
+                          </div>
+                          <span className="text-[10px] font-semibold text-slate-700">{s.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            {/* Badge flottant: QR code animé */}
-            <div className="absolute -top-4 -right-4 bg-[#134288] text-white p-3 rounded-xl shadow-xl rotate-6 z-10">
-              <div className="flex items-center gap-2">
-                <QrCode className="w-6 h-6 text-[#32ba5d]" />
-                <div>
-                  <p className="text-xs font-bold">QR scanné</p>
-                  <p className="text-xs opacity-90">Trouveur notifié</p>
+                {/* QR code floating */}
+                <div className="absolute -bottom-6 -left-6 w-28 h-28 bg-white rounded-2xl shadow-xl border border-slate-100 flex items-center justify-center">
+                  <QrCode className="w-20 h-20" style={{ color: BLUE_DARK }} />
+                </div>
+
+                {/* Badge "Sans app" */}
+                <div className="absolute -top-4 -right-4 px-3 py-2 rounded-xl shadow-lg" style={{ background: `linear-gradient(135deg, ${EMERALD}, ${BLUE})` }}>
+                  <p className="text-white text-xs font-bold flex items-center gap-1">
+                    <Smartphone className="w-3 h-3" /> Sans app
+                  </p>
                 </div>
               </div>
             </div>
@@ -376,32 +164,94 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══ COMMENT ÇA MARCHE ═══ */}
-      <section id="how" className="py-20 bg-white">
-        <div className="max-w-[1600px] mx-auto px-4 md:px-6">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-3">
-              Comment ça marche ?
+      {/* ─── 2. PREUVE SOCIALE ─── */}
+      <section className="py-12 bg-white border-y border-slate-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="text-center text-sm font-semibold text-slate-400 uppercase tracking-wide mb-6">
+            Conçu pour les hôtels indépendants, Airbnb et conciergeries
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-8 lg:gap-12">
+            {[
+              { icon: Smartphone, label: 'Sans installation' },
+              { icon: Check, label: 'Activation en 24h' },
+              { icon: MessageSquare, label: 'Interface multilingue' },
+              { icon: Shield, label: 'Données sécurisées' },
+              { icon: QrCode, label: 'QR code + bracelet' },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-2 text-slate-600">
+                <item.icon className="w-5 h-5" style={{ color: EMERALD }} />
+                <span className="text-sm font-medium">{item.label}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 3. PROBLÈME ─── */}
+      <section className="py-20 bg-slate-50">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+            Les voyageurs attendent plus. Les hôtels manquent d'outils simples.
+          </h2>
+          <p className="text-lg text-slate-600 mb-12">
+            Vos clients veulent une expérience moderne. Vos équipes sont saturées de tâches répétitives.
+          </p>
+
+          <div className="grid sm:grid-cols-2 gap-4">
+            {[
+              { icon: '📞', text: 'Clients qui appellent la réception pour tout' },
+              { icon: '⭐', text: 'Mauvais avis difficiles à rattraper' },
+              { icon: '💰', text: 'Manque de revenus additionnels' },
+              { icon: '🔁', text: 'Informations répétées : Wi-Fi, check-in, règles' },
+            ].map((p, i) => (
+              <div key={i} className="bg-white rounded-2xl p-6 border border-slate-200 flex items-start gap-4 text-left">
+                <span className="text-3xl">{p.icon}</span>
+                <p className="text-slate-700 font-medium">{p.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 4. SOLUTION ─── */}
+      <section id="solution" className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+              Guest One : un QR code, tout le séjour.
             </h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              De la génération des QR à la restitution, un workflow simple en 4 étapes.
+              Trois étapes simples pour transformer l'expérience de vos clients.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-4 gap-6">
-            {STEPS.map((step, i) => (
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                num: '1', icon: QrCode, title: 'Le client scanne', desc: 'Un QR code sur le bracelet ou dans la chambre ouvre la WebApp instantanément. Pas de téléchargement, pas d\'inscription.',
+                color: EMERALD,
+              },
+              {
+                num: '2', icon: Smartphone, title: 'Il accède aux services', desc: 'Room service, spa, ménage, tourisme, assistance. Tout est centralisé dans une interface élégante et multilingue.',
+                color: BLUE,
+              },
+              {
+                num: '3', icon: TrendingUp, title: 'Vous pilotez tout', desc: 'Un dashboard simple pour gérer les demandes, commandes, avis et revenus. Les notifications arrivent en temps réel.',
+                color: EMERALD,
+              },
+            ].map((step, i) => (
               <div key={i} className="relative">
-                <div className="bg-white rounded-2xl p-6 border-2 border-slate-200 hover:border-[#32ba5d] transition-colors h-full">
-                  <div className="w-20 h-20 mx-auto mb-4 flex items-center justify-center">
-                    {step.visual}
+                <div className="bg-white rounded-3xl p-8 border-2 border-slate-100 hover:shadow-lg transition-all">
+                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6" style={{ backgroundColor: `${step.color}15` }}>
+                    <step.icon className="w-7 h-7" style={{ color: step.color }} />
                   </div>
-                  <div className="text-xs font-bold text-[#32ba5d] mb-2">ÉTAPE {step.num}</div>
-                  <h3 className="text-lg font-bold text-slate-900 mb-2">{step.title}</h3>
-                  <p className="text-sm text-slate-600">{step.description}</p>
+                  <div className="absolute top-8 right-8 text-6xl font-bold text-slate-100">{step.num}</div>
+                  <h3 className="text-xl font-bold text-slate-900 mb-3">{step.title}</h3>
+                  <p className="text-slate-600 leading-relaxed">{step.desc}</p>
                 </div>
-                {i < STEPS.length - 1 && (
-                  <div className="hidden md:block absolute top-1/2 -right-3 transform -translate-y-1/2 text-slate-300 z-10">
-                    <ArrowRight className="w-6 h-6" />
+                {i < 2 && (
+                  <div className="hidden md:block absolute top-1/2 -right-4 z-10">
+                    <ArrowRight className="w-6 h-6 text-slate-300" />
                   </div>
                 )}
               </div>
@@ -410,47 +260,191 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══ MÉTIERS ═══ */}
-      <section id="metiers" className="py-20 bg-slate-50">
-        <div className="max-w-[1600px] mx-auto px-4 md:px-6">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-3">
-              Une solution par métier
+      {/* ─── 5. FONCTIONNALITÉS ─── */}
+      <section id="fonctionnalites" className="py-20" style={{ background: 'linear-gradient(135deg, #ECFDF5 0%, #EFF6FF 100%)' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+              Tout ce dont vos clients ont besoin, au même endroit
             </h2>
             <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Chaque métier a son propre workflow, ses propres champs et son propre dashboard.
+              9 modules prêts à l'emploi, activables selon vos besoins.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {METIERS.map((m, i) => (
-              <div
-                key={i}
-                className="bg-white rounded-2xl overflow-hidden border-2 border-slate-200 hover:border-[#32ba5d] hover:shadow-lg transition-all group"
-              >
-                {/* Image réelle */}
-                <div className="relative h-44 overflow-hidden">
-                  <img
-                    src={m.image}
-                    alt={m.title}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    loading="lazy"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                  <div className="absolute bottom-3 left-4 right-4 flex items-center justify-between">
-                    <h3 className="text-xl font-bold text-white drop-shadow-lg">{m.title}</h3>
-                    <span className={`text-xs px-2 py-1 rounded-full font-semibold ${
-                      m.badge === 'Disponible'
-                        ? 'bg-[#32ba5d] text-white'
-                        : 'bg-slate-200 text-slate-600'
-                    }`}>
-                      {m.badge}
-                    </span>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[
+              { icon: Bell, title: 'Demandes de services', desc: 'Ménage, serviettes, repassage, assistance technique. Le client demande en 1 tap, le staff est notifié.', color: EMERALD },
+              { icon: ShoppingCart, title: 'Room service & commandes', desc: 'Menu digital, panier, suivi en temps réel. Facturation sur la chambre.', color: BLUE },
+              { icon: Sparkles, title: 'Réservation spa', desc: 'Calendrier interactif, créneaux, tarifs. Confirmation instantanée.', color: EMERALD },
+              { icon: Home, title: 'Guide maison Airbnb', desc: 'Check-in, check-out, Wi-Fi, règles. Tout centralisé dans un livret digital.', color: BLUE },
+              { icon: MapPin, title: 'Tourisme local géolocalisé', desc: 'Recommandations à proximité : restaurants, activités, transports. Tri par distance.', color: EMERALD },
+              { icon: Hotel, title: 'Retour à l\'hôtel', desc: 'Bouton "Retour" avec itinéraire Google Maps. Plus jamais de client perdu.', color: BLUE },
+              { icon: SosButton, title: 'Assistance / SOS', desc: 'Bouton SOS avec partage GPS. Le staff voit la position en temps réel.', color: EMERALD },
+              { icon: Star, title: 'Gestion des avis', desc: 'Note avant départ : 4-5★ → Google, 1-3★ → formulaire privé. Protégez votre réputation.', color: BLUE },
+              { icon: Luggage, title: 'Consigne & dernier jour', desc: 'Dépôt bagages avec code de retrait, réservation douche, transfert aéroport.', color: EMERALD },
+            ].map((f, i) => (
+              <div key={i} className="bg-white rounded-2xl p-6 border border-slate-100 hover:shadow-lg transition-all">
+                <div className="w-12 h-12 rounded-xl flex items-center justify-center mb-4" style={{ backgroundColor: `${f.color}15` }}>
+                  <f.icon className="w-6 h-6" style={{ color: f.color }} />
+                </div>
+                <h3 className="font-bold text-slate-900 mb-2">{f.title}</h3>
+                <p className="text-sm text-slate-600 leading-relaxed">{f.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 6. SECTION HÔTELS ─── */}
+      <section id="hotels" className="py-20 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div>
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4" style={{ backgroundColor: `${BLUE}15` }}>
+                <Hotel className="w-4 h-4" style={{ color: BLUE }} />
+                <span className="text-sm font-semibold" style={{ color: BLUE_DARK }}>Pour les hôtels</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-6">
+                Une solution pensée pour les hôtels.
+              </h2>
+              <p className="text-lg text-slate-600 mb-8">
+                De la petite auberge au boutique hôtel, Guest One s'adapte à votre établissement.
+              </p>
+
+              <div className="space-y-4">
+                {[
+                  { icon: '📞', title: 'Moins d\'appels à la réception', desc: 'Les demandes passent par la WebApp, le staff est notifié automatiquement.' },
+                  { icon: '💰', title: 'Plus de ventes additionnelles', desc: 'Room service, spa, boutique locale : de nouvelles sources de revenus.' },
+                  { icon: '😊', title: 'Meilleure expérience client', desc: 'Vos clients se sentent choyés, 24/7, sans effort pour vos équipes.' },
+                  { icon: '⭐', title: 'Protection contre les mauvais avis', desc: 'Interceptez les réclamations avant qu\'elles arrivent sur Google.' },
+                  { icon: '✨', title: 'Image moderne et premium', desc: 'Un établissement connecté attire une clientèle exigeante.' },
+                ].map((b, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <span className="text-2xl shrink-0">{b.icon}</span>
+                    <div>
+                      <p className="font-semibold text-slate-900">{b.title}</p>
+                      <p className="text-sm text-slate-600">{b.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative">
+              <div className="rounded-3xl overflow-hidden shadow-2xl">
+                <div className="aspect-[4/3] flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${BLUE}15, ${EMERALD}15)` }}>
+                  <div className="text-center p-8">
+                    <Hotel className="w-24 h-24 mx-auto mb-4" style={{ color: BLUE }} />
+                    <p className="text-slate-500 text-sm">Dashboard hôtelier — temps réel</p>
+                    <div className="grid grid-cols-3 gap-2 mt-6">
+                      {['Nouvelles', 'En cours', 'Livrées'].map((s, i) => (
+                        <div key={i} className="bg-white rounded-xl p-3">
+                          <p className="text-2xl font-bold" style={{ color: i === 0 ? BLUE : i === 1 ? EMERALD_DARK : EMERALD }}>{[3, 7, 24][i]}</p>
+                          <p className="text-xs text-slate-500">{s}</p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </div>
-                {/* Description */}
-                <div className="p-5">
-                  <p className="text-sm text-slate-600 leading-relaxed">{m.description}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 7. SECTION AIRBNB ─── */}
+      <section id="airbnb" className="py-20" style={{ background: 'linear-gradient(135deg, #ECFDF5 0%, #F8FAFC 100%)' }}>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="lg:order-2">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4" style={{ backgroundColor: `${EMERALD}15` }}>
+                <Home className="w-4 h-4" style={{ color: EMERALD }} />
+                <span className="text-sm font-semibold" style={{ color: EMERALD_DARK }}>Pour Airbnb & conciergeries</span>
+              </div>
+              <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-6">
+                Une version dédiée aux Airbnb et conciergeries.
+              </h2>
+              <p className="text-lg text-slate-600 mb-8">
+                Le guide digital parfait pour vos voyageurs, sans effort de gestion.
+              </p>
+
+              <div className="space-y-4">
+                {[
+                  { icon: '📖', title: 'Guide digital automatique', desc: 'Wi-Fi, électroménager, règles : tout est dans le QR code du logement.' },
+                  { icon: '📶', title: 'Codes Wi-Fi centralisés', desc: 'Plus besoin de les envoyer manuellement à chaque arrivée.' },
+                  { icon: '🤝', title: 'Assistance voyageurs', desc: 'Bouton conciergerie : le voyageur vous alerte en 1 tap.' },
+                  { icon: '🗺️', title: 'Tourisme local', desc: 'Recommandations géolocalisées autour du logement.' },
+                  { icon: '🔑', title: 'Arrivées et départs simplifiés', desc: 'Instructions de check-in/out accessibles 24/7.' },
+                ].map((b, i) => (
+                  <div key={i} className="flex items-start gap-3">
+                    <span className="text-2xl shrink-0">{b.icon}</span>
+                    <div>
+                      <p className="font-semibold text-slate-900">{b.title}</p>
+                      <p className="text-sm text-slate-600">{b.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="lg:order-1 relative">
+              <div className="rounded-3xl overflow-hidden shadow-2xl">
+                <div className="aspect-[4/3] flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${EMERALD}15, ${BLUE}15)` }}>
+                  <div className="text-center p-8">
+                    <Home className="w-24 h-24 mx-auto mb-4" style={{ color: EMERALD }} />
+                    <p className="text-slate-500 text-sm">Guide maison digital</p>
+                    <div className="grid grid-cols-2 gap-2 mt-6">
+                      {[
+                        { icon: Wifi, label: 'Wi-Fi' },
+                        { icon: Check, label: 'Check-in' },
+                        { icon: MapPin, label: 'Tourisme' },
+                        { icon: Bell, label: 'Concierge' },
+                      ].map((s, i) => (
+                        <div key={i} className="bg-white rounded-xl p-3 flex items-center gap-2">
+                          <s.icon className="w-4 h-4" style={{ color: EMERALD }} />
+                          <span className="text-xs font-medium text-slate-700">{s.label}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 8. MODULES ACTIVABLES ─── */}
+      <section className="py-20 bg-white">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full mb-4" style={{ backgroundColor: `${EMERALD}15` }}>
+            <Puzzle className="w-4 h-4" style={{ color: EMERALD }} />
+            <span className="text-sm font-semibold" style={{ color: EMERALD_DARK }}>Modulaire</span>
+          </div>
+          <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+            Activez uniquement les modules dont vous avez besoin.
+          </h2>
+          <p className="text-lg text-slate-600 mb-12 max-w-2xl mx-auto">
+            Guest One est 100% modulaire. Chaque établissement active les fonctionnalités qui lui correspondent. Vous pouvez évoluer à votre rythme.
+          </p>
+
+          <div className="grid sm:grid-cols-3 gap-4">
+            {[
+              { label: 'Demandes service', on: true },
+              { label: 'Room service', on: true },
+              { label: 'Spa booking', on: false },
+              { label: 'Guide maison', on: true },
+              { label: 'Tourisme géolocalisé', on: true },
+              { label: 'Marketplace locale', on: false },
+              { label: 'SOS avancé', on: false },
+              { label: 'Anti-bad review', on: true },
+              { label: 'Consigne dernier jour', on: false },
+            ].map((m, i) => (
+              <div key={i} className={`rounded-2xl p-4 border-2 flex items-center justify-between ${m.on ? 'border-emerald-200 bg-emerald-50' : 'border-slate-100 bg-slate-50'}`}>
+                <span className="text-sm font-medium text-slate-700">{m.label}</span>
+                <div className={`w-10 h-6 rounded-full p-0.5 transition ${m.on ? 'bg-emerald-500' : 'bg-slate-300'}`}>
+                  <div className={`w-5 h-5 bg-white rounded-full shadow transition ${m.on ? 'translate-x-4' : ''}`} />
                 </div>
               </div>
             ))}
@@ -458,396 +452,315 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══ AVANTAGES ═══ */}
-      <section id="avantages" className="py-20 bg-white">
-        <div className="max-w-[1600px] mx-auto px-4 md:px-6">
-          <div className="text-center mb-14">
-            <h2 className="text-3xl md:text-4xl font-black text-slate-900 mb-3">
-              Pourquoi QRTagsPro ?
+      {/* ─── 9. COMMENT ÇA MARCHE ─── */}
+      <section className="py-20" style={{ background: `linear-gradient(135deg, ${BLUE}, ${BLUE_DARK})` }}>
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-white mb-4">
+              Comment ça marche
             </h2>
-            <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-              Pensé pour les entreprises, simple pour vos équipes.
+            <p className="text-lg text-blue-100">
+              Démarrez en moins de 24 heures.
             </p>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
-            {AVANTAGES.map((a, i) => (
+            {[
+              { num: '1', title: 'Créez votre espace', desc: 'Hôtel ou Airbnb, créez votre compte et configurez votre établissement en quelques minutes.' },
+              { num: '2', title: 'Générez vos QR codes', desc: 'QR codes pour chambres, bracelets pour clients, stickers pour logements. Tout est fourni.' },
+              { num: '3', title: 'Vos clients scannent', desc: 'Ils accèdent instantanément à tous les services. Vous pilotez depuis le dashboard.' },
+            ].map((step, i) => (
               <div key={i} className="text-center">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-[#134288] to-[#0d3266] text-white mb-4">
-                  {a.icon}
+                <div className="w-16 h-16 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center mx-auto mb-6">
+                  <span className="text-2xl font-bold text-white">{step.num}</span>
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">{a.title}</h3>
-                <p className="text-sm text-slate-600 leading-relaxed">{a.description}</p>
+                <h3 className="text-xl font-bold text-white mb-3">{step.title}</h3>
+                <p className="text-blue-100 leading-relaxed">{step.desc}</p>
               </div>
             ))}
           </div>
-
-          {/* Bandeau trust */}
-          <div className="mt-16 p-8 bg-gradient-to-r from-[#134288] to-[#0d3266] rounded-2xl text-white">
-            <div className="grid md:grid-cols-3 gap-6 text-center">
-              <div className="flex flex-col items-center">
-                <Lock className="w-8 h-8 text-[#32ba5d] mb-2" />
-                <p className="text-sm font-semibold">Confidentialité</p>
-                <p className="text-xs text-blue-200 mt-1">Le trouveur ne voit jamais les coordonnées client</p>
-              </div>
-              <div className="flex flex-col items-center">
-                <Clock className="w-8 h-8 text-[#32ba5d] mb-2" />
-                <p className="text-sm font-semibold">Auto-expiration</p>
-                <p className="text-xs text-blue-200 mt-1">Check-out automatique à la date de départ</p>
-              </div>
-              <div className="flex flex-col items-center">
-                <Bell className="w-8 h-8 text-[#32ba5d] mb-2" />
-                <p className="text-sm font-semibold">WhatsApp WAME</p>
-                <p className="text-xs text-blue-200 mt-1">Click-to-chat, aucune installation</p>
-              </div>
-            </div>
-          </div>
         </div>
       </section>
 
-      {/* ═══ DEMO FORM ═══ */}
-      <section id="demo" className="py-20 bg-slate-50">
-        <div className="max-w-3xl mx-auto px-4 md:px-6">
-          <div className="bg-white rounded-2xl p-8 md:p-10 shadow-xl border-2 border-slate-200">
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-black text-slate-900 mb-3">
-                Demandez une démo
-              </h2>
-              <p className="text-slate-600">
-                Découvrez QRTagsPro adapté à votre métier. Réponse sous 24h.
-              </p>
-            </div>
-
-            {submitted ? (
-              <div className="text-center py-8">
-                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-[#32ba5d]/15 mb-4">
-                  <CheckCircle2 className="w-10 h-10 text-[#32ba5d]" />
-                </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Merci !</h3>
-                <p className="text-slate-600">
-                  Votre demande a été préparée dans votre client email. Nous vous recontactons sous 24h.
-                </p>
-              </div>
-            ) : (
-              <form onSubmit={handleDemoSubmit} className="space-y-4">
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                      Entreprise *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      value={demoForm.company}
-                      onChange={(e) => setDemoForm({ ...demoForm, company: e.target.value })}
-                      placeholder="Hôtel Radisson"
-                      className="w-full px-4 py-2.5 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:border-[#32ba5d] focus:ring-2 focus:ring-[#32ba5d]/30"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                      Métier *
-                    </label>
-                    <select
-                      required
-                      value={demoForm.metier}
-                      onChange={(e) => setDemoForm({ ...demoForm, metier: e.target.value })}
-                      className="w-full px-4 py-2.5 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:border-[#32ba5d] focus:ring-2 focus:ring-[#32ba5d]/30"
-                    >
-                      <option value="hotel">🏨 Hôtel</option>
-                      <option value="school">🎓 École</option>
-                      <option value="medical">🏥 Clinique</option>
-                      <option value="car_rental">🚗 Loueur auto</option>
-                      <option value="luggage_locker">🧳 Consigne</option>
-                      <option value="autre">💼 Autre</option>
-                    </select>
-                  </div>
-                </div>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                      Email *
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      value={demoForm.email}
-                      onChange={(e) => setDemoForm({ ...demoForm, email: e.target.value })}
-                      placeholder="contact@entreprise.com"
-                      className="w-full px-4 py-2.5 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:border-[#32ba5d] focus:ring-2 focus:ring-[#32ba5d]/30"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                      Téléphone *
-                    </label>
-                    <input
-                      type="tel"
-                      required
-                      value={demoForm.phone}
-                      onChange={(e) => setDemoForm({ ...demoForm, phone: e.target.value })}
-                      placeholder="+33 6 12 34 56 78"
-                      className="w-full px-4 py-2.5 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:border-[#32ba5d] focus:ring-2 focus:ring-[#32ba5d]/30"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-1.5">
-                    Message (optionnel)
-                  </label>
-                  <textarea
-                    rows={3}
-                    value={demoForm.message}
-                    onChange={(e) => setDemoForm({ ...demoForm, message: e.target.value })}
-                    placeholder="Décrivez votre besoin..."
-                    className="w-full px-4 py-2.5 rounded-lg bg-slate-50 border border-slate-300 text-slate-900 focus:outline-none focus:border-[#32ba5d] focus:ring-2 focus:ring-[#32ba5d]/30 resize-none"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="w-full py-3.5 bg-[#32ba5d] text-white font-bold rounded-lg hover:bg-[#28a54f] hover:-translate-y-0.5 transition-all shadow-lg"
-                >
-                  Envoyer la demande
-                </button>
-              </form>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ ONBOARDING / INSCRIPTION ═══ */}
-      <section id="onboarding" className="py-20 bg-gradient-to-br from-[#134288] to-[#0d3266] text-white">
-        <div className="max-w-5xl mx-auto px-4 md:px-6">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-black mb-3">
-              Démarrez en 3 étapes
+      {/* ─── 10. BÉNÉFICES BUSINESS ─── */}
+      <section className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+              Pourquoi les hôteliers choisissent Guest One
             </h2>
-            <p className="text-lg text-blue-100 max-w-2xl mx-auto">
-              Que vous soyez superadmin ou gérant d'établissement, QRTagsPro
-              s'adapte à votre besoin.
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {[
+              { icon: TrendingUp, title: '+30% de revenus', desc: 'Room service, spa, boutique locale : de nouvelles sources de revenus.', color: EMERALD },
+              { icon: Smile, title: '+45% satisfaction', desc: 'Vos clients se sentent choyés 24/7, sans surcharge pour vos équipes.', color: BLUE },
+              { icon: Shield, title: '-60% d\'appels', desc: 'Les demandes passent par la WebApp, la réception respire.', color: EMERALD },
+              { icon: Star, title: 'Réputation protégée', desc: 'Interceptez les mauvais avis avant qu\'ils soient publics.', color: BLUE },
+            ].map((b, i) => (
+              <div key={i} className="text-center">
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4" style={{ backgroundColor: `${b.color}15` }}>
+                  <b.icon className="w-8 h-8" style={{ color: b.color }} />
+                </div>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">{b.title}</h3>
+                <p className="text-sm text-slate-600">{b.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 11. TÉMOIGNAGES ─── */}
+      <section className="py-20 bg-slate-50">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+              Ils nous font confiance
+            </h2>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-6">
+            {[
+              {
+                name: 'Aminata Diallo', role: 'Directrice, Hôtel Baobab', city: 'Dakar, Sénégal',
+                text: 'Guest One a transformé notre rapport aux clients. Les demandes de serviettes ou de room service arrivent directement sur le téléphone du staff. Plus d\'appels à la réception, plus de confusion.',
+                avatar: 'AD', color: EMERALD,
+              },
+              {
+                name: 'Karim Benali', role: 'Concierge, Saly Properties', city: 'Saly, Sénégal',
+                text: 'La version Airbnb est parfaite. Mes voyageurs trouvent le Wi-Fi, les instructions et les recommandations touristiques en scannant un QR. Je gère 12 appartements sans effort.',
+                avatar: 'KB', color: BLUE,
+              },
+              {
+                name: 'Sophie Martin', role: 'Gérante, Villa Téranga', city: 'Cap Skirring, Sénégal',
+                text: 'Le module anti-bad review a sauvé notre réputation. Les clients mécontents nous écrivent en privé au lieu de poster un avis négatif. On a résolu 90% des problèmes avant départ.',
+                avatar: 'SM', color: EMERALD,
+              },
+            ].map((t, i) => (
+              <div key={i} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+                <div className="flex items-center gap-1 mb-4">
+                  {[1, 2, 3, 4, 5].map((s) => (
+                    <Star key={s} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                  ))}
+                </div>
+                <p className="text-slate-700 mb-6 italic leading-relaxed">"{t.text}"</p>
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white font-bold" style={{ backgroundColor: t.color }}>
+                    {t.avatar}
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-900 text-sm">{t.name}</p>
+                    <p className="text-xs text-slate-500">{t.role} · {t.city}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── 12. TARIFS ─── */}
+      <section id="tarifs" className="py-20 bg-white">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+              Des offres simples et transparentes
+            </h2>
+            <p className="text-lg text-slate-600">
+              Commencez aujourd'hui, évoluez quand vous voulez.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            {/* Étape 1 — Superadmin */}
-            <div className="bg-white/10 backdrop-blur rounded-2xl p-6 border border-white/20">
-              <div className="w-12 h-12 rounded-xl bg-[#32ba5d] flex items-center justify-center text-white font-bold text-xl mb-4">
-                1
-              </div>
-              <h3 className="font-bold text-lg mb-2">Superadmin</h3>
-              <p className="text-sm text-blue-100 mb-4">
-                Créez les agences, générez les lots de QR, gérez les métiers personnalisés.
-              </p>
-              <Link
-                href="/admin/connexion"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-white text-[#134288] text-sm font-bold rounded-lg hover:bg-blue-50 transition"
-              >
-                Espace superadmin
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
-            {/* Étape 2 — Agence */}
-            <div className="bg-white/10 backdrop-blur rounded-2xl p-6 border border-white/20">
-              <div className="w-12 h-12 rounded-xl bg-[#32ba5d] flex items-center justify-center text-white font-bold text-xl mb-4">
-                2
-              </div>
-              <h3 className="font-bold text-lg mb-2">Agence</h3>
-              <p className="text-sm text-blue-100 mb-4">
-                Connectez-vous, faites le check-in de vos clients, suivez vos QR actifs.
-              </p>
-              <Link
-                href="/agence/connexion"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#32ba5d] text-white text-sm font-bold rounded-lg hover:bg-[#28a54f] transition"
-              >
-                Espace agence
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-
-            {/* Étape 3 — Démo */}
-            <div className="bg-white/10 backdrop-blur rounded-2xl p-6 border border-white/20">
-              <div className="w-12 h-12 rounded-xl bg-[#32ba5d] flex items-center justify-center text-white font-bold text-xl mb-4">
-                3
-              </div>
-              <h3 className="font-bold text-lg mb-2">Pas encore client ?</h3>
-              <p className="text-sm text-blue-100 mb-4">
-                Créez votre compte établissement en 2 minutes et commencez à protéger
-                les effets de vos clients.
-              </p>
-              <Link
-                href="/onboarding"
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-[#32ba5d] text-white text-sm font-bold rounded-lg hover:bg-[#28a54f] transition"
-              >
-                S'inscrire maintenant
-                <ArrowRight className="w-3.5 h-3.5" />
-              </Link>
-            </div>
-          </div>
-
-          {/* Workflow résumé */}
-          <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
-            <p className="text-sm font-bold text-[#32ba5d] mb-3 text-center">📋 WORKFLOW COMPLET</p>
-            <div className="grid md:grid-cols-4 gap-4 text-center text-sm">
-              <div>
-                <p className="font-bold text-white mb-1">1. Génération</p>
-                <p className="text-blue-200 text-xs">Superadmin génère QR → agence</p>
-              </div>
-              <div>
-                <p className="font-bold text-white mb-1">2. Check-in</p>
-                <p className="text-blue-200 text-xs">Agence scanne QR + infos client</p>
-              </div>
-              <div>
-                <p className="font-bold text-white mb-1">3. Perte → Scan</p>
-                <p className="text-blue-200 text-xs">Trouveur scanne → WhatsApp réception</p>
-              </div>
-              <div>
-                <p className="font-bold text-white mb-1">4. Restitution</p>
-                <p className="text-blue-200 text-xs">Réception vérifie + restitue</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* ═══ RGPD / CONFIDENTIALITÉ ═══ */}
-      <section className="py-12 bg-slate-100 border-t border-slate-200">
-        <div className="max-w-[1600px] mx-auto px-4 md:px-6">
-          <div className="bg-white rounded-2xl p-6 border-2 border-slate-200 shadow-sm">
-            <div className="flex items-start gap-4">
-              <div className="flex-shrink-0 w-12 h-12 rounded-xl bg-[#134288] flex items-center justify-center">
-                <Shield className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1">
-                <h2 className="text-lg font-bold text-slate-900 mb-2">
-                  🔒 Protection des données — RGPD
-                </h2>
-                <p className="text-sm text-slate-600 leading-relaxed mb-3">
-                  QRTagsPro s'engage à protéger les données personnelles de vos clients conformément
-                  au Règlement Général sur la Protection des Données (RGPD). Voici nos engagements :
-                </p>
-                <div className="grid md:grid-cols-4 gap-4 mt-4">
-                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                    <CheckCircle2 className="w-5 h-5 text-[#32ba5d] mb-2" />
-                    <p className="text-xs font-bold text-slate-900">Confidentialité trouveur</p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Le trouveur ne voit jamais les coordonnées du client (nom, chambre, téléphone).
-                    </p>
+          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto">
+            {[
+              {
+                name: 'Starter', badge: '🚀', price: '15 000', period: '/mois',
+                desc: 'Essentiel pour démarrer',
+                features: [
+                  '1 logement',
+                  '30 QR codes',
+                  '2 utilisateurs',
+                  'Demandes de services',
+                  'Aide & contact',
+                  'Retour à l\'hôtel',
+                  'Anti-bad review',
+                ],
+                color: EMERALD, popular: false,
+              },
+              {
+                name: 'Pro', badge: '⭐', price: '35 000', period: '/mois',
+                desc: 'Services, commandes, avis',
+                features: [
+                  '5 logements',
+                  '200 QR codes',
+                  '8 utilisateurs',
+                  'Tout Starter +',
+                  'Room service',
+                  'Spa booking',
+                  'Mode dernier jour',
+                  'Bracelet personne',
+                  'Escalade auto',
+                ],
+                color: BLUE, popular: true,
+              },
+              {
+                name: 'Premium', badge: '💎', price: '75 000', period: '/mois',
+                desc: 'Spa, marketplace, assistance',
+                features: [
+                  '20 logements',
+                  '1000 QR codes',
+                  '50 utilisateurs',
+                  'Tout Pro +',
+                  'Marketplace locale',
+                  'Commissions multi-niveaux',
+                  'SOS GPS temps réel',
+                  'Push notifications',
+                  'PMS integration',
+                  'RGPD complet',
+                ],
+                color: EMERALD, popular: false,
+              },
+            ].map((plan, i) => (
+              <div key={i} className={`relative rounded-3xl p-8 border-2 ${plan.popular ? 'border-blue-500 shadow-xl scale-105' : 'border-slate-200'}`}>
+                {plan.popular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full text-white text-xs font-bold" style={{ background: `linear-gradient(135deg, ${BLUE}, ${BLUE_DARK})` }}>
+                    POPULAIRE
                   </div>
-                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                    <CheckCircle2 className="w-5 h-5 text-[#32ba5d] mb-2" />
-                    <p className="text-xs font-bold text-slate-900">Opt-in explicite</p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Le contact direct client après séjour nécessite l'accord explicite du client.
-                    </p>
-                  </div>
-                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                    <CheckCircle2 className="w-5 h-5 text-[#32ba5d] mb-2" />
-                    <p className="text-xs font-bold text-slate-900">Données chiffrées</p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Toutes les données sensibles sont chiffrées en base (bcrypt, AES-256).
-                    </p>
-                  </div>
-                  <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
-                    <CheckCircle2 className="w-5 h-5 text-[#32ba5d] mb-2" />
-                    <p className="text-xs font-bold text-slate-900">Suppression auto</p>
-                    <p className="text-xs text-slate-500 mt-1">
-                      Les données de démo sont supprimées après 2h. Les QR expirés sont archivés.
-                    </p>
-                  </div>
+                )}
+                <div className="text-center mb-6">
+                  <span className="text-3xl">{plan.badge}</span>
+                  <h3 className="text-xl font-bold text-slate-900 mt-2">{plan.name}</h3>
+                  <p className="text-sm text-slate-500">{plan.desc}</p>
                 </div>
-                <div className="mt-4 flex flex-wrap gap-3 text-xs">
-                  <a href="/confidentialite" className="text-[#134288] font-semibold hover:underline">
-                    Politique de confidentialité
-                  </a>
-                  <span className="text-slate-300">|</span>
-                  <a href="/cgu" className="text-[#134288] font-semibold hover:underline">
-                    Conditions d'utilisation
-                  </a>
-                  <span className="text-slate-300">|</span>
-                  <a href="/mentions-legales" className="text-[#134288] font-semibold hover:underline">
-                    Mentions légales
-                  </a>
-                  <span className="text-slate-300">|</span>
-                  <a href="mailto:rgpd@qrtagspro.com" className="text-[#134288] font-semibold hover:underline">
-                    Contact DPO : rgpd@qrtagspro.com
-                  </a>
+                <div className="text-center mb-6">
+                  <span className="text-4xl font-bold text-slate-900">{plan.price}</span>
+                  <span className="text-slate-500"> FCFA {plan.period}</span>
                 </div>
+                <ul className="space-y-3 mb-8">
+                  {plan.features.map((f, j) => (
+                    <li key={j} className="flex items-start gap-2 text-sm">
+                      <Check className="w-4 h-4 mt-0.5 shrink-0" style={{ color: plan.color }} />
+                      <span className="text-slate-700">{f}</span>
+                    </li>
+                  ))}
+                </ul>
+                <a href="#cta" className={`block w-full py-3 rounded-xl font-bold text-center transition-all ${plan.popular ? 'text-white' : 'border-2 border-slate-200 text-slate-900 hover:border-slate-300'}`} style={plan.popular ? { background: `linear-gradient(135deg, ${BLUE}, ${BLUE_DARK})` } : {}}>
+                  Choisir {plan.name}
+                </a>
               </div>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ═══ PARTENAIRES ═══ */}
-      <section className="py-16 bg-white border-t border-slate-200">
-        <div className="max-w-5xl mx-auto px-4 md:px-6 text-center">
-          <h2 className="text-2xl font-black text-slate-900 mb-2">Ils nous font confiance</h2>
-          <p className="text-sm text-slate-500 mb-8">Intégrations et partenaires technologiques</p>
-          <div className="flex flex-wrap items-center justify-center gap-8 md:gap-12">
-            {/* Cloudbeds */}
-            <div className="flex flex-col items-center gap-2 opacity-70 hover:opacity-100 transition">
-              <div className="w-16 h-16 rounded-xl bg-[#134288] flex items-center justify-center text-white font-black text-xl">
-                CB
+      {/* ─── 13. FAQ ─── */}
+      <section id="faq" className="py-20 bg-slate-50">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl sm:text-4xl font-bold text-slate-900 mb-4">
+              Questions fréquentes
+            </h2>
+          </div>
+
+          <div className="space-y-3">
+            {[
+              { q: 'Faut-il installer une application ?', a: 'Non. Guest One est une WebApp : le client scanne le QR code et accède directement aux services dans son navigateur. Aucun téléchargement, aucune inscription.' },
+              { q: 'Comment fonctionnent les QR codes ?', a: 'Chaque QR code est unique et lié à un logement ou un bracelet. Vous les générez depuis le dashboard, les imprimez ou les collez. Le scan ouvre la WebApp instantanément.' },
+              { q: 'Est-ce adapté aux petits hôtels ?', a: 'Absolument. Guest One est conçu pour les petits hôtels et boutique hôtels. L\'offre Starter à 15 000 FCFA/mois suffit pour démarrer avec 1 logement et 30 QR codes.' },
+              { q: 'Peut-on activer uniquement certains modules ?', a: 'Oui, Guest One est 100% modulaire. Vous activez uniquement les fonctionnalités dont vous avez besoin. Vous pouvez en ajouter ou retirer à tout moment.' },
+              { q: 'Est-ce compatible avec les Airbnb ?', a: 'Oui, Guest One a une version dédiée Airbnb avec guide maison, Wi-Fi, check-in/out, tourisme local et bouton conciergerie. Parfait pour les propriétaires et conciergeries.' },
+              { q: 'Combien de temps faut-il pour démarrer ?', a: 'Moins de 24 heures. Créez votre compte, générez vos QR codes, configurez vos services. Vos clients peuvent scanner dès le lendemain.' },
+            ].map((item, i) => (
+              <div key={i} className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+                <button
+                  onClick={() => setFaqOpen(faqOpen === i ? null : i)}
+                  className="w-full px-6 py-4 flex items-center justify-between text-left"
+                >
+                  <span className="font-semibold text-slate-900">{item.q}</span>
+                  <ChevronDown className={`w-5 h-5 text-slate-400 transition-transform ${faqOpen === i ? 'rotate-180' : ''}`} />
+                </button>
+                {faqOpen === i && (
+                  <div className="px-6 pb-4 text-slate-600 leading-relaxed">
+                    {item.a}
+                  </div>
+                )}
               </div>
-              <span className="text-xs font-semibold text-slate-600">Cloudbeds</span>
-            </div>
-            {/* Mews */}
-            <div className="flex flex-col items-center gap-2 opacity-70 hover:opacity-100 transition">
-              <div className="w-16 h-16 rounded-xl bg-slate-800 flex items-center justify-center text-white font-black text-xl">
-                M
-              </div>
-              <span className="text-xs font-semibold text-slate-600">Mews</span>
-            </div>
-            {/* Sirvoy */}
-            <div className="flex flex-col items-center gap-2 opacity-70 hover:opacity-100 transition">
-              <div className="w-16 h-16 rounded-xl bg-[#32ba5d] flex items-center justify-center text-white font-black text-xl">
-                S
-              </div>
-              <span className="text-xs font-semibold text-slate-600">Sirvoy</span>
-            </div>
-            {/* Deliverback */}
-            <div className="flex flex-col items-center gap-2 opacity-70 hover:opacity-100 transition">
-              <div className="w-16 h-16 rounded-xl bg-orange-500 flex items-center justify-center text-white font-black text-xl">
-                DB
-              </div>
-              <span className="text-xs font-semibold text-slate-600">Deliverback</span>
-            </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* ═══ FOOTER ═══ */}
-      <footer className="bg-[#0d3266] text-white py-12">
-        <div className="max-w-[1600px] mx-auto px-4 md:px-6">
-          <div className="grid md:grid-cols-4 gap-8">
-            <div className="md:col-span-2">
-              <QRTagsLogo size="md" />
-              <p className="text-sm text-blue-200 mt-4 max-w-sm">
-                La solution de gestion d&apos;objets perdus pour les entreprises.
-                Simple, professionnelle, multi-métiers.
-              </p>
+      {/* ─── 14. CTA FINAL ─── */}
+      <section id="cta" className="py-24 relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${EMERALD}, ${BLUE})` }}>
+        <div className="absolute top-0 left-0 w-96 h-96 rounded-full blur-3xl opacity-20 bg-white" />
+        <div className="absolute bottom-0 right-0 w-96 h-96 rounded-full blur-3xl opacity-20 bg-white" />
+
+        <div className="relative max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-4xl sm:text-5xl font-bold text-white mb-6">
+            Prêt à moderniser l'expérience de vos clients ?
+          </h2>
+          <p className="text-xl text-blue-50 mb-10 leading-relaxed">
+            Créez votre espace Guest One et offrez un séjour connecté dès aujourd'hui.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <a href="/demande-demo" className="px-8 py-4 bg-white rounded-2xl font-bold text-slate-900 shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2">
+              Demander une démo
+              <ArrowRight className="w-5 h-5" />
+            </a>
+            <a href="/agence/connexion" className="px-8 py-4 bg-white/20 backdrop-blur rounded-2xl font-bold text-white border-2 border-white/30 hover:bg-white/30 transition-all flex items-center justify-center gap-2">
+              Commencer maintenant
+            </a>
+          </div>
+
+          <div className="flex flex-wrap items-center justify-center gap-6 mt-10 text-sm text-blue-50">
+            <span className="flex items-center gap-1.5"><Check className="w-4 h-4" /> Sans engagement</span>
+            <span className="flex items-center gap-1.5"><Check className="w-4 h-4" /> Activation en 24h</span>
+            <span className="flex items-center gap-1.5"><Check className="w-4 h-4" /> Annulable à tout moment</span>
+          </div>
+        </div>
+      </section>
+
+      {/* ─── FOOTER ─── */}
+      <footer className="bg-slate-900 text-slate-400 py-12">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-8 mb-8">
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: `linear-gradient(135deg, ${EMERALD}, ${BLUE})` }}>
+                  <span className="text-white font-bold text-xs">G1</span>
+                </div>
+                <span className="font-bold text-white">Guest One</span>
+              </div>
+              <p className="text-sm">La plateforme SaaS pour hôtels, Airbnb et conciergeries. Un QR code, tout le séjour.</p>
             </div>
             <div>
-              <p className="text-sm font-bold mb-3">Accès</p>
-              <ul className="space-y-2 text-sm text-blue-200">
-                <li><Link href="/agence/connexion" className="hover:text-[#32ba5d]">Espace agence</Link></li>
-                <li><Link href="/login" className="hover:text-[#32ba5d]">Espace superadmin</Link></li>
-                <li><Link href="/tarifs" className="hover:text-[#32ba5d]">Tarifs</Link></li>
-                <li><Link href="/contact" className="hover:text-[#32ba5d]">Contact</Link></li>
-                <li><Link href="/demo" className="hover:text-[#32ba5d]">Démo interactive</Link></li>
+              <h4 className="font-semibold text-white mb-3 text-sm">Produit</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#solution" className="hover:text-white">Solution</a></li>
+                <li><a href="#fonctionnalites" className="hover:text-white">Fonctionnalités</a></li>
+                <li><a href="#tarifs" className="hover:text-white">Tarifs</a></li>
+                <li><a href="#faq" className="hover:text-white">FAQ</a></li>
               </ul>
             </div>
             <div>
-              <p className="text-sm font-bold mb-3">Contact</p>
-              <ul className="space-y-2 text-sm text-blue-200">
-                <li className="flex items-center gap-2"><Mail className="w-3.5 h-3.5" /> contact@qrtagspro.com</li>
-                <li className="flex items-center gap-2"><Phone className="w-3.5 h-3.5" /> +33 1 23 45 67 89</li>
+              <h4 className="font-semibold text-white mb-3 text-sm">Solutions</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="#hotels" className="hover:text-white">Pour les hôtels</a></li>
+                <li><a href="#airbnb" className="hover:text-white">Pour les Airbnb</a></li>
+                <li><a href="#cta" className="hover:text-white">Pour les conciergeries</a></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-semibold text-white mb-3 text-sm">Contact</h4>
+              <ul className="space-y-2 text-sm">
+                <li><a href="/demande-demo" className="hover:text-white">Demander une démo</a></li>
+                <li><a href="/agence/connexion" className="hover:text-white">Connexion agence</a></li>
+                <li><a href="/admin/connexion" className="hover:text-white">Connexion admin</a></li>
               </ul>
             </div>
           </div>
-          <div className="mt-8 pt-6 border-t border-white/10 text-center text-xs text-blue-300">
-            © {new Date().getFullYear()} QRTagsPro. Tous droits réservés.
+          <div className="border-t border-slate-800 pt-8 text-center text-sm">
+            <p>© 2026 Guest One. Tous droits réservés.</p>
           </div>
         </div>
       </footer>
