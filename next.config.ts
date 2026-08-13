@@ -8,9 +8,8 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  // Next.js 16: la clé `eslint.ignoreDuringBuilds` n'est plus supportée ici.
+  // Pour ignorer le lint pendant le build, on passe --no-lint au CLI (voir Dockerfile).
   reactStrictMode: false,
   images: {
     formats: ['image/webp'],

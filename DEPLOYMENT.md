@@ -1,152 +1,229 @@
-# QRTagsPro — Guide de déploiement Coolify
+# Guest One — Guide de déploiement Coolify (Dockerfile)
 
-## 🚀 Installation rapide (5 minutes)
+Ce guide décrit le déploiement **via Dockerfile** (recommandé) sur Coolify.
+Le fichier `nixpacks.toml` a été désactivé (`nixpacks.toml.disabled`) pour forcer Coolify à utiliser le `Dockerfile`.
 
-### 1. Connecter le repo GitHub
+---
 
-1. Dans Coolify → **New Resource** → **Public Repository** (ou Private avec token)
-2. Repository: `topmuch/qrtagspro`
-3. Branch: `main`
-4. Coolify détecte automatiquement `nixpacks.toml` et l'utilise pour le build
+## 🏗️ Architecture du build
+
+Le `Dockerfile` est multi-stage (3 étapes) :
+
+| Stage | Rôle | Image de base |
+|-------|------|---------------|
+| **deps** | Installe toutes les dépendances npm + génère le client Prisma (avec binary targets Linux) | `node:20-slim` + python/make/g++ |
+| **builder** | Compile Next.js en mode `standalone` + copie `public/`, `prisma/`, `scripts/`, `node_modules/` à côté de `server.js` | `node:20-slim` |
+| **runner** | Image runtime minimale (openssl, sqlite3, curl) + bundle standalone + entrypoint | `node:20-slim` |
+
+**Avantages vs nixpacks :**
+- ✅ Build reproductible et cacheable
+- ✅ Client Prisma généré avec les bons binary targets Linux (`linux-debian-openssl-3.0.x`)
+- ✅ `serverExternalPackages` (sharp, nodemailer, pdf-lib, qrcode, archiver) correctement inclus
+- ✅ Seeds et migration DB gérés par `docker-entrypoint.sh` (idempotents)
+- ✅ Utilisateur non-root (`nextjs:1001`)
+- ✅ Healthcheck intégré
+- ✅ Volumes persistants pour SQLite et uploads
+
+---
+
+## 🚀 Déploiement sur Coolify (5 minutes)
+
+### 1. Connecter le repository
+
+1. Coolify → **+ New Resource** → **Public Repository** (ou Private avec token)
+2. Repository : `topmuch/guestone`
+3. Branch : `main`
+4. Coolify détecte automatiquement le `Dockerfile` (prioritaire sur nixpacks)
 
 ### 2. Configurer les variables d'environnement
 
-Dans Coolify → **Environment Variables**, ajouter:
+Coolify → **Environment Variables**. Copiez le contenu de `.env.production.example`
+et adaptez les valeurs :
 
 ```env
+# ─── Core ───────────────────────────────────────────────────────────
 NODE_ENV=production
 PORT=3000
 HOSTNAME=0.0.0.0
 DATABASE_URL=file:/app/data/qrtags.db
 
-NEXT_PUBLIC_BASE_URL=https://votre-domaine.com
-NEXTAUTH_URL=https://votre-domaine.com
-NEXTAUTH_SECRET=générer-avec-openssl-rand-base64-32
-ENCRYPTION_KEY=générer-avec-openssl-rand-base64-32
+# ─── URLs publiques (votre domaine Coolify) ─────────────────────────
+NEXT_PUBLIC_BASE_URL=https://guestone.votre-domaine.com
+NEXT_PUBLIC_APP_URL=https://guestone.votre-domaine.com
+NEXTAUTH_URL=https://guestone.votre-domaine.com
 
-CRON_SECRET=générer-une-chaine-aleatoire
-CRON_BACKUP_ENABLED=true
-CRON_BACKUP_SECRET=générer-une-chaine-aleatoire
+# ─── Secrets [OBLIGATOIRE] ──────────────────────────────────────────
+# Générez avec : openssl rand -base64 32
+NEXTAUTH_SECRET=<généré>
+ENCRYPTION_KEY=<généré>
+CRON_SECRET=<généré>
 ```
 
-### 3. Configurer le volume persistant
+### 3. Configurer les volumes persistants
 
-Dans Coolify → **Persistent Storage** (Volumes):
+Coolify → **Persistent Storage (Volumes)** :
 
-| Path | Description |
-|------|-------------|
-| `/app/data` | Base de données SQLite + backups |
-| `/app/public/uploads` | Uploads (photos, etc.) |
+| Path | Description | Obligatoire |
+|------|-------------|-------------|
+| `/app/data` | Base SQLite `qrtags.db` + backups | ✅ |
+| `/app/public/uploads` | Photos et fichiers uploadés | ✅ (si uploads utilisés) |
 
-### 4. Configurer le domaine
+> ⚠️ Sans le volume `/app/data`, la base SQLite est **perdue à chaque redéploiement**.
 
-Dans Coolify → **Domains**:
-- Ajouter votre domaine (ex: `qrtags.votre-domaine.com`)
+### 4. Configurer le port et le domaine
+
+- Coolify → **Ports** : `3000` (exposé par le Dockerfile)
+- Coolify → **Domains** : ajoutez votre domaine (ex: `guestone.votre-domaine.com`)
 - Coolify génère automatiquement le certificat SSL Let's Encrypt
 
 ### 5. Déployer
 
-Cliquer **Deploy** — le build prend ~3-5 minutes:
-1. `npm install` (installe les dépendances)
-2. `npx prisma generate` (génère le client Prisma)
-3. `npm run build` (build Next.js standalone)
-4. Au démarrage: `prisma db push` + `migrate-qrtags-columns.cjs` + `node server.js`
+Cliquez **Deploy**. Le build prend ~3-5 minutes :
 
-### 6. Premier login
-
-Après déploiement, aller sur `https://votre-domaine.com/login`:
-- **Email**: `admin@qrtags.com`
-- **Mot de passe**: `admin123`
-
-⚠️ **Changer le mot de passe immédiatement** après la 1ère connexion !
+1. `npm ci --legacy-peer-deps` (stage deps)
+2. `npx prisma generate` (stage deps)
+3. `npm run build` → Next.js standalone (stage builder)
+4. Copie du bundle standalone + node_modules + public (stage builder)
+5. Au démarrage (stage runner) :
+   - `mkdir -p /app/data /app/public/uploads`
+   - `prisma db push` (crée/maj le schéma SQLite)
+   - Seeds idempotents (services, modules, plans, superadmin, démo)
+   - `exec node server.js`
 
 ---
 
-## ⏰ Cron job (auto-checkout)
+## 🔑 Premier login
 
-Le check-out automatique expire les QR dont la `departureDate` est dépassée.
+Après déploiement, allez sur `https://guestone.votre-domaine.com/login` :
 
-### Option A — Coolify Scheduled Tasks
+- **Email** : `admin@qrtags.com`
+- **Mot de passe** : `admin123`
 
-Dans Coolify → **Scheduled Tasks**:
-- **Command**: `curl -X POST http://localhost:3000/api/cron/auto-checkout -H "Authorization: Bearer ${CRON_SECRET}"`
-- **Frequency**: Every hour (`0 * * * *`)
-
-### Option B — cron-job.org (gratuit)
-
-1. Créer un compte sur [cron-job.org](https://cron-job.org)
-2. Add cron job:
-   - URL: `https://votre-domaine.com/api/cron/auto-checkout`
-   - Method: POST
-   - Headers: `Authorization: Bearer votre-cron-secret`
-   - Schedule: Every hour
+⚠️ **Changez le mot de passe immédiatement** après la 1ère connexion !
 
 ---
 
-## 🏗️ Architecture
+## 🔍 Diagnostic des crashs (restart loop)
+
+Si le container affiche **« Exited (10x restarts) »** :
+
+### 1. Consulter les logs
+
+Coolify → **Logs** (onglet du container). Les 50 dernières lignes avant le crash
+contiennent l'erreur exacte. Le `docker-entrypoint.sh` affiche chaque étape :
 
 ```
-GitHub (topmuch/qrtagspro)
-    ↓
-Coolify (nixpacks build)
-    ├── npm install
-    ├── npx prisma generate
-    ├── npm run build (Next.js standalone)
-    └── Start cmd:
-        ├── mkdir -p /app/data
-        ├── npx prisma db push (crée/maj le schéma DB)
-        ├── node scripts/migrate-qrtags-columns.cjs (backup migration)
-        └── npm start (node .next/standalone/server.js)
-    ↓
-Container (node:20-slim + sqlite3)
-    ├── /app/data/qrtags.db (SQLite, volume persistant)
-    ├── /app/.next/standalone/server.js (Next.js)
-    └── Port 3000
+→ Initialisation du schéma SQLite (prisma db push)...
+✓ Schéma DB à jour
+→ Seeds de référence (idempotents)...
+  • Catalogue services hôtel...
+→ Démarrage du serveur Next.js (standalone)...
 ```
 
-## 🗄️ Base de données
+### 2. Causes fréquentes
 
-SQLite — fichier unique `/app/data/qrtags.db`.
+| Symptôme | Cause | Solution |
+|----------|-------|----------|
+| `prisma db push a échoué` | `DATABASE_URL` vide ou volume non monté | Vérifiez la variable + le volume `/app/data` |
+| `Cannot find module 'sharp'` | node_modules mal copié | Rebuild sans cache : Coolify → **Rebuild (no cache)** |
+| `EADDRINUSE :3000` | Port déjà utilisé | Vérifiez qu'aucun autre service n'utilise le port 3000 |
+| `NEXTAUTH_SECRET` warning | Secret par défaut | Définissez un vrai secret dans Coolify |
+| Hydratation / 500 sur `/` | `NEXT_PUBLIC_APP_URL` incorrect | Doit matcher le domaine Coolify |
+
+### 3. Terminal du container (debug avancé)
+
+Coolify → **Terminal / Exec** dans le container :
+
+```bash
+# Vérifier la DB
+sqlite3 /app/data/qrtags.db ".tables"
+
+# Relancer un seed manuellement
+node scripts/seed-services.cjs
+
+# Reset complet de la DB (⚠️ supprime les données)
+rm -f /app/data/qrtags.db /app/data/qrtags.db-journal
+# Puis Coolify → Restart
+```
+
+---
+
+## ⏰ Cron jobs (optionnel)
+
+Le `instrumentation.ts` lance déjà en arrière-plan (in-process) :
+- Escalade auto (toutes les 5 min)
+- PMS sync (toutes les 30 min)
+- Demo reset (toutes les heures)
+
+Pour le **auto-checkout** (expire les QR dont la `departureDate` est dépassée),
+ajoutez une tâche planifiée dans Coolify → **Scheduled Tasks** :
+
+- **Command** : `curl -X POST http://localhost:3000/api/cron/auto-checkout -H "Authorization: Bearer ${CRON_SECRET}"`
+- **Frequency** : `0 * * * *` (toutes les heures)
+
+---
+
+## 🔄 Mises à jour
+
+Pour déployer une nouvelle version :
+
+1. `git push` sur la branche `main`
+2. Coolify détecte le push → **Deploy** automatique (si auto-deploy activé)
+3. Le volume `/app/data` est préservé → vos données SQLite sont conservées
+
+Pour un **rebuild sans cache** (en cas de souci) :
+Coolify → **Deploy** → choisir **Rebuild without cache**
+
+---
+
+## 📦 Build local (test)
+
+```bash
+# Build
+docker build -t guestone .
+
+# Run avec volume
+docker run -d \
+  --name guestone \
+  -p 3000:3000 \
+  -v $(pwd)/data:/app/data \
+  -v $(pwd)/uploads:/app/public/uploads \
+  -e NEXTAUTH_SECRET=$(openssl rand -base64 32) \
+  -e ENCRYPTION_KEY=$(openssl rand -base64 32) \
+  -e NEXT_PUBLIC_BASE_URL=http://localhost:3000 \
+  -e NEXT_PUBLIC_APP_URL=http://localhost:3000 \
+  -e NEXTAUTH_URL=http://localhost:3000 \
+  guestone
+
+# Logs
+docker logs -f guestone
+
+# Healthcheck
+curl http://localhost:3000/api
+```
+
+---
+
+## 🗄️ Sauvegarde / restauration DB
 
 ### Backup manuel
 
 ```bash
-curl -X POST https://votre-domaine.com/api/cron/backup-db \
+# Via Coolify Exec ou en local
+sqlite3 /app/data/qrtags.db ".backup /app/data/backup-$(date +%Y%m%d).db"
+```
+
+### Via l'API (si CRON_BACKUP_ENABLED=true)
+
+```bash
+curl -X POST https://guestone.votre-domaine.com/api/cron/backup-db \
   -H "Authorization: Bearer ${CRON_BACKUP_SECRET}"
 ```
 
 ### Reset complet (⚠️ supprime toutes les données)
 
-Dans Coolify → **Exec** (terminal du container):
 ```bash
+# Coolify → Exec
 rm -f /app/data/qrtags.db /app/data/qrtags.db-journal
-# Redémarrer le container → la DB est recréée from scratch
+# Puis Coolify → Restart (la DB est recréée + reseed au démarrage)
 ```
-
----
-
-## 🔧 Dépannage
-
-### Le build échoue avec "lightningcss"
-
-→ Vérifier que `bun.lock` n'existe pas dans le repo. Il a été supprimé pour forcer npm.
-
-### Erreur "trackingEnabled does not exist in DB"
-
-→ Le script de migration n'a pas tourné. Vérifier les logs de démarrage.
-Solution: dans Coolify → Exec:
-```bash
-node scripts/migrate-qrtags-columns.cjs
-```
-
-### Le superadmin ne peut pas se connecter
-
-→ Vérifier que le hash bcrypt est correct. Le mot de passe par défaut est `admin123`.
-Reset: dans Coolify → Exec:
-```bash
-sqlite3 /app/data/qrtags.db "UPDATE User SET password='\$2b\$10\$5JnNkrnAaKKWV6kw5Ya9X.yCPqhCi4qTEFTQ37fGRUIORU9nSx9Dq' WHERE email='admin@qrtags.com';"
-```
-
-### Les QR codes générés n'apparaissent pas
-
-→ Vérifier que l'agence a bien un `agencyType` défini et que `customTypeId` est null (sauf pour les métiers custom).

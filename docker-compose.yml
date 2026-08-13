@@ -1,35 +1,55 @@
 # ════════════════════════════════════════════════════════════════════
-# QRTagsPro — docker-compose.yml
-#
-# Coolify utilise nixpacks.toml par défaut (pas ce fichier).
-# Ce fichier est fourni pour un déploiement Docker manuel.
+# Guest One — docker-compose.yml
+# Pour déploiement Docker manuel (Coolify utilise directement le Dockerfile).
+# Usage : docker compose up -d --build
 # ════════════════════════════════════════════════════════════════════
 
 services:
-  qrtagspro:
+  guestone:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: qrtagspro
+    image: guestone:latest
+    container_name: guestone
     restart: unless-stopped
+
     ports:
       - "${PORT:-3000}:3000"
+
     environment:
-      - NODE_ENV=production
-      - PORT=3000
-      - HOSTNAME=0.0.0.0
-      - DATABASE_URL=file:/app/data/qrtags.db
-      - NEXT_PUBLIC_BASE_URL=${NEXT_PUBLIC_BASE_URL:-http://localhost:3000}
-      - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
-      - NEXTAUTH_URL=${NEXTAUTH_URL:-http://localhost:3000}
-      - NEXTAUTH_SECRET=${NEXTAUTH_SECRET:-change-me-in-prod-32-chars-min}
-      - ENCRYPTION_KEY=${ENCRYPTION_KEY:-change-me-in-prod-32-chars-min}
-      - CRON_SECRET=${CRON_SECRET:-change-me}
-      - CRON_BACKUP_ENABLED=${CRON_BACKUP_ENABLED:-true}
-      - CRON_BACKUP_SECRET=${CRON_BACKUP_SECRET:-change-me}
+      # ─── Core ───
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      DATABASE_URL: file:/app/data/qrtags.db
+
+      # ─── URLs publiques (à adapter à votre domaine) ───
+      NEXT_PUBLIC_BASE_URL: ${NEXT_PUBLIC_BASE_URL:-http://localhost:3000}
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://localhost:3000}
+
+      # ─── Secrets (OBLIGATOIRES — voir .env.example) ───
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:?NEXTAUTH_SECRET is required}
+      ENCRYPTION_KEY: ${ENCRYPTION_KEY:?ENCRYPTION_KEY is required}
+      CRON_SECRET: ${CRON_SECRET:-change-me}
+      CRON_BACKUP_ENABLED: ${CRON_BACKUP_ENABLED:-false}
+      CRON_BACKUP_SECRET: ${CRON_BACKUP_SECRET:-change-me}
+
+      # ─── Superadmin (créé au 1er démarrage) ───
+      ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@qrtags.com}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
+
+      # ─── Services externes (optionnels — fallback automatique si vides) ───
+      WAKIT_API_KEY: ${WAKIT_API_KEY:-}
+      GROQ_API_KEY: ${GROQ_API_KEY:-}
+      GROQ_AI_ENABLED: ${GROQ_AI_ENABLED:-true}
+
     volumes:
-      - qrtagspro_data:/app/data
-      - qrtagspro_uploads:/app/public/uploads
+      # Base SQLite + backups (PERSISTANT)
+      - guestone_data:/app/data
+      # Uploads utilisateurs (photos, etc.)
+      - guestone_uploads:/app/public/uploads
+
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/api"]
       interval: 30s
@@ -37,8 +57,15 @@ services:
       retries: 3
       start_period: 60s
 
+    # Logging limité pour éviter la saturation du disque
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
 volumes:
-  qrtagspro_data:
+  guestone_data:
     driver: local
-  qrtagspro_uploads:
+  guestone_uploads:
     driver: local
