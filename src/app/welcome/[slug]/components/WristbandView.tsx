@@ -9,7 +9,8 @@ import SosButton from './SosButton';
 import RoomServiceModal from './RoomServiceModal';
 import LastDayModal from './LastDayModal';
 import SpaModal from './SpaModal';
-import MarketplaceModal from './MarketplaceModal';
+import MarketplaceSection from './MarketplaceSection';
+import OrderTracker from './OrderTracker';
 import ConciergeAlertButton from './ConciergeAlertButton';
 import { getProfileMeta, type BraceletProfile } from '@/lib/bracelet-profiles';
 
@@ -101,12 +102,16 @@ const T = {
     rules: 'Règlement',
     myOrders: 'Mes commandes',
     pending: 'En attente',
-    'Dernier jour': 'Dernier Jour',
+    lastDay: 'Dernier Jour',
     suggestions: 'Suggestions',
     sectionFood: 'Restauration',
     sectionWellness: 'Bien-être',
     sectionPractical: 'Pratique',
     sectionShop: 'Boutique',
+    reorder: 'Recommander le même',
+    reorderYesterday: 'Commander le même que hier',
+    orderTracking: 'Suivi commandes',
+    marketplace: 'Boutique locale',
   },
   en: {
     morning: 'Good Morning',
@@ -132,36 +137,55 @@ const T = {
     rules: 'House Rules',
     myOrders: 'My Orders',
     pending: 'Pending',
-    'Dernier jour': 'Last Day',
+    lastDay: 'Last Day',
     suggestions: 'Suggestions',
     sectionFood: 'Food & Drinks',
     sectionWellness: 'Wellness',
     sectionPractical: 'Practical',
     sectionShop: 'Shop',
+    reorder: 'Reorder same',
+    reorderYesterday: 'Order the same as yesterday',
+    orderTracking: 'Order tracking',
+    marketplace: 'Local Shop',
   },
 };
 
-// ─── Suggestions contextuelles (hardcodées par heure) ────────────────────
-function getContextualSuggestions(hour: number, lang: string): { emoji: string; label: string; action: string }[] {
+// ─── Suggestions contextuelles (hardcodées par heure + événements) ────────
+function getContextualSuggestions(hour: number, lang: string, isLastDay: boolean): { emoji: string; label: string; action: string }[] {
+  const suggestions: { emoji: string; label: string; action: string }[] = [];
+  const isFr = lang !== 'en';
+
+  // Time-based
   if (hour >= 6 && hour < 10) {
-    return lang === 'en'
-      ? [{ emoji: '☕', label: 'Coffee & Breakfast', action: 'roomservice' }, { emoji: '🧖', label: 'Morning Spa', action: 'spa' }]
-      : [{ emoji: '☕', label: 'Café & Petit-déj', action: 'roomservice' }, { emoji: '🧖', label: 'Spa matinal', action: 'spa' }];
+    suggestions.push(
+      { emoji: '☕', label: isFr ? 'Café & Petit-déj' : 'Coffee & Breakfast', action: 'roomservice' },
+      { emoji: '🧖', label: isFr ? 'Spa matinal' : 'Morning Spa', action: 'spa' }
+    );
+  } else if (hour >= 10 && hour < 14) {
+    suggestions.push(
+      { emoji: '🍽️', label: isFr ? 'Menu déjeuner' : 'Lunch Menu', action: 'roomservice' },
+      { emoji: '🚕', label: isFr ? 'Réserver taxi' : 'Book a Taxi', action: 'taxi' }
+    );
+  } else if (hour >= 14 && hour < 18) {
+    suggestions.push(
+      { emoji: '💆', label: isFr ? 'Spa l\'après-midi' : 'Afternoon Spa', action: 'spa' },
+      { emoji: '🛍️', label: isFr ? 'Boutique locale' : 'Local Shop', action: 'marketplace' }
+    );
+  } else {
+    suggestions.push(
+      { emoji: '🍽️', label: isFr ? 'Menu dîner' : 'Dinner Menu', action: 'roomservice' },
+      { emoji: '🧳', label: isFr ? 'Préparer checkout' : 'Prepare Checkout', action: 'lastday' }
+    );
   }
-  if (hour >= 10 && hour < 14) {
-    return lang === 'en'
-      ? [{ emoji: '🍽️', label: 'Lunch Menu', action: 'roomservice' }, { emoji: '🚕', label: 'Book a Taxi', action: 'taxi' }]
-      : [{ emoji: '🍽️', label: 'Menu déjeuner', action: 'roomservice' }, { emoji: '🚕', label: 'Réserver taxi', action: 'taxi' }];
+
+  // Last day override
+  if (isLastDay) {
+    suggestions.push(
+      { emoji: '🧳', label: isFr ? 'Dernier jour — Checkout' : 'Last Day — Checkout', action: 'lastday' }
+    );
   }
-  if (hour >= 14 && hour < 18) {
-    return lang === 'en'
-      ? [{ emoji: '💆', label: 'Afternoon Spa', action: 'spa' }, { emoji: '🛍️', label: 'Local Shop', action: 'marketplace' }]
-      : [{ emoji: '💆', label: 'Spa l\'après-midi', action: 'spa' }, { emoji: '🛍️', label: 'Boutique locale', action: 'marketplace' }];
-  }
-  // Evening
-  return lang === 'en'
-    ? [{ emoji: '🍽️', label: 'Dinner Menu', action: 'roomservice' }, { emoji: '🧳', label: 'Prepare Checkout', action: 'lastday' }]
-    : [{ emoji: '🍽️', label: 'Menu dîner', action: 'roomservice' }, { emoji: '🧳', label: 'Préparer checkout', action: 'lastday' }];
+
+  return suggestions;
 }
 
 // ─── Service category classification ───────────────────────────────────────
@@ -198,7 +222,6 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
   const [showRoomService, setShowRoomService] = useState(false);
   const [showLastDay, setShowLastDay] = useState(false);
   const [showSpa, setShowSpa] = useState(false);
-  const [showMarketplace, setShowMarketplace] = useState(false);
 
   // Geofencing GPS
   useEffect(() => {
@@ -321,7 +344,7 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
     } catch { return null; }
   };
 
-  // ─── Carte de service (réutilisable) ─.--
+  // ─── Carte de service (réutilisable) ───
   const ServiceCard = ({ s }: { s: HotelServiceItem }) => {
     const sched = parseSchedule(s.schedule);
     return (
@@ -368,37 +391,59 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
   };
 
   // ════════════════════════════════════════════════════════════════════
-  // ONGLET 1 — ROOM SERVICE (centre de commande)
+  // ONGLET 1 — ROOM SERVICE (centre de commande complet)
   // ════════════════════════════════════════════════════════════════════
   const renderRoomServiceTab = () => {
     if (isHost && agency.houseGuide) {
       return <HostView guide={agency.houseGuide} agencyName={agency.name} agencyAddress={agency.address} lang={lang} />;
     }
 
-    const suggestions = getContextualSuggestions(currentHour, effectiveLang);
+    const suggestions = getContextualSuggestions(currentHour, effectiveLang, !!isLastDay);
 
     return (
       <div className="space-y-5">
-        {/* Suggestions contextuelles */}
+        {/* ─── Suivi commandes en temps réel ─── */}
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-lg">📦</span>
+            <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: C.goldDark }}>{t.orderTracking}</h2>
+          </div>
+          <OrderTracker
+            agencyId={agency.id}
+            baggageId={agency.reference || undefined}
+            reference={agency.reference || undefined}
+            lang={effectiveLang}
+            onReorder={(order) => {
+              // Ouvrir le bon modal selon le type de commande
+              if (order.type === 'roomservice') setShowRoomService(true);
+              // Marketplace reorder se fait via le MarketplaceSection directement
+            }}
+          />
+        </div>
+
+        {/* ─── Suggestions contextuelles ─── */}
         {suggestions.length > 0 && (
           <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-4 border" style={{ borderColor: `${C.gold}30` }}>
             <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: C.goldDark }}>
               💡 {t.suggestions}
             </p>
-            <div className="flex gap-2">
+            <div className="flex gap-2 overflow-x-auto pb-1">
               {suggestions.map((sug, i) => (
                 <button
                   key={i}
                   onClick={() => {
                     if (sug.action === 'roomservice') setShowRoomService(true);
                     else if (sug.action === 'spa') setShowSpa(true);
-                    else if (sug.action === 'marketplace') setShowMarketplace(true);
+                    else if (sug.action === 'marketplace') {
+                      // Scroll vers marketplace section
+                      document.getElementById('marketplace-section')?.scrollIntoView({ behavior: 'smooth' });
+                    }
                     else if (sug.action === 'lastday') setShowLastDay(true);
                   }}
-                  className="flex-1 flex items-center justify-center gap-2 py-3 px-3 bg-white rounded-xl border transition-all hover:shadow-md"
+                  className="flex items-center gap-2 py-2.5 px-4 bg-white rounded-xl border transition-all hover:shadow-md whitespace-nowrap"
                   style={{ borderColor: C.border }}
                 >
-                  <span className="text-xl">{sug.emoji}</span>
+                  <span className="text-lg">{sug.emoji}</span>
                   <span className="text-sm font-semibold" style={{ color: C.ink }}>{sug.label}</span>
                 </button>
               ))}
@@ -414,7 +459,7 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
           >
             <span className="text-2xl">🧳</span>
             <div className="text-left">
-              <p className="font-bold text-sm">{t['Dernier jour']}</p>
+              <p className="font-bold text-sm">{t.lastDay}</p>
               <p className="text-xs text-purple-100">{t.checkout}</p>
             </div>
           </button>
@@ -483,27 +528,26 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
           <ServiceSection title={t.sectionPractical} emoji="🔧" items={practicalServices} />
         )}
 
-        {/* ─── Section Boutique ─── */}
-        <div>
+        {/* ─── Section Boutique (Marketplace enrichi INLINE) ─── */}
+        <div id="marketplace-section">
           <div className="flex items-center gap-2 mb-3">
             <span className="text-lg">🛍️</span>
             <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: C.inkLight }}>{t.sectionShop}</h2>
           </div>
-          <button
-            onClick={() => setShowMarketplace(true)}
-            className="w-full p-4 bg-gradient-to-r from-orange-500 to-amber-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition flex items-center gap-3"
-          >
-            <span className="text-2xl">🛍️</span>
-            <div className="text-left">
-              <p className="font-bold text-sm">Boutique locale</p>
-              <p className="text-xs text-orange-100">Commerçants partenaires</p>
-            </div>
-          </button>
+          <MarketplaceSection
+            agencyId={agency.id}
+            baggageId={agency.reference || undefined}
+            roomNumber={stay?.roomNumber}
+            guestName={stay?.guestName}
+            hotelLat={agency.latitude}
+            hotelLng={agency.longitude}
+            lang={effectiveLang}
+          />
         </div>
 
         {/* Other services */}
         {otherServices.length > 0 && (
-          <ServiceSection title="Autres" emoji="📋" items={otherServices} />
+          <ServiceSection title={effectiveLang === 'en' ? 'Other' : 'Autres'} emoji="📋" items={otherServices} />
         )}
 
         {/* Empty state */}
@@ -538,7 +582,9 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
             <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 mb-2">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-wide" style={{ color: C.goldDark }}>Séjour</p>
+                  <p className="text-xs uppercase tracking-wide" style={{ color: C.goldDark }}>
+                    {effectiveLang === 'en' ? 'Stay' : 'Séjour'}
+                  </p>
                   <p className="text-2xl font-bold" style={{ color: C.ink }}>
                     {t.day}{stayDay.dayNum} {t.of} {stayDay.totalDays}
                   </p>
@@ -547,7 +593,7 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
                   {isLastDay ? '🧳' : '🏨'}
                 </div>
               </div>
-              {isLastDay && <p className="text-xs font-semibold mt-1" style={{ color: '#7c3aed' }}>{t['Dernier jour']} !</p>}
+              {isLastDay && <p className="text-xs font-semibold mt-1" style={{ color: '#7c3aed' }}>{t.lastDay} !</p>}
             </div>
           )}
           <div className="grid grid-cols-2 gap-2 text-sm">
@@ -564,7 +610,9 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
       ) : (
         <div className="bg-white rounded-2xl p-6 border text-center" style={{ borderColor: C.border, boxShadow: C.shadow }}>
           <span className="text-3xl">🏨</span>
-          <p className="mt-2 text-sm" style={{ color: C.inkLight }}>Informations de séjour non disponibles</p>
+          <p className="mt-2 text-sm" style={{ color: C.inkLight }}>
+            {effectiveLang === 'en' ? 'Stay information not available' : 'Informations de séjour non disponibles'}
+          </p>
         </div>
       )}
 
@@ -576,7 +624,7 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
         >
           <span className="text-3xl">🧳</span>
           <div className="text-left">
-            <p className="font-bold">{t['Dernier jour']}</p>
+            <p className="font-bold">{t.lastDay}</p>
             <p className="text-sm text-purple-100">{t.checkout}</p>
           </div>
         </button>
@@ -778,7 +826,6 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
       {showRoomService && <RoomServiceModal agencyId={agency.id} baggageId={undefined} roomNumber={stay?.roomNumber} guestName={stay?.guestName} onClose={() => setShowRoomService(false)} />}
       {showLastDay && <LastDayModal agencyId={agency.id} baggageId={undefined} roomNumber={stay?.roomNumber} guestName={stay?.guestName} onClose={() => setShowLastDay(false)} />}
       {showSpa && <SpaModal agencyId={agency.id} baggageId={undefined} roomNumber={stay?.roomNumber} guestName={stay?.guestName} onClose={() => setShowSpa(false)} />}
-      {showMarketplace && <MarketplaceModal agencyId={agency.id} baggageId={undefined} roomNumber={stay?.roomNumber} guestName={stay?.guestName} onClose={() => setShowMarketplace(false)} />}
     </div>
   );
 }
