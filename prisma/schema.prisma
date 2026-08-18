@@ -1533,6 +1533,10 @@ model Merchant {
   website           String?
   // Médias
   logoUrl           String?
+  coverUrl          String?  // photo bannière du shop
+  // Géolocalisation
+  latitude          Float?
+  longitude         Float?
   // Commission (pourcentage prélevé par l'hôtel)
   commissionRate    Float              @default(10) // 10% par défaut
   // Accès portail commerçant (login simplifié)
@@ -1547,6 +1551,7 @@ model Merchant {
   updatedAt         DateTime           @updatedAt
   products          Product[]
   marketplaceOrders MarketplaceOrder[]
+  reviews           MerchantReview[]
 
   @@index([agencyId])
   @@index([category])
@@ -1632,6 +1637,21 @@ model MarketplaceOrderItem {
   quantity  Int              @default(1)
 
   @@index([orderId])
+}
+
+model MerchantReview {
+  id         String    @id @default(cuid())
+  merchantId String
+  merchant   Merchant  @relation(fields: [merchantId], references: [id], onDelete: Cascade)
+  agencyId   String
+  // Auteur (optionnel — guest anonyme ou identifié)
+  guestName  String?
+  rating     Int       // 1-5
+  comment    String?
+  createdAt  DateTime  @default(now())
+
+  @@index([merchantId])
+  @@index([agencyId])
 }
 
 // ════════════════════════════════════════════════════════════════
