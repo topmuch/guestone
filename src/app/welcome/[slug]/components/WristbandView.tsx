@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import HostView, { type HouseGuideData } from './HostView';
 import NearbyAttractions from './NearbyAttractions';
 import ServiceRequestModal from './ServiceRequestModal';
@@ -13,206 +13,137 @@ import MarketplaceSection from './MarketplaceSection';
 import OrderTracker from './OrderTracker';
 import ConciergeAlertButton from './ConciergeAlertButton';
 import { getProfileMeta, type BraceletProfile } from '@/lib/bracelet-profiles';
+import {
+  UtensilsCrossed, Bed, Compass, ShieldAlert,
+  Star, ChevronRight, Wifi, Clock, MapPin
+} from 'lucide-react';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 interface HotelServiceItem {
-  id: string;
-  name: string;
-  description: string | null;
-  icon: string;
-  type: string;
-  category: string;
-  isFree: boolean;
-  price: number;
-  schedule: string | null;
-  assignedTeam: string;
-  displayTab: string;
+  id: string; name: string; description: string | null; icon: string;
+  type: string; category: string; isFree: boolean; price: number;
+  schedule: string | null; assignedTeam: string; displayTab: string;
 }
 
 export interface WelcomeAgency {
-  id: string;
-  name: string;
-  slug: string;
-  phone: string | null;
-  contactPhone: string | null;
-  logoUrl: string | null;
-  address: string | null;
-  braceletProfile: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  houseGuide: HouseGuideData | null;
-  reference: string | null;
+  id: string; name: string; slug: string;
+  phone: string | null; contactPhone: string | null; logoUrl: string | null;
+  address: string | null; braceletProfile: string | null;
+  latitude: number | null; longitude: number | null;
+  houseGuide: HouseGuideData | null; reference: string | null;
 }
 
 interface StayData {
-  id: string;
-  roomNumber: string | null;
-  guestName: string | null;
-  guestEmail: string | null;
-  guestPhone: string | null;
-  language: string;
-  checkInDate: string;
-  checkOutDate: string;
-  nbPersons: number;
-  status: string;
+  id: string; roomNumber: string | null; guestName: string | null;
+  guestEmail: string | null; guestPhone: string | null; language: string;
+  checkInDate: string; checkOutDate: string; nbPersons: number; status: string;
 }
 
-interface WristbandViewProps {
-  agency: WelcomeAgency;
-  lang: string;
-}
+interface WristbandViewProps { agency: WelcomeAgency; lang: string; }
 
-// ─── Palette Luxe ──────────────────────────────────────────────────────────
-const C = {
-  bg: '#FAF8F5',
-  card: '#FFFFFF',
-  ink: '#2C2C2C',
-  inkLight: '#6B6B6B',
-  gold: '#C9A961',
-  goldLight: '#E8D5A3',
-  goldDark: '#A8884A',
-  border: '#E8E4DD',
-  shadow: '0 2px 12px rgba(0,0,0,0.06)',
-  shadowHover: '0 4px 20px rgba(201,169,97,0.15)',
+// ─── Mobile App Palette ────────────────────────────────────────────────────
+const P = {
+  // Fond principal
+  bg:          '#F5F5F7',
+  // Cards
+  card:        '#FFFFFF',
+  cardShadow:  '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)',
+  cardShadowL: '0 4px 12px rgba(0,0,0,0.1)',
+  // Text
+  text:        '#1C1C1E',
+  text2:       '#8E8E93',
+  text3:       '#C7C7CC',
+  // Accent (gold luxe)
+  accent:      '#C9A961',
+  accentDark:  '#A8884A',
+  accentBg:    '#FFF9EE',
+  // Status colors
+  green:       '#34C759',
+  orange:      '#FF9500',
+  red:         '#FF3B30',
+  blue:        '#007AFF',
+  purple:      '#AF52DE',
+  // Tab bar
+  tabBar:      '#FFFFFF',
+  tabInactive: '#8E8E93',
+  tabActive:   '#C9A961',
+  // Separator
+  sep:         '#E5E5EA',
 };
 
 // ─── Traductions ────────────────────────────────────────────────────────────
 const T = {
   fr: {
-    morning: 'Bonjour',
-    afternoon: 'Bon après-midi',
-    evening: 'Bonsoir',
+    morning: 'Bonjour', afternoon: 'Bon après-midi', evening: 'Bonsoir',
     subtitle: 'Votre compagnon de séjour',
-    tabRoomService: 'Room Service',
-    tabMyStay: 'Mon Séjour',
-    tabExplore: 'Explorer',
-    tabEmergency: 'Urgence',
-    reception: 'Appeler la réception',
-    emergency: 'Urgences',
-    review: 'Laisser un avis',
-    noServices: 'Aucun service configuré pour le moment.',
-    noPartners: 'Aucun lieu recommandé pour le moment.',
-    backToHotel: 'Retour à l\'hôtel',
-    room: 'Ch.',
-    day: 'J',
-    of: 'sur',
-    checkout: 'Préparer mon checkout',
-    wifi: 'WiFi & Informations',
-    network: 'Réseau',
-    rules: 'Règlement',
-    myOrders: 'Mes commandes',
-    pending: 'En attente',
-    lastDay: 'Dernier Jour',
-    suggestions: 'Suggestions',
-    sectionFood: 'Restauration',
-    sectionWellness: 'Bien-être',
-    sectionPractical: 'Pratique',
-    sectionShop: 'Boutique',
-    reorder: 'Recommander le même',
-    reorderYesterday: 'Commander le même que hier',
-    orderTracking: 'Suivi commandes',
-    marketplace: 'Boutique locale',
+    tabRoomService: 'Service', tabMyStay: 'Séjour', tabExplore: 'Explorer', tabEmergency: 'Urgence',
+    reception: 'Réception', emergency: 'Urgences', review: 'Avis',
+    noServices: 'Aucun service configuré.', noPartners: 'Aucun lieu recommandé.',
+    backToHotel: 'Retour hôtel', room: 'Ch.', day: 'J', of: 'sur',
+    checkout: 'Préparer mon checkout', wifi: 'WiFi & Infos',
+    network: 'Réseau', rules: 'Règlement',
+    myOrders: 'Commandes', pending: 'En attente', lastDay: 'Dernier Jour',
+    suggestions: 'Suggestions', sectionFood: 'Restauration',
+    sectionWellness: 'Bien-être', sectionPractical: 'Pratique', sectionShop: 'Boutique',
+    orderTracking: 'Suivi commandes', allGood: 'Tout est calme',
+    activeOrders: 'En cours', pastOrders: 'Historique',
   },
   en: {
-    morning: 'Good Morning',
-    afternoon: 'Good Afternoon',
-    evening: 'Good Evening',
+    morning: 'Good Morning', afternoon: 'Good Afternoon', evening: 'Good Evening',
     subtitle: 'Your stay companion',
-    tabRoomService: 'Room Service',
-    tabMyStay: 'My Stay',
-    tabExplore: 'Explore',
-    tabEmergency: 'Emergency',
-    reception: 'Call Reception',
-    emergency: 'Emergency',
-    review: 'Leave a review',
-    noServices: 'No services configured yet.',
-    noPartners: 'No recommended places yet.',
-    backToHotel: 'Back to hotel',
-    room: 'Room',
-    day: 'D',
-    of: 'of',
-    checkout: 'Prepare my checkout',
-    wifi: 'WiFi & Information',
-    network: 'Network',
-    rules: 'House Rules',
-    myOrders: 'My Orders',
-    pending: 'Pending',
-    lastDay: 'Last Day',
-    suggestions: 'Suggestions',
-    sectionFood: 'Food & Drinks',
-    sectionWellness: 'Wellness',
-    sectionPractical: 'Practical',
-    sectionShop: 'Shop',
-    reorder: 'Reorder same',
-    reorderYesterday: 'Order the same as yesterday',
-    orderTracking: 'Order tracking',
-    marketplace: 'Local Shop',
+    tabRoomService: 'Service', tabMyStay: 'Stay', tabExplore: 'Explore', tabEmergency: 'Emergency',
+    reception: 'Reception', emergency: 'Emergency', review: 'Review',
+    noServices: 'No services configured.', noPartners: 'No recommended places.',
+    backToHotel: 'Back to hotel', room: 'Rm', day: 'D', of: 'of',
+    checkout: 'Prepare checkout', wifi: 'WiFi & Info',
+    network: 'Network', rules: 'House Rules',
+    myOrders: 'Orders', pending: 'Pending', lastDay: 'Last Day',
+    suggestions: 'Suggestions', sectionFood: 'Food & Drinks',
+    sectionWellness: 'Wellness', sectionPractical: 'Practical', sectionShop: 'Shop',
+    orderTracking: 'Order tracking', allGood: 'All quiet',
+    activeOrders: 'Active', pastOrders: 'History',
   },
 };
 
-// ─── Suggestions contextuelles (hardcodées par heure + événements) ────────
-function getContextualSuggestions(hour: number, lang: string, isLastDay: boolean): { emoji: string; label: string; action: string }[] {
-  const suggestions: { emoji: string; label: string; action: string }[] = [];
+// ─── Suggestions contextuelles ─────────────────────────────────────────────
+function getContextualSuggestions(hour: number, lang: string, isLastDay: boolean) {
   const isFr = lang !== 'en';
-
-  // Time-based
+  const s: { emoji: string; label: string; action: string; gradient: string }[] = [];
   if (hour >= 6 && hour < 10) {
-    suggestions.push(
-      { emoji: '☕', label: isFr ? 'Café & Petit-déj' : 'Coffee & Breakfast', action: 'roomservice' },
-      { emoji: '🧖', label: isFr ? 'Spa matinal' : 'Morning Spa', action: 'spa' }
-    );
+    s.push({ emoji: '☕', label: isFr ? 'Café & Petit-déj' : 'Coffee & Breakfast', action: 'roomservice', gradient: 'from-amber-400 to-orange-500' });
+    s.push({ emoji: '🧖', label: isFr ? 'Spa matinal' : 'Morning Spa', action: 'spa', gradient: 'from-purple-400 to-pink-500' });
   } else if (hour >= 10 && hour < 14) {
-    suggestions.push(
-      { emoji: '🍽️', label: isFr ? 'Menu déjeuner' : 'Lunch Menu', action: 'roomservice' },
-      { emoji: '🚕', label: isFr ? 'Réserver taxi' : 'Book a Taxi', action: 'taxi' }
-    );
+    s.push({ emoji: '🍽️', label: isFr ? 'Menu déjeuner' : 'Lunch Menu', action: 'roomservice', gradient: 'from-green-400 to-emerald-500' });
+    s.push({ emoji: '🚕', label: isFr ? 'Réserver taxi' : 'Book Taxi', action: 'taxi', gradient: 'from-blue-400 to-cyan-500' });
   } else if (hour >= 14 && hour < 18) {
-    suggestions.push(
-      { emoji: '💆', label: isFr ? 'Spa l\'après-midi' : 'Afternoon Spa', action: 'spa' },
-      { emoji: '🛍️', label: isFr ? 'Boutique locale' : 'Local Shop', action: 'marketplace' }
-    );
+    s.push({ emoji: '💆', label: isFr ? 'Spa après-midi' : 'Afternoon Spa', action: 'spa', gradient: 'from-violet-400 to-purple-500' });
+    s.push({ emoji: '🛍️', label: isFr ? 'Boutique locale' : 'Local Shop', action: 'marketplace', gradient: 'from-orange-400 to-amber-500' });
   } else {
-    suggestions.push(
-      { emoji: '🍽️', label: isFr ? 'Menu dîner' : 'Dinner Menu', action: 'roomservice' },
-      { emoji: '🧳', label: isFr ? 'Préparer checkout' : 'Prepare Checkout', action: 'lastday' }
-    );
+    s.push({ emoji: '🍽️', label: isFr ? 'Menu dîner' : 'Dinner Menu', action: 'roomservice', gradient: 'from-rose-400 to-red-500' });
+    s.push({ emoji: '🧳', label: isFr ? 'Préparer checkout' : 'Prepare Checkout', action: 'lastday', gradient: 'from-indigo-400 to-violet-500' });
   }
-
-  // Last day override
-  if (isLastDay) {
-    suggestions.push(
-      { emoji: '🧳', label: isFr ? 'Dernier jour — Checkout' : 'Last Day — Checkout', action: 'lastday' }
-    );
-  }
-
-  return suggestions;
+  if (isLastDay) s.push({ emoji: '🧳', label: isFr ? 'Dernier jour !' : 'Last Day!', action: 'lastday', gradient: 'from-violet-500 to-purple-600' });
+  return s;
 }
 
-// ─── Service category classification ───────────────────────────────────────
+// ─── Service classification ────────────────────────────────────────────────
 type ServiceCategory = 'food' | 'wellness' | 'practical' | 'other';
-
 function classifyService(s: HotelServiceItem): ServiceCategory {
-  const name = s.name.toLowerCase();
-  const cat = s.category.toLowerCase();
-  const type = s.type.toLowerCase();
-  if (cat.includes('restauration') || cat.includes('food') || cat.includes('bar') || cat.includes('room-service') ||
-      name.includes('menu') || name.includes('petit-déj') || name.includes('déjeuner') || name.includes('dîner') ||
-      name.includes('breakfast') || name.includes('lunch') || name.includes('dinner') || name.includes('bar')) {
-    return 'food';
-  }
-  if (cat.includes('spa') || cat.includes('bien-être') || cat.includes('wellness') || cat.includes('massage') ||
-      name.includes('spa') || name.includes('massage') || name.includes('hammam') || name.includes('piscine')) {
-    return 'wellness';
-  }
-  if (cat.includes('pratique') || cat.includes('practical') || cat.includes('blanchisserie') || cat.includes('navette') || cat.includes('taxi') ||
-      name.includes('blanchisserie') || name.includes('pressing') || name.includes('navette') || name.includes('taxi') || name.includes('réveil') || name.includes('oreiller')) {
-    return 'practical';
-  }
+  const n = s.name.toLowerCase(), c = s.category.toLowerCase();
+  if (c.includes('restauration') || c.includes('food') || c.includes('bar') || c.includes('room-service') ||
+      n.includes('menu') || n.includes('petit-déj') || n.includes('déjeuner') || n.includes('dîner') ||
+      n.includes('breakfast') || n.includes('lunch') || n.includes('dinner') || n.includes('bar')) return 'food';
+  if (c.includes('spa') || c.includes('bien-être') || c.includes('wellness') || c.includes('massage') ||
+      n.includes('spa') || n.includes('massage') || n.includes('hammam') || n.includes('piscine')) return 'wellness';
+  if (c.includes('pratique') || c.includes('practical') || c.includes('blanchisserie') || c.includes('navette') || c.includes('taxi') ||
+      n.includes('blanchisserie') || n.includes('pressing') || n.includes('navette') || n.includes('taxi') || n.includes('réveil') || n.includes('oreiller')) return 'practical';
   return 'other';
 }
 
+// ══════════════════════════════════════════════════════════════════════════
+// MAIN COMPONENT
+// ══════════════════════════════════════════════════════════════════════════
 export default function WristbandView({ agency, lang }: WristbandViewProps) {
-  const [greeting, setGreeting] = useState(T.fr.morning);
   const [activeTab, setActiveTab] = useState<'roomservice' | 'mystay' | 'explore' | 'emergency'>('roomservice');
   const [hotelServices, setHotelServices] = useState<HotelServiceItem[]>([]);
   const [stay, setStay] = useState<StayData | null>(null);
@@ -222,38 +153,29 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
   const [showRoomService, setShowRoomService] = useState(false);
   const [showLastDay, setShowLastDay] = useState(false);
   const [showSpa, setShowSpa] = useState(false);
+  const [greeting, setGreeting] = useState('');
+  const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Geofencing GPS
+  // ─── Effects (geofencing, stay, services, greeting) ─────────────────────
   useEffect(() => {
     if (!agency.latitude || !agency.longitude) return;
     if (!('geolocation' in navigator)) return;
     let cancelled = false;
-    const checkPosition = () => {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          if (cancelled) return;
-          const R = 6371;
-          const dLat = (pos.coords.latitude - agency.latitude!) * Math.PI / 180;
-          const dLng = (pos.coords.longitude - agency.longitude!) * Math.PI / 180;
-          const a = Math.sin(dLat/2)**2 + Math.cos(agency.latitude!*Math.PI/180) * Math.cos(pos.coords.latitude*Math.PI/180) * Math.sin(dLng/2)**2;
-          const dist = R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-          setIsAtHotel(dist < 0.2);
-        },
-        () => {},
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
-      );
+    const check = () => {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        if (cancelled) return;
+        const R = 6371;
+        const dLat = (pos.coords.latitude - agency.latitude!) * Math.PI / 180;
+        const dLng = (pos.coords.longitude - agency.longitude!) * Math.PI / 180;
+        const a = Math.sin(dLat/2)**2 + Math.cos(agency.latitude!*Math.PI/180)*Math.cos(pos.coords.latitude*Math.PI/180)*Math.sin(dLng/2)**2;
+        setIsAtHotel(R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)) < 0.2);
+      }, () => {}, { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 });
     };
-    checkPosition();
-    const interval = setInterval(checkPosition, 30000);
-    return () => { cancelled = true; clearInterval(interval); };
+    check(); const iv = setInterval(check, 30000);
+    return () => { cancelled = true; clearInterval(iv); };
   }, [agency.latitude, agency.longitude]);
 
-  // Auto-tab switch on geofencing
-  useEffect(() => {
-    if (isAtHotel === null) return;
-    if (isAtHotel) setActiveTab('roomservice');
-    else setActiveTab('explore');
-  }, [isAtHotel]);
+  useEffect(() => { if (isAtHotel === null) return; setActiveTab(isAtHotel ? 'roomservice' : 'explore'); }, [isAtHotel]);
 
   const effectiveLang = stay?.language || lang;
   const t = effectiveLang === 'en' ? T.en : T.fr;
@@ -263,276 +185,204 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
   const currentHour = new Date().getHours();
 
   useEffect(() => {
-    const updateGreeting = () => {
-      const hour = new Date().getHours();
-      if (hour < 12) setGreeting(t.morning);
-      else if (hour < 18) setGreeting(t.afternoon);
-      else setGreeting(t.evening);
-    };
-    updateGreeting();
-    const timer = setInterval(updateGreeting, 60_000);
-    return () => clearInterval(timer);
+    const update = () => { const h = new Date().getHours(); setGreeting(h < 12 ? t.morning : h < 18 ? t.afternoon : t.evening); };
+    update(); const ti = setInterval(update, 60000); return () => clearInterval(ti);
   }, [t.morning, t.afternoon, t.evening]);
 
   useEffect(() => {
-    if (!agency.reference) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch(`/api/stay?reference=${agency.reference}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (!cancelled && data.found && data.stay) setStay(data.stay);
-        }
-      } catch {}
-    })();
-    return () => { cancelled = true; };
+    if (!agency.reference) return; let c = false;
+    (async () => { try { const r = await fetch(`/api/stay?reference=${agency.reference}`); if (r.ok) { const d = await r.json(); if (!c && d.found && d.stay) setStay(d.stay); } } catch {} })();
+    return () => { c = true; };
   }, [agency.reference]);
 
   useEffect(() => {
-    if (isHost) return;
-    let cancelled = false;
-    (async () => {
-      try {
-        const res = await fetch(`/api/hotel-services?agencyId=${agency.id}`);
-        if (res.ok) {
-          const data = await res.json();
-          if (!cancelled && data.success) setHotelServices(data.services || []);
-        }
-      } catch {}
-    })();
-    return () => { cancelled = true; };
+    if (isHost) return; let c = false;
+    (async () => { try { const r = await fetch(`/api/hotel-services?agencyId=${agency.id}`); if (r.ok) { const d = await r.json(); if (!c && d.success) setHotelServices(d.services || []); } } catch {} })();
+    return () => { c = true; };
   }, [agency.id, isHost]);
 
+  // Scroll to top on tab switch
+  useEffect(() => { scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' }); }, [activeTab]);
+
   const receptionPhone = agency.contactPhone || agency.phone;
-  const cleanPhone = (p: string | null) => (p ? p.replace(/[\s\-().]/g, '') : null);
+  const cleanPhone = (p: string | null) => p ? p.replace(/[\s\-().]/g, '') : null;
   const receptionTel = cleanPhone(receptionPhone);
 
   const servicesHotel = hotelServices.filter((s) => s.displayTab === 'hotel');
   const servicesTourism = hotelServices.filter((s) => s.displayTab === 'tourism');
   const servicesHelp = hotelServices.filter((s) => s.displayTab === 'help');
-
-  // Classify hotel services by category
   const foodServices = servicesHotel.filter((s) => classifyService(s) === 'food');
   const wellnessServices = servicesHotel.filter((s) => classifyService(s) === 'wellness');
   const practicalServices = servicesHotel.filter((s) => classifyService(s) === 'practical');
   const otherServices = servicesHotel.filter((s) => classifyService(s) === 'other');
 
-  // Stay day calculation
   const stayDay = (() => {
     if (!stay?.checkInDate) return null;
-    const checkIn = new Date(stay.checkInDate);
-    const now = new Date();
-    const diffMs = now.getTime() - checkIn.getTime();
-    const dayNum = Math.floor(diffMs / (1000 * 60 * 60 * 24)) + 1;
-    let totalDays = 1;
-    if (stay.checkOutDate) {
-      const checkOut = new Date(stay.checkOutDate);
-      totalDays = Math.max(1, Math.round((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)));
-    }
-    return { dayNum: Math.max(1, dayNum), totalDays };
+    const ci = new Date(stay.checkInDate), now = new Date();
+    const dn = Math.floor((now.getTime() - ci.getTime()) / 86400000) + 1;
+    let td = 1;
+    if (stay.checkOutDate) td = Math.max(1, Math.round((new Date(stay.checkOutDate).getTime() - ci.getTime()) / 86400000));
+    return { dayNum: Math.max(1, dn), totalDays: td };
   })();
-
   const isLastDay = stayDay && stayDay.dayNum === stayDay.totalDays;
 
-  const parseSchedule = (schedule: string | null): { days: string; open: string; close: string } | null => {
-    if (!schedule) return null;
-    try {
-      const parsed = JSON.parse(schedule);
-      if (parsed.open === '00:00' && parsed.close === '23:59') return { days: parsed.days, open: '', close: '' };
-      return parsed;
-    } catch { return null; }
-  };
+  const parseSchedule = (s: string | null) => { if (!s) return null; try { const p = JSON.parse(s); return (p.open === '00:00' && p.close === '23:59') ? { ...p, open: '', close: '' } : p; } catch { return null; } };
 
-  // ─── Carte de service (réutilisable) ───
-  const ServiceCard = ({ s }: { s: HotelServiceItem }) => {
+  // ─── Mobile Card ─────────────────────────────────────────────────────────
+  const MobileCard = ({ children, onClick, className = '' }: { children: React.ReactNode; onClick?: () => void; className?: string }) => (
+    <div
+      onClick={onClick}
+      className={`bg-white rounded-2xl p-4 ${onClick ? 'active:scale-[0.98] cursor-pointer' : ''} transition-transform ${className}`}
+      style={{ boxShadow: P.cardShadow }}
+    >
+      {children}
+    </div>
+  );
+
+  // ─── Service Chip ────────────────────────────────────────────────────────
+  const ServiceChip = ({ s }: { s: HotelServiceItem }) => {
     const sched = parseSchedule(s.schedule);
     return (
-    <button
-      onClick={() => setSelectedService(s)}
-      className="text-left p-4 bg-white rounded-2xl border transition-all hover:shadow-lg w-full"
-      style={{ borderColor: C.border, boxShadow: C.shadow }}
-    >
-      <div className="flex items-center gap-3">
-        <div className="w-12 h-12 sm:w-11 sm:h-11 rounded-xl flex items-center justify-center text-2xl sm:text-xl shrink-0" style={{ backgroundColor: `${C.gold}15` }}>
+      <button
+        onClick={() => setSelectedService(s)}
+        className="w-full text-left bg-white rounded-2xl p-3.5 active:scale-[0.98] transition-transform flex items-center gap-3"
+        style={{ boxShadow: P.cardShadow }}
+      >
+        <div className="w-11 h-11 rounded-xl flex items-center justify-center text-xl shrink-0" style={{ backgroundColor: P.accentBg }}>
           {s.icon}
         </div>
         <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-sm leading-tight" style={{ color: C.ink }}>{s.name}</h3>
-          {s.description && <p className="text-xs mt-0.5 line-clamp-1" style={{ color: C.inkLight }}>{s.description}</p>}
-          <div className="flex items-center gap-2 mt-0.5">
-            {!s.isFree && <p className="text-xs font-bold" style={{ color: C.goldDark }}>{s.price.toLocaleString('fr-FR')} FCFA</p>}
-            {sched && (
-              <span className="text-[10px] px-1.5 py-0.5 rounded-full" style={{ backgroundColor: `${C.gold}10`, color: C.goldDark }}>
-                {sched.open === '' ? '24/7' : `${sched.open}-${sched.close}`}
-              </span>
-            )}
+          <p className="font-semibold text-[13px] leading-tight truncate" style={{ color: P.text }}>{s.name}</p>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            {!s.isFree && <span className="text-[11px] font-bold" style={{ color: P.accentDark }}>{s.price.toLocaleString('fr-FR')} FCFA</span>}
+            {sched && <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium" style={{ backgroundColor: P.accentBg, color: P.accentDark }}>{sched.open === '' ? '24/7' : `${sched.open}-${sched.close}`}</span>}
           </div>
         </div>
-      </div>
-    </button>
+        <ChevronRight className="w-4 h-4 shrink-0" style={{ color: P.text3 }} />
+      </button>
     );
   };
 
-  // ─── Section render helper ───
-  const ServiceSection = ({ title, emoji, items }: { title: string; emoji: string; items: HotelServiceItem[] }) => {
+  const ServiceGroup = ({ title, emoji, items }: { title: string; emoji: string; items: HotelServiceItem[] }) => {
     if (items.length === 0) return null;
     return (
       <div>
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-lg">{emoji}</span>
-          <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: C.inkLight }}>{title}</h2>
+        <div className="flex items-center gap-1.5 mb-2 mt-1">
+          <span className="text-sm">{emoji}</span>
+          <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: P.text2 }}>{title}</span>
         </div>
-        <div className="space-y-2">
-          {items.map((s) => <ServiceCard key={s.id} s={s} />)}
-        </div>
+        <div className="space-y-2">{items.map((s) => <ServiceChip key={s.id} s={s} />)}</div>
       </div>
     );
   };
 
-  // ════════════════════════════════════════════════════════════════════
-  // ONGLET 1 — ROOM SERVICE (centre de commande complet)
-  // ════════════════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════════════════
+  // TAB 1 — ROOM SERVICE (centre de commande)
+  // ══════════════════════════════════════════════════════════════════════
   const renderRoomServiceTab = () => {
-    if (isHost && agency.houseGuide) {
-      return <HostView guide={agency.houseGuide} agencyName={agency.name} agencyAddress={agency.address} lang={lang} />;
-    }
-
+    if (isHost && agency.houseGuide) return <HostView guide={agency.houseGuide} agencyName={agency.name} agencyAddress={agency.address} lang={lang} />;
     const suggestions = getContextualSuggestions(currentHour, effectiveLang, !!isLastDay);
 
     return (
-      <div className="space-y-5">
-        {/* ─── Suivi commandes en temps réel ─── */}
+      <div className="space-y-4 pb-4">
+        {/* Order Tracker */}
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">📦</span>
-            <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: C.goldDark }}>{t.orderTracking}</h2>
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-sm">📦</span>
+            <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: P.accentDark }}>{t.orderTracking}</span>
           </div>
           <OrderTracker
             agencyId={agency.id}
             baggageId={agency.reference || undefined}
             reference={agency.reference || undefined}
             lang={effectiveLang}
-            onReorder={(order) => {
-              // Ouvrir le bon modal selon le type de commande
-              if (order.type === 'roomservice') setShowRoomService(true);
-              // Marketplace reorder se fait via le MarketplaceSection directement
-            }}
+            onReorder={(order) => { if (order.type === 'roomservice') setShowRoomService(true); }}
           />
         </div>
 
-        {/* ─── Suggestions contextuelles ─── */}
+        {/* Suggestions carousel */}
         {suggestions.length > 0 && (
-          <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-2xl p-4 border" style={{ borderColor: `${C.gold}30` }}>
-            <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: C.goldDark }}>
-              💡 {t.suggestions}
-            </p>
-            <div className="flex gap-2 overflow-x-auto pb-1">
-              {suggestions.map((sug, i) => (
-                <button
-                  key={i}
-                  onClick={() => {
-                    if (sug.action === 'roomservice') setShowRoomService(true);
-                    else if (sug.action === 'spa') setShowSpa(true);
-                    else if (sug.action === 'marketplace') {
-                      // Scroll vers marketplace section
-                      document.getElementById('marketplace-section')?.scrollIntoView({ behavior: 'smooth' });
-                    }
-                    else if (sug.action === 'lastday') setShowLastDay(true);
-                  }}
-                  className="flex items-center gap-2 py-2.5 px-4 bg-white rounded-xl border transition-all hover:shadow-md whitespace-nowrap"
-                  style={{ borderColor: C.border }}
-                >
-                  <span className="text-lg">{sug.emoji}</span>
-                  <span className="text-sm font-semibold" style={{ color: C.ink }}>{sug.label}</span>
-                </button>
-              ))}
-            </div>
+          <div className="flex gap-2.5 overflow-x-auto pb-1 -mx-5 px-5 snap-x snap-mandatory" style={{ WebkitOverflowScrolling: 'touch' }}>
+            {suggestions.map((sug, i) => (
+              <button
+                key={i}
+                onClick={() => {
+                  if (sug.action === 'roomservice') setShowRoomService(true);
+                  else if (sug.action === 'spa') setShowSpa(true);
+                  else if (sug.action === 'marketplace') document.getElementById('marketplace-section')?.scrollIntoView({ behavior: 'smooth' });
+                  else if (sug.action === 'lastday') setShowLastDay(true);
+                }}
+                className={`snap-start flex-shrink-0 w-[140px] rounded-2xl p-3.5 text-white active:scale-95 transition-transform bg-gradient-to-br ${sug.gradient}`}
+              >
+                <span className="text-2xl">{sug.emoji}</span>
+                <p className="text-[12px] font-semibold mt-1.5 leading-tight">{sug.label}</p>
+              </button>
+            ))}
           </div>
         )}
 
-        {/* Rappel dernier jour */}
+        {/* Last day banner */}
         {isLastDay && (
           <button
             onClick={() => setShowLastDay(true)}
-            className="w-full p-4 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition flex items-center gap-3"
+            className="w-full rounded-2xl p-4 flex items-center gap-3 active:scale-[0.98] transition-transform bg-gradient-to-r from-violet-500 to-purple-600 text-white"
+            style={{ boxShadow: P.cardShadowL }}
           >
             <span className="text-2xl">🧳</span>
             <div className="text-left">
-              <p className="font-bold text-sm">{t.lastDay}</p>
-              <p className="text-xs text-purple-100">{t.checkout}</p>
+              <p className="font-bold text-[13px]">{t.lastDay}</p>
+              <p className="text-[11px] text-purple-200">{t.checkout}</p>
             </div>
+            <ChevronRight className="w-5 h-5 ml-auto text-purple-200" />
           </button>
         )}
 
-        {/* ─── Section Restauration ─── */}
+        {/* ─── Food Section ─── */}
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">🍽️</span>
-            <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: C.inkLight }}>{t.sectionFood}</h2>
+          <div className="flex items-center gap-1.5 mb-2">
+            <UtensilsCrossed className="w-4 h-4" style={{ color: P.text2 }} />
+            <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: P.text2 }}>{t.sectionFood}</span>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => setShowRoomService(true)}
-              className="flex flex-col items-center justify-center p-4 bg-gradient-to-br from-green-500 to-emerald-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition"
-            >
+          <div className="grid grid-cols-2 gap-2.5">
+            <button onClick={() => setShowRoomService(true)} className="rounded-2xl p-4 flex flex-col items-center justify-center active:scale-95 transition-transform bg-gradient-to-br from-green-500 to-emerald-600 text-white" style={{ boxShadow: P.cardShadowL }}>
               <span className="text-2xl mb-1">🍽️</span>
-              <span className="font-bold text-xs">Menu</span>
+              <span className="font-bold text-[11px]">Menu</span>
             </button>
-            <button
-              onClick={() => setShowRoomService(true)}
-              className="flex flex-col items-center justify-center p-4 bg-gradient-to-br from-amber-500 to-orange-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition"
-            >
+            <button onClick={() => setShowRoomService(true)} className="rounded-2xl p-4 flex flex-col items-center justify-center active:scale-95 transition-transform bg-gradient-to-br from-amber-500 to-orange-600 text-white" style={{ boxShadow: P.cardShadowL }}>
               <span className="text-2xl mb-1">🍸</span>
-              <span className="font-bold text-xs">Bar</span>
+              <span className="font-bold text-[11px]">Bar</span>
             </button>
           </div>
-          {foodServices.length > 0 && (
-            <div className="space-y-2 mt-3">
-              {foodServices.map((s) => <ServiceCard key={s.id} s={s} />)}
-            </div>
-          )}
+          <div className="space-y-2 mt-2.5">{foodServices.map((s) => <ServiceChip key={s.id} s={s} />)}</div>
         </div>
 
-        {/* ─── Section Bien-être ─── */}
+        {/* ─── Wellness Section ─── */}
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">💆</span>
-            <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: C.inkLight }}>{t.sectionWellness}</h2>
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-sm">💆</span>
+            <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: P.text2 }}>{t.sectionWellness}</span>
           </div>
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => setShowSpa(true)}
-              className="flex flex-col items-center justify-center p-4 bg-gradient-to-br from-purple-500 to-pink-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition"
-            >
+          <div className="grid grid-cols-2 gap-2.5">
+            <button onClick={() => setShowSpa(true)} className="rounded-2xl p-4 flex flex-col items-center justify-center active:scale-95 transition-transform bg-gradient-to-br from-purple-500 to-pink-600 text-white" style={{ boxShadow: P.cardShadowL }}>
               <span className="text-2xl mb-1">💆</span>
-              <span className="font-bold text-xs">Spa</span>
+              <span className="font-bold text-[11px]">Spa</span>
             </button>
-            <button
-              onClick={() => setShowSpa(true)}
-              className="flex flex-col items-center justify-center p-4 bg-gradient-to-br from-blue-500 to-cyan-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition"
-            >
+            <button onClick={() => setShowSpa(true)} className="rounded-2xl p-4 flex flex-col items-center justify-center active:scale-95 transition-transform bg-gradient-to-br from-blue-500 to-cyan-600 text-white" style={{ boxShadow: P.cardShadowL }}>
               <span className="text-2xl mb-1">🧖</span>
-              <span className="font-bold text-xs">Hammam</span>
+              <span className="font-bold text-[11px]">Hammam</span>
             </button>
           </div>
-          {wellnessServices.length > 0 && (
-            <div className="space-y-2 mt-3">
-              {wellnessServices.map((s) => <ServiceCard key={s.id} s={s} />)}
-            </div>
-          )}
+          <div className="space-y-2 mt-2.5">{wellnessServices.map((s) => <ServiceChip key={s.id} s={s} />)}</div>
         </div>
 
-        {/* ─── Section Pratique ─── */}
-        {practicalServices.length > 0 && (
-          <ServiceSection title={t.sectionPractical} emoji="🔧" items={practicalServices} />
-        )}
+        {/* ─── Practical ─── */}
+        <ServiceGroup title={t.sectionPractical} emoji="🔧" items={practicalServices} />
 
-        {/* ─── Section Boutique (Marketplace enrichi INLINE) ─── */}
+        {/* ─── Marketplace INLINE ─── */}
         <div id="marketplace-section">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">🛍️</span>
-            <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: C.inkLight }}>{t.sectionShop}</h2>
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="text-sm">🛍️</span>
+            <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: P.text2 }}>{t.sectionShop}</span>
           </div>
           <MarketplaceSection
             agencyId={agency.id}
@@ -545,282 +395,263 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
           />
         </div>
 
-        {/* Other services */}
-        {otherServices.length > 0 && (
-          <ServiceSection title={effectiveLang === 'en' ? 'Other' : 'Autres'} emoji="📋" items={otherServices} />
-        )}
+        <ServiceGroup title={effectiveLang === 'en' ? 'Other' : 'Autres'} emoji="📋" items={otherServices} />
 
-        {/* Empty state */}
         {servicesHotel.length === 0 && (
-          <div className="bg-white rounded-2xl p-10 text-center border" style={{ borderColor: C.border }}>
-            <p className="text-base" style={{ color: C.inkLight }}>{t.noServices}</p>
-          </div>
+          <MobileCard>
+            <p className="text-center text-sm py-6" style={{ color: P.text2 }}>{t.noServices}</p>
+          </MobileCard>
         )}
       </div>
     );
   };
 
-  // ════════════════════════════════════════════════════════════════════
-  // ONGLET 2 — MON SÉJOUR (infos personnelles)
-  // ════════════════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════════════════
+  // TAB 2 — MON SÉJOUR
+  // ══════════════════════════════════════════════════════════════════════
   const renderMyStayTab = () => (
-    <div className="space-y-5">
-      {/* Guest info + countdown */}
+    <div className="space-y-4 pb-4">
       {stay ? (
-        <div className="bg-white rounded-2xl p-6 border" style={{ borderColor: C.border, boxShadow: C.shadow }}>
+        <MobileCard>
+          {/* Guest avatar + name */}
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-14 h-14 rounded-full flex items-center justify-center text-2xl" style={{ backgroundColor: `${C.gold}15` }}>
+            <div className="w-12 h-12 rounded-full flex items-center justify-center text-xl" style={{ backgroundColor: P.accentBg }}>
               👤
             </div>
             <div>
-              <h2 className="font-bold text-lg" style={{ color: C.ink }}>{stay.guestName || 'Guest'}</h2>
-              {stay.roomNumber && <p className="text-sm" style={{ color: C.inkLight }}>{t.room} {stay.roomNumber}</p>}
-              {stay.nbPersons > 1 && <p className="text-xs" style={{ color: C.inkLight }}>{stay.nbPersons} pers.</p>}
+              <p className="font-bold text-[15px]" style={{ color: P.text }}>{stay.guestName || 'Guest'}</p>
+              {stay.roomNumber && <p className="text-[13px]" style={{ color: P.text2 }}>{t.room} {stay.roomNumber}</p>}
             </div>
           </div>
+          {/* Stay progress */}
           {stayDay && (
-            <div className="bg-gradient-to-r from-amber-50 to-orange-50 rounded-xl p-4 mb-2">
+            <div className="rounded-xl p-3.5 mb-3" style={{ backgroundColor: P.accentBg }}>
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs uppercase tracking-wide" style={{ color: C.goldDark }}>
-                    {effectiveLang === 'en' ? 'Stay' : 'Séjour'}
-                  </p>
-                  <p className="text-2xl font-bold" style={{ color: C.ink }}>
-                    {t.day}{stayDay.dayNum} {t.of} {stayDay.totalDays}
-                  </p>
+                  <p className="text-[10px] uppercase tracking-widest font-bold" style={{ color: P.accentDark }}>Séjour</p>
+                  <p className="text-2xl font-bold" style={{ color: P.text }}>{t.day}{stayDay.dayNum} {t.of} {stayDay.totalDays}</p>
                 </div>
-                <div className="text-3xl">
-                  {isLastDay ? '🧳' : '🏨'}
-                </div>
+                <span className="text-3xl">{isLastDay ? '🧳' : '🏨'}</span>
               </div>
-              {isLastDay && <p className="text-xs font-semibold mt-1" style={{ color: '#7c3aed' }}>{t.lastDay} !</p>}
+              {/* Progress bar */}
+              <div className="mt-2 h-1.5 rounded-full" style={{ backgroundColor: `${P.accent}30` }}>
+                <div className="h-full rounded-full transition-all" style={{ backgroundColor: P.accent, width: `${Math.min(100, (stayDay.dayNum / stayDay.totalDays) * 100)}%` }} />
+              </div>
+              {isLastDay && <p className="text-[11px] font-bold mt-1.5" style={{ color: P.purple }}>{t.lastDay} !</p>}
             </div>
           )}
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-xs uppercase tracking-wide" style={{ color: C.inkLight }}>Check-in</p>
-              <p className="font-semibold" style={{ color: C.ink }}>{new Date(stay.checkInDate).toLocaleDateString(effectiveLang === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'short' })}</p>
+          {/* Dates */}
+          <div className="grid grid-cols-2 gap-2">
+            <div className="rounded-xl p-3" style={{ backgroundColor: '#F5F5F7' }}>
+              <p className="text-[10px] uppercase tracking-widest" style={{ color: P.text2 }}>Check-in</p>
+              <p className="font-semibold text-[13px] mt-0.5" style={{ color: P.text }}>{new Date(stay.checkInDate).toLocaleDateString(effectiveLang === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'short' })}</p>
             </div>
-            <div className="bg-gray-50 rounded-lg p-3">
-              <p className="text-xs uppercase tracking-wide" style={{ color: C.inkLight }}>Check-out</p>
-              <p className="font-semibold" style={{ color: C.ink }}>{new Date(stay.checkOutDate).toLocaleDateString(effectiveLang === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'short' })}</p>
+            <div className="rounded-xl p-3" style={{ backgroundColor: '#F5F5F7' }}>
+              <p className="text-[10px] uppercase tracking-widest" style={{ color: P.text2 }}>Check-out</p>
+              <p className="font-semibold text-[13px] mt-0.5" style={{ color: P.text }}>{new Date(stay.checkOutDate).toLocaleDateString(effectiveLang === 'en' ? 'en-US' : 'fr-FR', { day: 'numeric', month: 'short' })}</p>
             </div>
           </div>
-        </div>
+        </MobileCard>
       ) : (
-        <div className="bg-white rounded-2xl p-6 border text-center" style={{ borderColor: C.border, boxShadow: C.shadow }}>
-          <span className="text-3xl">🏨</span>
-          <p className="mt-2 text-sm" style={{ color: C.inkLight }}>
-            {effectiveLang === 'en' ? 'Stay information not available' : 'Informations de séjour non disponibles'}
-          </p>
-        </div>
+        <MobileCard>
+          <div className="text-center py-6">
+            <span className="text-3xl">🏨</span>
+            <p className="mt-2 text-[13px]" style={{ color: P.text2 }}>{effectiveLang === 'en' ? 'Stay info not available' : 'Infos séjour non disponibles'}</p>
+          </div>
+        </MobileCard>
       )}
 
-      {/* Checkout assistant */}
+      {/* Checkout CTA */}
       {isLastDay && (
-        <button
-          onClick={() => setShowLastDay(true)}
-          className="w-full p-5 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-2xl shadow-lg hover:shadow-xl transition flex items-center gap-4"
-        >
-          <span className="text-3xl">🧳</span>
-          <div className="text-left">
-            <p className="font-bold">{t.lastDay}</p>
-            <p className="text-sm text-purple-100">{t.checkout}</p>
-          </div>
+        <button onClick={() => setShowLastDay(true)} className="w-full rounded-2xl p-4 flex items-center gap-3 active:scale-[0.98] transition-transform bg-gradient-to-r from-violet-500 to-purple-600 text-white" style={{ boxShadow: P.cardShadowL }}>
+          <span className="text-2xl">🧳</span>
+          <div className="text-left"><p className="font-bold text-[13px]">{t.lastDay}</p><p className="text-[11px] text-purple-200">{t.checkout}</p></div>
+          <ChevronRight className="w-5 h-5 ml-auto text-purple-200" />
         </button>
       )}
 
-      {/* WiFi & Infos */}
+      {/* WiFi */}
       {agency.houseGuide && (
-        <div className="bg-white rounded-2xl p-6 sm:p-5 border" style={{ borderColor: C.border, boxShadow: C.shadow }}>
-          <h2 className="text-lg sm:text-base font-bold mb-4 flex items-center gap-3" style={{ color: C.ink }}>
-            <span className="w-12 h-12 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center text-2xl sm:text-xl" style={{ backgroundColor: `${C.gold}15` }}>📶</span>
-            {t.wifi}
-          </h2>
+        <MobileCard>
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ backgroundColor: P.accentBg }}><Wifi className="w-4 h-4" style={{ color: P.accentDark }} /></div>
+            <span className="font-bold text-[13px]" style={{ color: P.text }}>{t.wifi}</span>
+          </div>
           {agency.houseGuide.wifiNetwork && (
-            <div className="bg-gray-50 rounded-xl p-4 sm:p-3 mb-2">
-              <p className="text-xs uppercase tracking-wide mb-1" style={{ color: C.inkLight }}>{t.network}</p>
-              <p className="font-mono font-bold text-lg sm:text-sm" style={{ color: C.ink }}>{agency.houseGuide.wifiNetwork}</p>
-              {agency.houseGuide.wifiPassword && <p className="font-mono text-lg sm:text-sm mt-2" style={{ color: C.ink }}>🔑 {agency.houseGuide.wifiPassword}</p>}
+            <div className="rounded-xl p-3 mb-2" style={{ backgroundColor: '#F5F5F7' }}>
+              <p className="text-[10px] uppercase tracking-widest mb-0.5" style={{ color: P.text2 }}>{t.network}</p>
+              <p className="font-mono font-bold text-[15px]" style={{ color: P.text }}>{agency.houseGuide.wifiNetwork}</p>
+              {agency.houseGuide.wifiPassword && <p className="font-mono text-[15px] mt-1" style={{ color: P.text }}>🔑 {agency.houseGuide.wifiPassword}</p>}
             </div>
           )}
           {agency.houseGuide.houseRules && (
-            <div className="bg-gray-50 rounded-xl p-4 sm:p-3">
-              <p className="text-xs uppercase tracking-wide mb-1" style={{ color: C.inkLight }}>{t.rules}</p>
-              <p className="text-sm sm:text-xs whitespace-pre-line" style={{ color: C.ink }}>{agency.houseGuide.houseRules}</p>
+            <div className="rounded-xl p-3" style={{ backgroundColor: '#F5F5F7' }}>
+              <p className="text-[10px] uppercase tracking-widest mb-0.5" style={{ color: P.text2 }}>{t.rules}</p>
+              <p className="text-[12px] whitespace-pre-line leading-relaxed" style={{ color: P.text }}>{agency.houseGuide.houseRules}</p>
             </div>
           )}
-        </div>
+        </MobileCard>
       )}
     </div>
   );
 
-  // ════════════════════════════════════════════════════════════════════
-  // ONGLET 3 — EXPLORER (tourisme, GPS, partenaires)
-  // ════════════════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════════════════
+  // TAB 3 — EXPLORER
+  // ══════════════════════════════════════════════════════════════════════
   const renderExploreTab = () => (
-    <div className="space-y-5">
+    <div className="space-y-4 pb-4">
       {isAtHotel !== null && (
-        <div className="bg-white rounded-2xl p-4 border flex items-center gap-3" style={{ borderColor: C.border, boxShadow: C.shadow }}>
-          <span className="text-2xl">{isAtHotel ? '🏨' : '🗺️'}</span>
-          <p className="text-sm font-semibold" style={{ color: C.ink }}>
-            {isAtHotel
-              ? (effectiveLang === 'en' ? 'You are at the hotel' : 'Vous êtes à l\'hôtel')
-              : (effectiveLang === 'en' ? 'You are exploring' : 'Vous explorez')}
-          </p>
-        </div>
+        <MobileCard>
+          <div className="flex items-center gap-2">
+            <span className="text-xl">{isAtHotel ? '🏨' : '🗺️'}</span>
+            <span className="font-semibold text-[13px]" style={{ color: P.text }}>
+              {isAtHotel ? (effectiveLang === 'en' ? 'You are at the hotel' : 'Vous êtes à l\'hôtel') : (effectiveLang === 'en' ? 'You are exploring' : 'Vous explorez')}
+            </span>
+          </div>
+        </MobileCard>
       )}
       {servicesTourism.length > 0 && (
         <div>
-          <div className="flex items-center gap-2 mb-3">
-            <span className="text-lg">📍</span>
-            <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: C.inkLight }}>
-              {effectiveLang === 'en' ? 'Recommended' : 'Recommandé'}
-            </h2>
+          <div className="flex items-center gap-1.5 mb-2">
+            <MapPin className="w-4 h-4" style={{ color: P.text2 }} />
+            <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: P.text2 }}>{effectiveLang === 'en' ? 'Recommended' : 'Recommandé'}</span>
           </div>
-          <div className="space-y-2">
-            {servicesTourism.map((s) => <ServiceCard key={s.id} s={s} />)}
-          </div>
+          <div className="space-y-2">{servicesTourism.map((s) => <ServiceChip key={s.id} s={s} />)}</div>
         </div>
       )}
       {agency.latitude !== null && agency.longitude !== null && !isHost && (
         <NearbyAttractions hotelLat={agency.latitude} hotelLng={agency.longitude} agencySlug={agency.slug} agencyId={agency.id} />
       )}
       {servicesTourism.length === 0 && (agency.latitude === null || agency.longitude === null) && (
-        <div className="bg-white rounded-2xl p-10 text-center border" style={{ borderColor: C.border }}>
-          <p className="text-base" style={{ color: C.inkLight }}>{t.noPartners}</p>
-        </div>
+        <MobileCard><p className="text-center text-sm py-6" style={{ color: P.text2 }}>{t.noPartners}</p></MobileCard>
       )}
     </div>
   );
 
-  // ════════════════════════════════════════════════════════════════════
-  // ONGLET 4 — URGENCE (SOS, contact, feedback)
-  // ════════════════════════════════════════════════════════════════════
+  // ══════════════════════════════════════════════════════════════════════
+  // TAB 4 — URGENCE
+  // ══════════════════════════════════════════════════════════════════════
   const renderEmergencyTab = () => (
-    <div className="space-y-5">
-      {servicesHelp.length > 0 && (
-        <div className="space-y-2">
-          {servicesHelp.map((s) => <ServiceCard key={s.id} s={s} />)}
-        </div>
-      )}
+    <div className="space-y-4 pb-4">
+      {servicesHelp.length > 0 && <div className="space-y-2">{servicesHelp.map((s) => <ServiceChip key={s.id} s={s} />)}</div>}
       {!isHost && <SosButton agencyId={agency.id} baggageId={undefined} />}
       {isHost && <ConciergeAlertButton agencyId={agency.id} baggageId={undefined} />}
-
-      <div className="bg-white rounded-2xl p-6 sm:p-5 border" style={{ borderColor: C.border, boxShadow: C.shadow }}>
-        <div className="grid grid-cols-2 gap-4 sm:gap-3">
+      <MobileCard>
+        <div className="grid grid-cols-2 gap-2.5">
           <a href={`https://www.google.com/maps/dir/?api=1&destination=${agency.latitude || ''},${agency.longitude || ''}`} target="_blank" rel="noopener noreferrer"
-            className="flex flex-col items-center justify-center p-5 sm:p-4 rounded-xl border transition-all hover:shadow-md" style={{ borderColor: C.border }}>
-            <span className="text-4xl sm:text-2xl mb-2">📍</span>
-            <span className="text-sm sm:text-xs font-semibold text-center" style={{ color: C.ink }}>{t.backToHotel}</span>
+            className="flex flex-col items-center justify-center p-4 rounded-2xl active:scale-95 transition-transform" style={{ backgroundColor: '#F5F5F7' }}>
+            <span className="text-2xl mb-1">📍</span>
+            <span className="text-[11px] font-semibold text-center" style={{ color: P.text }}>{t.backToHotel}</span>
           </a>
           {receptionTel && (
-            <a href={`tel:${receptionTel}`} className="flex flex-col items-center justify-center p-5 sm:p-4 rounded-xl border transition-all hover:shadow-md" style={{ borderColor: C.border }}>
-              <span className="text-4xl sm:text-2xl mb-2">🛎️</span>
-              <span className="text-sm sm:text-xs font-semibold text-center" style={{ color: C.ink }}>{t.reception}</span>
+            <a href={`tel:${receptionTel}`} className="flex flex-col items-center justify-center p-4 rounded-2xl active:scale-95 transition-transform" style={{ backgroundColor: '#F5F5F7' }}>
+              <span className="text-2xl mb-1">🛎️</span>
+              <span className="text-[11px] font-semibold text-center" style={{ color: P.text }}>{t.reception}</span>
             </a>
           )}
-          <a href="tel:1515" className="flex flex-col items-center justify-center p-5 sm:p-4 rounded-xl border transition-all hover:shadow-md" style={{ borderColor: C.border }}>
-            <span className="text-4xl sm:text-2xl mb-2">🚑</span>
-            <span className="text-sm sm:text-xs font-semibold text-center" style={{ color: C.ink }}>{t.emergency}</span>
+          <a href="tel:1515" className="flex flex-col items-center justify-center p-4 rounded-2xl active:scale-95 transition-transform" style={{ backgroundColor: '#F5F5F7' }}>
+            <span className="text-2xl mb-1">🚑</span>
+            <span className="text-[11px] font-semibold text-center" style={{ color: P.text }}>{t.emergency}</span>
           </a>
           {receptionTel && (
             <a href={`https://wa.me/${receptionTel}?text=${encodeURIComponent(effectiveLang === 'en' ? 'Hello, I need assistance.' : 'Bonjour, j\'ai besoin d\'aide.')}`} target="_blank" rel="noopener noreferrer"
-              className="flex flex-col items-center justify-center p-5 sm:p-4 rounded-xl border transition-all hover:shadow-md" style={{ borderColor: C.border }}>
-              <span className="text-4xl sm:text-2xl mb-2">💬</span>
-              <span className="text-sm sm:text-xs font-semibold text-center" style={{ color: C.ink }}>WhatsApp</span>
+              className="flex flex-col items-center justify-center p-4 rounded-2xl active:scale-95 transition-transform" style={{ backgroundColor: '#F5F5F7' }}>
+              <span className="text-2xl mb-1">💬</span>
+              <span className="text-[11px] font-semibold text-center" style={{ color: P.text }}>WhatsApp</span>
             </a>
           )}
         </div>
-      </div>
+      </MobileCard>
     </div>
   );
 
+  // ─── Tab config ─────────────────────────────────────────────────────────
+  const tabs = [
+    { key: 'roomservice' as const, label: t.tabRoomService, Icon: UtensilsCrossed },
+    { key: 'mystay' as const, label: t.tabMyStay, Icon: Bed },
+    { key: 'explore' as const, label: t.tabExplore, Icon: Compass },
+    { key: 'emergency' as const, label: t.tabEmergency, Icon: ShieldAlert },
+  ];
+
   return (
-    <div className="min-h-screen pb-32 sm:pb-28" style={{ backgroundColor: C.bg }}>
-      {/* ─── HEADER LUXE ─── */}
-      <header className="relative overflow-hidden" style={{ background: `linear-gradient(135deg, ${C.goldLight} 0%, #FFFFFF 60%, ${C.bg} 100%)` }}>
-        <div className="h-1" style={{ background: `linear-gradient(90deg, transparent, ${C.gold}, transparent)` }} />
-        <div className="pt-12 pb-10 sm:pt-10 sm:pb-8 px-6 text-center relative z-10">
-          {agency.logoUrl && agency.logoUrl.length > 100 && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={agency.logoUrl} alt={agency.name} className="h-56 w-56 sm:h-40 sm:w-40 object-contain mx-auto mb-5 rounded-3xl shadow-lg" style={{ boxShadow: C.shadowHover }} />
-          )}
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-sm sm:text-xs font-semibold mb-5" style={{ backgroundColor: `${C.gold}20`, color: C.goldDark }}>
-            <span className="text-base">{profileMeta.emoji}</span>
-            <span>{effectiveLang === 'en' ? profileMeta.labelEn : profileMeta.label}</span>
-          </div>
-          <p className="text-xl sm:text-lg font-light tracking-wide mb-2" style={{ color: C.inkLight }}>{greeting}</p>
-          <h1 className="text-4xl sm:text-3xl font-bold mb-3 leading-tight" style={{ color: C.ink }}>{agency.name}</h1>
-          {stay && stay.guestName ? (
-            <div className="inline-block px-5 py-2 rounded-full mb-3" style={{ backgroundColor: `${C.gold}15` }}>
-              <p className="text-base sm:text-sm font-medium" style={{ color: C.goldDark }}>
-                {stay.guestName}{stay.roomNumber && ` · ${t.room} ${stay.roomNumber}`}
-              </p>
+    <div className="fixed inset-0 flex flex-col" style={{ backgroundColor: P.bg }}>
+      {/* ─── STATUS BAR (safe area) ─── */}
+      <div className="h-[env(safe-area-inset-top,0px)]" style={{ backgroundColor: P.card }} />
+
+      {/* ─── COMPACT HEADER ─── */}
+      <header className="shrink-0 bg-white border-b px-5 pt-3 pb-3" style={{ borderColor: P.sep }}>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5 min-w-0">
+            {agency.logoUrl && agency.logoUrl.length > 100 ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={agency.logoUrl} alt="" className="w-9 h-9 rounded-lg object-cover shrink-0" />
+            ) : (
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center text-lg shrink-0" style={{ backgroundColor: P.accentBg }}>
+                {profileMeta.emoji}
+              </div>
+            )}
+            <div className="min-w-0">
+              <h1 className="font-bold text-[15px] leading-tight truncate" style={{ color: P.text }}>{agency.name}</h1>
+              <p className="text-[11px] leading-tight truncate" style={{ color: P.text2 }}>{greeting}{stay?.guestName ? ` · ${stay.guestName}` : ''}{stay?.roomNumber ? ` · ${t.room}${stay.roomNumber}` : ''}</p>
             </div>
-          ) : null}
-          <p className="text-base sm:text-sm" style={{ color: C.inkLight }}>{t.subtitle}</p>
+          </div>
+          <button
+            onClick={() => setShowFeedback(true)}
+            className="w-9 h-9 rounded-full flex items-center justify-center active:scale-90 transition-transform"
+            style={{ backgroundColor: P.accentBg }}
+          >
+            <Star className="w-4 h-4" style={{ color: P.accentDark }} />
+          </button>
         </div>
-        <div className="absolute top-0 right-0 w-40 h-40 rounded-full opacity-20" style={{ background: `radial-gradient(circle, ${C.gold}, transparent)` }} />
-        <div className="absolute bottom-0 left-0 w-32 h-32 rounded-full opacity-10" style={{ background: `radial-gradient(circle, ${C.gold}, transparent)` }} />
       </header>
 
-      {/* ─── ONGLETS ─── */}
-      <div className="sticky top-0 z-30 backdrop-blur-md border-b" style={{ backgroundColor: `${C.bg}F0`, borderColor: C.border }}>
-        <div className="max-w-2xl mx-auto flex">
-          {([
-            { key: 'roomservice' as const, label: t.tabRoomService, icon: '🛎️' },
-            { key: 'mystay' as const, label: t.tabMyStay, icon: '🏨' },
-            { key: 'explore' as const, label: t.tabExplore, icon: '🗺️' },
-            { key: 'emergency' as const, label: t.tabEmergency, icon: '🛟' },
-          ]).map((tab) => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className="flex-1 py-4 sm:py-3 px-2 sm:px-1 text-xs sm:text-sm font-semibold transition-all relative flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1"
-              style={{ color: activeTab === tab.key ? C.goldDark : C.inkLight }}
-            >
-              <span className="text-lg sm:text-base sm:mr-1">{tab.icon}</span>
-              <span className="truncate">{tab.label}</span>
-              {activeTab === tab.key && (
-                <div className="absolute bottom-0 left-1/4 right-1/4 h-1 sm:h-0.5 rounded-full" style={{ backgroundColor: C.gold }} />
-              )}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ─── CONTENU ─── */}
-      <main className="px-4 py-6 sm:py-4 max-w-2xl mx-auto">
+      {/* ─── SCROLLABLE CONTENT ─── */}
+      <div ref={scrollRef} className="flex-1 overflow-y-auto px-5 pt-4" style={{ WebkitOverflowScrolling: 'touch' }}>
         {activeTab === 'roomservice' && renderRoomServiceTab()}
         {activeTab === 'mystay' && renderMyStayTab()}
         {activeTab === 'explore' && renderExploreTab()}
         {activeTab === 'emergency' && renderEmergencyTab()}
-      </main>
+        {/* Bottom spacer for tab bar */}
+        <div className="h-24" />
+      </div>
 
-      {/* ─── FOOTER ─── */}
-      <footer className="fixed bottom-0 left-0 w-full backdrop-blur-md border-t p-3 z-50" style={{ backgroundColor: `${C.bg}F0`, borderColor: C.border }}>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setShowFeedback(true)}
-            className="flex-1 py-4 sm:py-3 rounded-xl font-bold text-base sm:text-sm text-center transition-all hover:shadow-lg"
-            style={{ backgroundColor: C.gold, color: '#FFFFFF' }}
-          >
-            ⭐ {t.review}
-          </button>
+      {/* ─── BOTTOM TAB BAR (iOS style) ─── */}
+      <nav className="shrink-0 bg-white border-t" style={{ borderColor: P.sep }}>
+        <div className="flex items-center justify-around px-2 pt-2 pb-2">
+          {tabs.map((tab) => {
+            const isActive = activeTab === tab.key;
+            return (
+              <button
+                key={tab.key}
+                onClick={() => setActiveTab(tab.key)}
+                className="flex flex-col items-center gap-0.5 py-1 px-3 min-w-[56px] active:scale-90 transition-transform"
+              >
+                <tab.Icon
+                  className="w-5 h-5 transition-colors"
+                  style={{ color: isActive ? P.tabActive : P.tabInactive }}
+                  strokeWidth={isActive ? 2.5 : 1.5}
+                />
+                <span
+                  className="text-[10px] font-medium transition-colors"
+                  style={{ color: isActive ? P.tabActive : P.tabInactive }}
+                >
+                  {tab.label}
+                </span>
+              </button>
+            );
+          })}
         </div>
-      </footer>
+        {/* Home indicator */}
+        <div className="flex justify-center pb-1">
+          <div className="w-32 h-1 rounded-full" style={{ backgroundColor: P.text3 }} />
+        </div>
+        {/* Safe area bottom */}
+        <div className="h-[env(safe-area-inset-bottom,0px)]" />
+      </nav>
 
       {/* ─── MODALS ─── */}
       {selectedService && (
-        <ServiceRequestModal
-          service={selectedService}
-          agencyId={agency.id}
-          reference={agency.reference}
-          roomNumber={stay?.roomNumber}
-          guestName={stay?.guestName}
-          onClose={() => setSelectedService(null)}
-        />
+        <ServiceRequestModal service={selectedService} agencyId={agency.id} reference={agency.reference} roomNumber={stay?.roomNumber} guestName={stay?.guestName} onClose={() => setSelectedService(null)} />
       )}
       {showFeedback && <FeedbackModal agencyId={agency.id} baggageId={undefined} agencyName={agency.name} onClose={() => setShowFeedback(false)} />}
       {showRoomService && <RoomServiceModal agencyId={agency.id} baggageId={undefined} roomNumber={stay?.roomNumber} guestName={stay?.guestName} onClose={() => setShowRoomService(false)} />}

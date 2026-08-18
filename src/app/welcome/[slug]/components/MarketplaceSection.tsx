@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import {
-  X, Loader2, CheckCircle2, ShoppingCart, Plus, Minus, Store,
+  Loader2, CheckCircle2, ShoppingCart, Plus, Minus, Store,
   Star, MapPin, Phone, MessageCircle, Globe, ChevronRight,
-  Filter, Heart, Share2, Image as ImageIcon
+  Filter, Image as ImageIcon, ArrowLeft
 } from 'lucide-react';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -207,6 +207,8 @@ export default function MarketplaceSection({
   const availableCategories = ['all', ...Array.from(new Set(merchants.map((m) => m.category)))];
 
   const isFr = lang !== 'en';
+  // Shared mobile palette
+  const MP = { text: '#1C1C1E', text2: '#8E8E93', accent: '#C9A961', accentDark: '#A8884A', accentBg: '#FFF9EE', card: '#FFFFFF', cardShadow: '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)', sep: '#E5E5EA' };
 
   // ─── PRODUIT DÉTAILLÉ (grande photo) ────────────────────────────────────
   if (selectedProduct && selectedMerchant) {
@@ -214,22 +216,22 @@ export default function MarketplaceSection({
       <div className="space-y-4">
         <button
           onClick={() => setSelectedProduct(null)}
-          className="text-sm font-medium flex items-center gap-1 hover:underline"
-          style={{ color: '#C9A961' }}
+          className="text-[13px] font-semibold flex items-center gap-1 active:opacity-60"
+          style={{ color: MP.accentDark }}
         >
-          ← {isFr ? 'Retour aux produits' : 'Back to products'}
+          <ArrowLeft className="w-4 h-4" /> {isFr ? 'Produits' : 'Products'}
         </button>
-        <div className="bg-white rounded-2xl overflow-hidden border" style={{ borderColor: '#E8E4DD' }}>
+        <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: MP.cardShadow }}>
           {/* Grande photo */}
           {selectedProduct.photoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={selectedProduct.photoUrl}
               alt={selectedProduct.name}
-              className="w-full h-56 object-cover"
+              className="w-full h-52 object-cover"
             />
           ) : (
-            <div className="w-full h-56 bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center">
+            <div className="w-full h-52 bg-gradient-to-br from-orange-100 to-amber-100 flex items-center justify-center">
               <ImageIcon className="w-16 h-16 text-orange-300" />
             </div>
           )}
@@ -301,14 +303,14 @@ export default function MarketplaceSection({
       <div className="space-y-4">
         <button
           onClick={() => { setSelectedMerchant(null); setCart({}); setConfirmed(null); }}
-          className="text-sm font-medium flex items-center gap-1 hover:underline"
-          style={{ color: '#C9A961' }}
+          className="text-[13px] font-semibold flex items-center gap-1 active:opacity-60"
+          style={{ color: MP.accentDark }}
         >
-          ← {isFr ? 'Retour aux commerçants' : 'Back to merchants'}
+          <ArrowLeft className="w-4 h-4" /> {isFr ? 'Commerçants' : 'Merchants'}
         </button>
 
         {/* Bannière + Logo */}
-        <div className="bg-white rounded-2xl overflow-hidden border" style={{ borderColor: '#E8E4DD' }}>
+        <div className="bg-white rounded-2xl overflow-hidden" style={{ boxShadow: MP.cardShadow }}>
           {m.coverUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img src={m.coverUrl} alt={m.name} className="w-full h-36 object-cover" />
@@ -400,8 +402,8 @@ export default function MarketplaceSection({
 
         {/* Commande confirmée */}
         {confirmed ? (
-          <div className="bg-white rounded-2xl p-6 text-center border" style={{ borderColor: '#E8E4DD' }}>
-            <CheckCircle2 className="w-16 h-16 mx-auto text-green-500 mb-4" />
+        <div className="bg-white rounded-2xl p-6 text-center" style={{ boxShadow: MP.cardShadow }}>
+            <CheckCircle2 className="w-14 h-14 mx-auto text-green-500 mb-3" />
             <h3 className="text-lg font-bold mb-2" style={{ color: '#2C2C2C' }}>
               {isFr ? 'Commande envoyée !' : 'Order sent!'}
             </h3>
@@ -479,7 +481,7 @@ export default function MarketplaceSection({
 
             {/* Panier */}
             {cartItems.length > 0 && (
-              <div className="bg-white rounded-2xl p-4 border" style={{ borderColor: '#E8E4DD' }}>
+              <div className="bg-white rounded-2xl p-4" style={{ boxShadow: MP.cardShadow }}>
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <ShoppingCart className="w-5 h-5 text-orange-600" />
@@ -544,17 +546,18 @@ export default function MarketplaceSection({
   }
 
   // ─── LISTE COMMERÇANTS (vue par défaut) ─────────────────────────────────
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Store className="w-5 h-5" style={{ color: '#C9A961' }} />
-          <h2 className="text-sm font-bold uppercase tracking-wide" style={{ color: '#6B6B6B' }}>
+        <div className="flex items-center gap-1.5">
+          <Store className="w-4 h-4" style={{ color: MP.accentDark }} />
+          <span className="text-[11px] font-bold uppercase tracking-widest" style={{ color: MP.text2 }}>
             {isFr ? 'Boutique locale' : 'Local Shop'}
-          </h2>
+          </span>
         </div>
-        <span className="text-xs" style={{ color: '#6B6B6B' }}>{merchants.length} {isFr ? 'commerçant(s)' : 'merchant(s)'}</span>
+        <span className="text-[10px]" style={{ color: MP.text2 }}>{merchants.length} {isFr ? 'commerçant(s)' : 'merchant(s)'}</span>
       </div>
 
       {/* Filtres catégories */}
@@ -587,7 +590,7 @@ export default function MarketplaceSection({
           <Loader2 className="w-6 h-6 animate-spin text-orange-500" />
         </div>
       ) : filteredMerchants.length === 0 ? (
-        <div className="bg-white rounded-2xl p-10 text-center border" style={{ borderColor: '#E8E4DD' }}>
+        <div className="bg-white rounded-2xl p-6 text-center" style={{ boxShadow: MP.cardShadow }}>
           <Store className="w-12 h-12 mx-auto text-gray-300 mb-3" />
           <p className="text-sm" style={{ color: '#6B6B6B' }}>
             {isFr ? 'Aucun commerçant disponible' : 'No merchants available'}
@@ -601,8 +604,8 @@ export default function MarketplaceSection({
               <button
                 key={m.id}
                 onClick={() => setSelectedMerchant(m)}
-                className="w-full text-left bg-white rounded-2xl border overflow-hidden transition-all hover:shadow-lg"
-                style={{ borderColor: '#E8E4DD' }}
+                className="w-full text-left bg-white rounded-2xl overflow-hidden active:scale-[0.98] transition-transform"
+                style={{ boxShadow: MP.cardShadow }}
               >
                 {/* Mini bannière */}
                 {m.coverUrl ? (

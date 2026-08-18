@@ -84,19 +84,22 @@ export default function OrderTracker({ agencyId, baggageId, reference, lang = 'f
     }
   }, [orders, expandedId]);
 
+  // Shared mobile palette
+  const OP = { text: '#1C1C1E', text2: '#8E8E93', accent: '#C9A961', accentDark: '#A8884A', accentBg: '#FFF9EE', card: '#FFFFFF', cardShadow: '0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06)', sep: '#E5E5EA' };
+
   if (loading) {
     return (
-      <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-5 h-5 animate-spin" style={{ color: '#C9A961' }} />
+      <div className="flex items-center justify-center py-6">
+        <Loader2 className="w-4 h-4 animate-spin" style={{ color: OP.accent }} />
       </div>
     );
   }
 
   if (orders.length === 0) {
     return (
-      <div className="bg-white rounded-2xl p-6 text-center border" style={{ borderColor: '#E8E4DD' }}>
-        <Package className="w-10 h-10 mx-auto text-gray-300 mb-2" />
-        <p className="text-sm" style={{ color: '#6B6B6B' }}>
+      <div className="bg-white rounded-2xl p-5 text-center" style={{ boxShadow: OP.cardShadow }}>
+        <Package className="w-8 h-8 mx-auto text-gray-300 mb-2" />
+        <p className="text-[13px]" style={{ color: OP.text2 }}>
           {isFr ? 'Aucune commande pour l\'instant' : 'No orders yet'}
         </p>
       </div>
@@ -150,12 +153,12 @@ export default function OrderTracker({ agencyId, baggageId, reference, lang = 'f
     return (
       <div
         key={order.id}
-        className="bg-white rounded-2xl border overflow-hidden transition-all"
-        style={{ borderColor: '#E8E4DD', opacity: isPast && !isExpanded ? 0.7 : 1 }}
+        className="bg-white rounded-2xl overflow-hidden active:scale-[0.98] transition-transform"
+        style={{ boxShadow: OP.cardShadow, opacity: isPast && !isExpanded ? 0.7 : 1 }}
       >
         <button
           onClick={() => setExpandedId(isExpanded ? null : order.id)}
-          className="w-full p-4 text-left"
+          className="w-full p-3.5 text-left"
         >
           <div className="flex items-center gap-3">
             {/* Icon */}
@@ -245,7 +248,7 @@ export default function OrderTracker({ agencyId, baggageId, reference, lang = 'f
       {/* Active orders */}
       {activeOrders.length > 0 && (
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: '#C9A961' }}>
+          <p className="text-[11px] font-bold uppercase tracking-widest mb-1.5" style={{ color: OP.accentDark }}>
             🔥 {isFr ? 'En cours' : 'Active'} ({activeOrders.length})
           </p>
           <div className="space-y-2">
@@ -257,7 +260,7 @@ export default function OrderTracker({ agencyId, baggageId, reference, lang = 'f
       {/* Past orders */}
       {pastOrders.length > 0 && (
         <div>
-          <p className="text-xs font-bold uppercase tracking-wide mb-2" style={{ color: '#6B6B6B' }}>
+          <p className="text-[11px] font-bold uppercase tracking-widest mb-1.5" style={{ color: OP.text2 }}>
             📋 {isFr ? 'Historique' : 'History'} ({pastOrders.length})
           </p>
           <div className="space-y-2">
