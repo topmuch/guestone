@@ -116,6 +116,8 @@ ENV NEXTAUTH_SECRET=change-me-32-chars-min
 ENV ENCRYPTION_KEY=change-me-32-chars-min
 ENV CRON_SECRET=change-me
 ENV CRON_BACKUP_ENABLED=false
+# Demo reset: désactivé par défaut en production (mettre 1 pour activer)
+ENV ENABLE_DEMO_RESET=
 
 # ─── Copie du bundle standalone ──────────────────────────────────────
 COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./

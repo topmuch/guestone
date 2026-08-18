@@ -89,6 +89,7 @@ const T = {
     evening: 'Bonsoir',
     subtitle: 'Votre compagnon de séjour',
     tabHotel: 'Mon Hôtel',
+    tabServices: 'Services',
     tabTourism: 'Autour de moi',
     tabHelp: 'Aide',
     reception: 'Appeler la réception',
@@ -105,6 +106,7 @@ const T = {
     evening: 'Good Evening',
     subtitle: 'Your stay companion',
     tabHotel: 'My Hotel',
+    tabServices: 'Services',
     tabTourism: 'Around Me',
     tabHelp: 'Help',
     reception: 'Call Reception',
@@ -119,7 +121,7 @@ const T = {
 
 export default function WristbandView({ agency, lang }: WristbandViewProps) {
   const [greeting, setGreeting] = useState(T.fr.morning);
-  const [activeTab, setActiveTab] = useState<'hotel' | 'tourism' | 'help'>('hotel');
+  const [activeTab, setActiveTab] = useState<'hotel' | 'services' | 'tourism' | 'help'>('hotel');
   const [hotelServices, setHotelServices] = useState<HotelServiceItem[]>([]);
   const [stay, setStay] = useState<StayData | null>(null);
   const [selectedService, setSelectedService] = useState<HotelServiceItem | null>(null);
@@ -265,7 +267,7 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
     }
     return (
       <div className="space-y-5">
-        {/* Room Service + Mode Dernier Jour + Spa + Marketplace — quick access */}
+        {/* Room Service + Spa + Boutique + Dernier Jour — quick access */}
         <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => setShowRoomService(true)}
@@ -297,13 +299,6 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
           </button>
         </div>
 
-        {/* Services */}
-        {servicesHotel.length > 0 && (
-          <div className="space-y-3">
-            {servicesHotel.map((s) => <ServiceCard key={s.id} s={s} />)}
-          </div>
-        )}
-
         {/* WiFi & Infos */}
         {agency.houseGuide && (
           <div className="bg-white rounded-2xl p-6 sm:p-5 border" style={{ borderColor: C.border, boxShadow: C.shadow }}>
@@ -327,7 +322,7 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
           </div>
         )}
 
-        {servicesHotel.length === 0 && !agency.houseGuide && (
+        {!agency.houseGuide && (
           <div className="bg-white rounded-2xl p-10 text-center border" style={{ borderColor: C.border }}>
             <p className="text-base" style={{ color: C.inkLight }}>{t.noServices}</p>
           </div>
@@ -335,6 +330,21 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
       </div>
     );
   };
+
+  // ─── Onglet SERVICES ───
+  const renderServicesTab = () => (
+    <div className="space-y-5">
+      {servicesHotel.length > 0 ? (
+        <div className="space-y-3">
+          {servicesHotel.map((s) => <ServiceCard key={s.id} s={s} />)}
+        </div>
+      ) : (
+        <div className="bg-white rounded-2xl p-10 text-center border" style={{ borderColor: C.border }}>
+          <p className="text-base" style={{ color: C.inkLight }}>{t.noServices}</p>
+        </div>
+      )}
+    </div>
+  );
 
   // ─── Onglet AUTOUR DE MOI ───
   const renderTourismTab = () => (
@@ -438,6 +448,7 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
         <div className="max-w-2xl mx-auto flex">
           {([
             { key: 'hotel', label: t.tabHotel, icon: '🏨' },
+            { key: 'services', label: t.tabServices, icon: '🍽️' },
             { key: 'tourism', label: t.tabTourism, icon: '🗺️' },
             { key: 'help', label: t.tabHelp, icon: '🛟' },
           ] as const).map((tab) => (
@@ -463,6 +474,7 @@ export default function WristbandView({ agency, lang }: WristbandViewProps) {
       {/* ─── CONTENU ─── */}
       <main className="px-4 py-8 sm:py-6 max-w-2xl mx-auto">
         {activeTab === 'hotel' && renderHotelTab()}
+        {activeTab === 'services' && renderServicesTab()}
         {activeTab === 'tourism' && renderTourismTab()}
         {activeTab === 'help' && renderHelpTab()}
       </main>

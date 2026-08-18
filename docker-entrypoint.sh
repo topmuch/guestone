@@ -74,7 +74,14 @@ warn_secret NEXTAUTH_SECRET
 warn_secret ENCRYPTION_KEY
 warn_secret CRON_SECRET
 
-# ─── 5. Démarrage du serveur Next.js ─────────────────────────────────
+# ─── 5. Vérification NEXT_PUBLIC_APP_URL (critical pour Coolify) ─────
+case "$NEXT_PUBLIC_APP_URL" in
+    ""|"http://localhost:"*)
+        echo "⚠️  AVERTISSEMENT: NEXT_PUBLIC_APP_URL n'est pas configuré ($NEXT_PUBLIC_APP_URL). Les URLs générées (emails, QR codes) seront cassées en production."
+        ;;
+esac
+
+# ─── 6. Démarrage du serveur Next.js ─────────────────────────────────
 # `exec` remplace le shell courant : node devient PID 1 et reçoit
 # proprement les signaux SIGTERM/SIGINT de Docker/Coolify (graceful shutdown).
 echo "→ Démarrage du serveur Next.js (standalone)..."

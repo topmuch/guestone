@@ -7,14 +7,36 @@
  *
  *   1. Escalade auto — toutes les 5 min, vérifie les demandes "new" > 15 min
  *      et envoie un email consolidé à l'équipe direction.
+ *   2. PMS Sync — toutes les 30 min, synchronise les agences avec PMS configuré.
+ *   3. Demo Reset — toutes les heures, réinitialise les données démo.
  *
  * Avantage: aucun cron externe à configurer dans Coolify. Tout tourne in-process.
+ *
+ * ⚠️ IMPORTANT: En production (Coolify), les variables suivantes DOIVENT être définies:
+ *   - NEXT_PUBLIC_APP_URL (URL publique du site)
+ *   - CRON_SECRET (secret pour les endpoints cron)
+ * Sans cela, les jobs utiliseront http://localhost:3000 et échoueront.
  */
 
 export async function register() {
   // Ne lancer que sur le serveur (pas pendant le build)
   if (process.env.NEXT_RUNTIME !== 'nodejs') return;
-  if (process.env.NODE_ENV === 'production' || process.env.ENABLE_BACKGROUND_JOBS === '1') {
+
+  const isProduction = process.env.NODE_ENV === 'production';
+  const bgJobsEnabled = process.env.ENABLE_BACKGROUND_JOBS === '1';
+
+  if (isProduction || bgJobsEnabled) {
+    // Vérification critique des variables d'environnement
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    const cronSecret = process.env.CRON_SECRET;
+
+    if (isProduction && !appUrl) {
+      console.warn('[instrumentation] ⚠️ NEXT_PUBLIC_APP_URL non défini — les tâches de fond utiliseront http://localhost:3000 (CASSÉ EN PRODUCTION)');
+    }
+    if (isProduction && !cronSecret) {
+      console.warn('[instrumentation] ⚠️ CRON_SECRET non défini — les appels cron utiliseront un token par défaut non sécurisé');
+    }
+
     console.log('[instrumentation] Démarrage tâches de fond...');
     startEscalationJob();
     startPmsSyncJob();
@@ -22,11 +44,29 @@ export async function register() {
   }
 }
 
+/** Résout l'URL de l'app — warn si fallback localhost en production */
+function getAppUrl(): string {
+  const url = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  if (url === 'http://localhost:3000' && process.env.NODE_ENV === 'production') {
+    console.warn('[instrumentation] ⚠️ NEXT_PUBLIC_APP_URL non configuré — fallback localhost (les appels internes vont échouer)');
+  }
+  return url;
+}
+
+/** Résout le secret cron — warn si fallback en production */
+function getCronSecret(): string {
+  const secret = process.env.CRON_SECRET || 'internal-escalation-token';
+  if (secret === 'internal-escalation-token' && process.env.NODE_ENV === 'production') {
+    console.warn('[instrumentation] ⚠️ CRON_SECRET non configuré — token par défaut utilisé (non sécurisé)');
+  }
+  return secret;
+}
+
 // ─── Escalade auto ──────────────────────────────────────────────────────
 function startEscalationJob() {
   const POLL_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
-  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  const INTERNAL_TOKEN = process.env.CRON_SECRET || 'internal-escalation-token';
+  const APP_URL = getAppUrl();
+  const INTERNAL_TOKEN = getCronSecret();
 
   const runEscalation = async () => {
     try {
@@ -60,8 +100,8 @@ function startEscalationJob() {
 // ─── PMS Sync auto ──────────────────────────────────────────────────────
 function startPmsSyncJob() {
   const SYNC_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
-  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  const CRON_SECRET = process.env.CRON_SECRET || 'internal-escalation-token';
+  const APP_URL = getAppUrl();
+  const CRON_SECRET = getCronSecret();
 
   const runPmsSync = async () => {
     try {
@@ -100,9 +140,15 @@ function startPmsSyncJob() {
 
 // ─── Demo reset auto ────────────────────────────────────────────────────
 function startDemoResetJob() {
+  // Désactivé en production sauf si ENABLE_DEMO_RESET=1
+  if (process.env.NODE_ENV === 'production' && process.env.ENABLE_DEMO_RESET !== '1') {
+    console.log('[instrumentation] Demo reset DÉSACTIVÉ en production (mettre ENABLE_DEMO_RESET=1 pour activer)');
+    return;
+  }
+
   const RESET_INTERVAL_MS = 60 * 60 * 1000; // 1 heure
-  const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
-  const CRON_SECRET = process.env.CRON_SECRET || 'internal-escalation-token';
+  const APP_URL = getAppUrl();
+  const CRON_SECRET = getCronSecret();
 
   const runDemoReset = async () => {
     try {

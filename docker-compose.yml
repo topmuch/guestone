@@ -35,6 +35,9 @@ services:
       CRON_BACKUP_ENABLED: ${CRON_BACKUP_ENABLED:-false}
       CRON_BACKUP_SECRET: ${CRON_BACKUP_SECRET:-change-me}
 
+      # ─── Demo reset (désactivé par défaut en prod, mettre 1 pour activer) ───
+      ENABLE_DEMO_RESET: ${ENABLE_DEMO_RESET:-}
+
       # ─── Superadmin (créé au 1er démarrage) ───
       ADMIN_EMAIL: ${ADMIN_EMAIL:-admin@qrtags.com}
       ADMIN_PASSWORD: ${ADMIN_PASSWORD:-admin123}
